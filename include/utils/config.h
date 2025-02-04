@@ -21,6 +21,8 @@ namespace ChessBot
     constexpr static gpio_num_t PHOTODIODE_C_PIN = GPIO_NUM_4;
     constexpr static gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 
+    constexpr static float_t WHEEL_DIAMETER_INCHES = 4.375;
+
     static float_t MOTOR_A_DRIVE_MULTIPLIER;
     static float_t MOTOR_B_DRIVE_MULTIPLIER;
 
