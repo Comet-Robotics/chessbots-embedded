@@ -11,10 +11,10 @@
 namespace ChessBot
 {
     void setupMotors() {
-        setupPWM(MOTOR_A_PIN1, 1);
-        setupPWM(MOTOR_A_PIN2, 2);
-        setupPWM(MOTOR_B_PIN1, 3);
-        setupPWM(MOTOR_B_PIN2, 4);
+        setupPWM(MOTOR_A_PIN1);
+        setupPWM(MOTOR_A_PIN2);
+        setupPWM(MOTOR_B_PIN1);
+        setupPWM(MOTOR_B_PIN2);
     }
 
     // Value between [-1, 1]
@@ -22,11 +22,11 @@ namespace ChessBot
         log((char*)"Left Power: ");
         logln(power);
         if (power > 0) {
-            writePWM(2, 0);
-            writePWM(1, mapPowerToDuty(power));
+            writePWM(MOTOR_A_PIN2, 0);
+            writePWM(MOTOR_A_PIN1, mapPowerToDuty(power));
         } else {
-            writePWM(1, 0);
-            writePWM(2, mapPowerToDuty(-power));
+            writePWM(MOTOR_A_PIN1, 0);
+            writePWM(MOTOR_A_PIN2, mapPowerToDuty(-power));
         }
     }
 
@@ -35,11 +35,11 @@ namespace ChessBot
         log((char*)"Right Power: ");
         logln(power);
         if (power > 0) {
-            writePWM(4, 0);
-            writePWM(3, mapPowerToDuty(power));
+            writePWM(MOTOR_B_PIN2, 0);
+            writePWM(MOTOR_B_PIN1, mapPowerToDuty(power));
         } else {
-            writePWM(3, 0);
-            writePWM(4, mapPowerToDuty(-power));
+            writePWM(MOTOR_B_PIN1, 0);
+            writePWM(MOTOR_B_PIN2, mapPowerToDuty(-power));
         }
     }
 };

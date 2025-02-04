@@ -11,18 +11,12 @@
 
 namespace ChessBot
 {
-    constexpr static uint8_t LEDC_DUTY_RES = 14;
-    static uint16_t LEDC_DUTY_STEPS = (1 << LEDC_DUTY_RES) - 1;
-    constexpr static int16_t LEDC_FREQUENCY = 5000;
-
-    void setupPWM(int pin, int channel) {
+    void setupPWM(int pin) {
         pinMode(pin, OUTPUT);
-        ledcSetup(channel, LEDC_FREQUENCY, LEDC_DUTY_RES);
-        ledcAttachPin(pin, channel);
     }
 
-    void writePWM(int channel, int dutyCycle) {
-        ledcWrite(channel, dutyCycle);
+    void writePWM(int pin, int dutyCycle) {
+        analogWrite(pin, dutyCycle);
     }
 
     float fmap(float x, float in_min, float in_max, float out_min, float out_max) {
@@ -31,7 +25,7 @@ namespace ChessBot
 
     // Value between [0, 1]
     int mapPowerToDuty(float power) {
-        int value = fmap(power, 0.0, 1.0, 0.0, LEDC_DUTY_STEPS);
+        int value = fmap(power, 0.0, 1.0, 0.0, 255);
         log((char*)"Mapped Duty: ");
         logln(value);
         return value;

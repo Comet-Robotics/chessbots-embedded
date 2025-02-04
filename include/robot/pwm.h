@@ -3,7 +3,7 @@
 
 namespace ChessBot
 {
-    void setupPWM(int pin, int channel);
+    void setupPWM(int pin);
     void writePWM(int channel, int dutyCycle);
     int mapPowerToDuty(float power);
 };
