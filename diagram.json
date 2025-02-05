@@ -6,52 +6,45 @@
     {
       "type": "board-wemos-s2-mini",
       "id": "esp",
-      "top": 177.8,
-      "left": 273.14,
+      "top": 446.6,
+      "left": 138.74,
       "rotate": -90,
       "attrs": { "psramSize": "2" }
     },
     {
       "type": "wokwi-stepper-motor",
       "id": "stepper1",
-      "top": -159.59,
-      "left": 58.03,
+      "top": 0,
+      "left": 0,
       "attrs": { "size": "17", "arrow": "orange" }
     },
-    {
-      "type": "wokwi-a4988",
-      "id": "drv1",
-      "top": 33.8,
-      "left": 110.8,
-      "rotate": -90,
-      "attrs": {}
-    },
+    { "type": "wokwi-a4988", "id": "drv1", "top": 197, "left": 53.2, "rotate": -90, "attrs": {} },
     {
       "type": "wokwi-stepper-motor",
       "id": "stepper2",
-      "top": -169.19,
-      "left": 374.83,
+      "top": 0,
+      "left": 163.63,
       "attrs": { "size": "17", "arrow": "orange" }
     },
+    { "type": "wokwi-a4988", "id": "drv2", "top": 200, "left": 216.4, "rotate": -90, "attrs": {} },
     {
-      "type": "wokwi-a4988",
-      "id": "drv2",
-      "top": 24.2,
-      "left": 427.6,
+      "type": "wokwi-gate-or-2",
+      "id": "or1",
+      "top": 320,
+      "left": 220.6,
       "rotate": -90,
       "attrs": {}
     },
-    { "type": "wokwi-gate-or-2", "id": "or1", "top": 124.8, "left": 384, "attrs": {} },
     {
       "type": "wokwi-gate-or-2",
       "id": "or2",
-      "top": 125.2,
-      "left": 163.2,
-      "rotate": 180,
+      "top": 320,
+      "left": 57.4,
+      "rotate": -90,
       "attrs": {}
     },
-    { "type": "wokwi-led", "id": "led1", "top": 102, "left": 90.2, "attrs": { "color": "red" } },
-    { "type": "wokwi-led", "id": "led2", "top": 63.6, "left": 368.6, "attrs": { "color": "red" } }
+    { "type": "wokwi-led", "id": "led1", "top": 320, "left": 32.6, "attrs": { "color": "blue" } },
+    { "type": "wokwi-led", "id": "led2", "top": 320, "left": 195.8, "attrs": { "color": "red" } }
   ],
   "connections": [
     [ "drv1:SLEEP", "drv1:RESET", "green", [ "v19.4", "h-9.2" ] ],
@@ -66,16 +59,16 @@
     [ "stepper2:B-", "drv2:1B", "green", [ "v0" ] ],
     [ "drv1:STEP", "or2:OUT", "green", [ "v0" ] ],
     [ "drv2:STEP", "or1:OUT", "green", [ "v0" ] ],
-    [ "esp:33(SDA)", "or2:B", "gold", [ "v0" ] ],
-    [ "esp:38", "or2:A", "orange", [ "h0", "v-57.45" ] ],
-    [ "esp:39", "or1:A", "green", [ "v0" ] ],
-    [ "esp:40", "or1:B", "red", [ "h0", "v-57.45" ] ],
-    [ "drv1:DIR", "esp:33(SDA)", "green", [ "v76.8", "h57.6" ] ],
-    [ "esp:39", "drv2:DIR", "green", [ "v-28.65", "h192" ] ],
-    [ "led2:C", "drv2:GND.2", "green", [ "v0" ] ],
-    [ "led1:C", "drv1:GND.2", "green", [ "v0" ] ],
-    [ "led1:A", "or2:OUT", "green", [ "v0" ] ],
-    [ "led2:A", "or1:OUT", "green", [ "v0" ] ]
+    [ "esp:33(SDA)", "or2:B", "red", [ "v-86.25" ] ],
+    [ "esp:38", "or2:A", "black", [ "h0", "v-76.65", "h-67.2" ] ],
+    [ "esp:39", "or1:A", "red", [ "v-47.85", "h105.6" ] ],
+    [ "esp:40", "or1:B", "black", [ "h-38.4", "v-38.25", "h163.2" ] ],
+    [ "esp:33(SDA)", "drv1:DIR", "red", [ "v-182.25", "h-67.2" ] ],
+    [ "esp:39", "drv2:DIR", "red", [ "v-47.85", "h144", "v-144", "h-19.2" ] ],
+    [ "led2:C", "esp:GND.2", "black", [ "v0" ] ],
+    [ "led1:C", "led2:C", "black", [ "v19.2", "h192.4" ] ],
+    [ "led2:A", "or1:OUT", "green", [ "v0", "h9.6", "v-67.2", "h38.4" ] ],
+    [ "led1:A", "or2:OUT", "green", [ "v2.8", "h19.2", "v-76.8" ] ]
   ],
   "dependencies": {}
 }
