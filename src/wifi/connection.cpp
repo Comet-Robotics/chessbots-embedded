@@ -1,12 +1,17 @@
 #ifndef CHESSBOT_CONNECTION_CPP
 #define CHESSBOT_CONNECTION_CPP
 
+// Associated Header File
 #include "wifi/connection.h"
 
+// Built-In Libraries
 #include "Arduino.h"
-#include <ArduinoJson.h>
 #include "WiFi.h"
 
+// External Libraries
+#include <ArduinoJson.h>
+
+// Custom Libraries
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"

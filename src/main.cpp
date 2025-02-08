@@ -1,7 +1,10 @@
 #ifndef CHESSBOT_MAIN_CPP
 #define CHESSBOT_MAIN_CPP
 
+// Built-In Libraries
 #include <Arduino.h>
+
+// Custom Libraries
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"

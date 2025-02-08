@@ -1,11 +1,14 @@
 #ifndef CHESSBOT_WIRELESS_CPP
 #define CHESSBOT_WIRELESS_CPP
 
+// Associated Header File
 #include "wifi/wireless.h"
 
+// Built-In Libraries
 #include "Arduino.h"
 #include "WiFi.h"
 
+// Custom Libraries
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"

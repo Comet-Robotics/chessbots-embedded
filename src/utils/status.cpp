@@ -1,10 +1,12 @@
 #ifndef CHESSBOT_STATUS_CPP
 #define CHESSBOT_STATUS_CPP
 
+// Associated Header File
 #include "utils/status.h"
 
 bool wifiConnected = false;
 bool serverConnected = false;
+
 namespace ChessBot
 {
     bool getWiFiConnectionStatus() {

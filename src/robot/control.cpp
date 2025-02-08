@@ -1,10 +1,13 @@
 #ifndef CHESSBOT_CONTROL_CPP
 #define CHESSBOT_CONTROL_CPP
 
+// Associated Header File
 #include "robot/control.h"
 
+// Built-In Libraries
 #include "Arduino.h"
 
+// Custom Libraries
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "robot/motor.h"

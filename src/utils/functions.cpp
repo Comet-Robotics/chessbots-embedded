@@ -1,10 +1,13 @@
 #ifndef CHESSBOT_FUNCTIONS_CPP
 #define CHESSBOT_FUNCTIONS_CPP
 
+// Associated Header File
 #include "utils/functions.h"
 
+// Built-In Libraries
 #include "Arduino.h"
 
+// Custom Libraries
 #include "utils/logging.h"
 
 namespace ChessBot

@@ -1,10 +1,13 @@
 #ifndef CHESSBOT_LIGHT_SENSOR_CPP
 #define CHESSBOT_LIGHT_SENSOR_CPP
 
+// Associated Header File
 #include "robot/lightSensor.h"
 
+// Built-In Libraries
 #include "Arduino.h"
 
+// Custom Libraries
 #include "utils/logging.h"
 #include "utils/config.h"
 #include "utils/timer.h"

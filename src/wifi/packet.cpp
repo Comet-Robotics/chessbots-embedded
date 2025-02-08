@@ -1,12 +1,17 @@
 #ifndef CHESSBOT_PACKET_CPP
 #define CHESSBOT_PACKET_CPP
 
+// Associated Header File
 #include "wifi/packet.h"
 
+// Built-In Libraries
 #include "Arduino.h"
-#include <ArduinoJson.h>
 #include "esp_mac.h"
 
+// External Libraries
+#include <ArduinoJson.h>
+
+// Custom Libraries
 #include "utils/logging.h"
 #include "utils/status.h"
 #include "utils/functions.h"

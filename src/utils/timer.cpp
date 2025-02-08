@@ -1,11 +1,14 @@
 #ifndef CHESSBOT_TIMER_CPP
 #define CHESSBOT_TIMER_CPP
 
+// Associated Header File
 #include "utils/timer.h"
 
+// Built-In Libraries
 #include "Arduino.h"
 #include <vector>
 
+// Custom Libraries
 #include "utils/logging.h"
 
 // How to pass function from within a class (Uses a lambda that captures the class' pointer)

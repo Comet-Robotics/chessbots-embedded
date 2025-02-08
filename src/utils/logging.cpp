@@ -1,10 +1,13 @@
 #ifndef CHESSBOT_LOGGING_CPP
 #define CHESSBOT_LOGGING_CPP
 
+// Associated Header File
 #include "utils/logging.h"
 
+// Built-In Libraries
 #include <Arduino.h>
 
+// Custom Libraries
 #include "utils/status.h"
 #include "../env.h"
 
