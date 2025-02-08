@@ -13,10 +13,11 @@
 #include "wifi/packet.h"
 #include "../env.h"
 
+bool connecting = false;
+
 namespace ChessBot
 {
     WiFiClient client;
-    bool connecting = false;
     
     // Called to connect to the server whose info is stored in env.h
     void connect() {

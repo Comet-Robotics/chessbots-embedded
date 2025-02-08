@@ -4,7 +4,6 @@
 #include "utils/logging.h"
 
 #include <Arduino.h>
-//#include <iostream>
 
 #include "utils/status.h"
 #include "../env.h"

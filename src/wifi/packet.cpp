@@ -12,23 +12,23 @@
 #include "utils/functions.h"
 #include "robot/control.h"
 
+// These are the various different supported message types that can be sent over TCP
+const char* CLIENT_HELLO = "CLIENT_HELLO";
+const char* SERVER_HELLO = "SERVER_HELLO";
+const char* PING_SEND = "PING_SEND";
+const char* PING_RESPONSE = "PING_RESPONSE";
+const char* QUERY_VAR = "QUERY_VAR";
+const char* QUERY_RESPONSE = "QUERY_RESPONSE";
+const char* SET_VAR = "SET_VAR";
+const char* TURN_BY_ANGLE = "TURN_BY_ANGLE";
+const char* DRIVE_TILES = "DRIVE_TILES";
+const char* ACTION_SUCCESS = "ACTION_SUCCESS";
+const char* ACTION_FAIL = "ACTION_FAIL";
+const char* DRIVE_TANK = "DRIVE_TANK";
+const char* ESTOP = "ESTOP";
+
 namespace ChessBot
 {
-    // These are the various different supported message types that can be sent over TCP
-    const char* CLIENT_HELLO = "CLIENT_HELLO";
-    const char* SERVER_HELLO = "SERVER_HELLO";
-    const char* PING_SEND = "PING_SEND";
-    const char* PING_RESPONSE = "PING_RESPONSE";
-    const char* QUERY_VAR = "QUERY_VAR";
-    const char* QUERY_RESPONSE = "QUERY_RESPONSE";
-    const char* SET_VAR = "SET_VAR";
-    const char* TURN_BY_ANGLE = "TURN_BY_ANGLE";
-    const char* DRIVE_TILES = "DRIVE_TILES";
-    const char* ACTION_SUCCESS = "ACTION_SUCCESS";
-    const char* ACTION_FAIL = "ACTION_FAIL";
-    const char* DRIVE_TANK = "DRIVE_TANK";
-    const char* ESTOP = "ESTOP";
-
     // Takes a packet a does specific things based on the type
     void handlePacket(JsonDocument& packet) {
         // Sadly a switch case can't be used due to the packet type being a string.

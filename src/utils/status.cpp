@@ -3,11 +3,10 @@
 
 #include "utils/status.h"
 
+bool wifiConnected = false;
+bool serverConnected = false;
 namespace ChessBot
 {
-    bool wifiConnected = false;
-    bool serverConnected = false;
-
     bool getWiFiConnectionStatus() {
         return wifiConnected;
     }
