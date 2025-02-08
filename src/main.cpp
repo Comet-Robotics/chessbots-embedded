@@ -14,7 +14,7 @@ using namespace ChessBot;
 
 void setup() {
     // Serial port for debugging purposes
-    if (getLoggingStatus) Serial.begin(115200);
+    if (LOGGING_LEVEL > 0) Serial.begin(115200);
 
     // Any setup needed to get bot ready
     setupBot();
@@ -25,15 +25,17 @@ void setup() {
 }
 
 void loop() {
+    // Checks whether bot is still connected to the server. Reconnect if not
     if (!testConnection()) {
         reconnect();
     }
 
+    // If the bot is connected for the server, check for received data, and accept if if available
     if (getServerConnectionStatus()) {
         acceptData();
     }
 
-    if (DO_LIGHT_SENSOR_TEST) logLight();
+    if (DO_LIGHT_SENSOR_TEST) readLight();
 
   	delay(100);
   	timerStep();

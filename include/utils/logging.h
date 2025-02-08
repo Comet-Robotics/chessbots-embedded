@@ -5,13 +5,13 @@
 
 namespace ChessBot
 {
-    void log(char message[]);
-    void log(int value);
+    void log(char message[], int loggingLevel);
+    void log(int value, int loggingLevel);
 
-    void logln(char message[]);
-    void logln(int value);
-    void logln(float value);
-    void logln(std::string value);
+    void logln(char message[], int loggingLevel);
+    void logln(int value, int loggingLevel);
+    void logln(float value, int loggingLevel);
+    void logln(std::string value, int loggingLevel);
 
     void logError(char message[], int error);
 };

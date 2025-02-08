@@ -7,8 +7,7 @@ namespace ChessBot
     void drive(float tiles);
     void drive(float leftPower, float rightPower);
     void stop();
-    void readLight(int lightArray[]);
-    void logLight();
+    void readLight();
     void startDriveTest();
     void driveTestOff();
 };

@@ -8,8 +8,8 @@ namespace ChessBot
     void setupIR();
     void activateIR();
     void deactivateIR();
-    void readLightLevels(int lightArray[]);
-    void logLightLevels();
+    void startLightReading();
+    void readLightLevels();
 };
 
 #endif

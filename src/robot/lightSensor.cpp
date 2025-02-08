@@ -4,43 +4,56 @@
 #include "robot/lightSensor.h"
 
 #include "Arduino.h"
+
 #include "utils/logging.h"
 #include "utils/config.h"
+#include "utils/timer.h"
 
 namespace ChessBot
 {
     int lightArray[4];
 
+    // Sets the IR (Infrared) Blaster to be able to output
     void setupIR() {
         pinMode(RELAY_IR_LED_PIN, OUTPUT);
     }
 
+    // Turns on the IR Blaster
     void activateIR() {
         digitalWrite(RELAY_IR_LED_PIN, HIGH);
     }
 
+    // Turns off the IR Blaster
     void deactivateIR() {
         digitalWrite(RELAY_IR_LED_PIN, LOW);
     }
 
-    void readLightLevels(int lightArray[]) {
+    void startLightReading() {
+        // The Infrared Blaster must be activated first to get a clear reading
+        activateIR();
+        // To give time for the IR Blaster to activate, only reads light values after 50 milliseconds
+        timerDelay(50, &readLightLevels);
+    }
+
+    void readLightLevels() {
+        // Reads the values on the light sensor pins
         lightArray[0] = analogRead(PHOTODIODE_A_PIN);
         lightArray[1] = analogRead(PHOTODIODE_B_PIN);
         lightArray[2] = analogRead(PHOTODIODE_C_PIN);
         lightArray[3] = analogRead(PHOTODIODE_D_PIN);
-    }
 
-    void logLightLevels() {
-        readLightLevels(lightArray);
+        // Deactivates the IR Blaster after reading to save battery power
+        deactivateIR();
 
-        log((char*)"Light Levels: ");
-        log(lightArray[0]);
-        log((char*)" ");
-        log(lightArray[1]);
-        log((char*)" ");
-        log(lightArray[2]);
-        log((char*)" ");
-        logln(lightArray[3]);
+        // Logs the values for debugging purposes
+        log((char*)"Light Levels: ", 4);
+        log(lightArray[0], 4);
+        log((char*)" ", 4);
+        log(lightArray[1], 4);
+        log((char*)" ", 4);
+        log(lightArray[2], 4);
+        log((char*)" ", 4);
+        logln(lightArray[3], 4);
     }
 };
 

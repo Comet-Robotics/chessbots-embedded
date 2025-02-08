@@ -7,7 +7,6 @@ namespace ChessBot
 {
     bool wifiConnected = false;
     bool serverConnected = false;
-    bool doLogging = true;
 
     bool getWiFiConnectionStatus() {
         return wifiConnected;
@@ -21,13 +20,6 @@ namespace ChessBot
     }
     void setServerConnectionStatus(bool value) {
         serverConnected = value;
-    }
-
-    bool getLoggingStatus() {
-        return doLogging;
-    }
-    void setLoggingStatus(bool value) {
-        doLogging = value;
     }
 };
 

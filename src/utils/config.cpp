@@ -7,7 +7,9 @@
 
 namespace ChessBot
 {
-    
+    void setConfig() {
+        
+    }
 };
 
 #endif

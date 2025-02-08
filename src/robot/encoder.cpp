@@ -7,7 +7,7 @@
 
 namespace ChessBot
 {
-
+    // Will read the values on the encoders. WIP
 };
 
 #endif

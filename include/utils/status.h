@@ -8,9 +8,6 @@ namespace ChessBot
 
     bool getWiFiConnectionStatus();
     void setWiFiConnectionStatus(bool value);
-
-    bool getLoggingStatus();
-    void setLoggingStatus(bool value);
 };
 
 #endif

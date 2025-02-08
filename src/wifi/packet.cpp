@@ -6,11 +6,10 @@
 #include "Arduino.h"
 #include <ArduinoJson.h>
 #include "esp_mac.h"
-#include <sstream>
-#include <iostream>
 
 #include "utils/logging.h"
 #include "utils/status.h"
+#include "utils/functions.h"
 #include "robot/control.h"
 
 namespace ChessBot
@@ -30,31 +29,26 @@ namespace ChessBot
     const char* DRIVE_TANK = "DRIVE_TANK";
     const char* ESTOP = "ESTOP";
 
+    // Takes a packet a does specific things based on the type
     void handlePacket(JsonDocument& packet) {
+        // Sadly a switch case can't be used due to the packet type being a string.
+        // We do this to allow the packets to be more readable when logged
         if (packet["type"] == SERVER_HELLO) {
+            // When we initiate a handshake, the server sends a handshake back. This server handshake
+            // contains any variable that should be changed in this bot's config
         } else if (packet["type"] == DRIVE_TANK) {
+            // This is received when the bot is being manually controlled via the debug page
             drive(packet["left"], packet["right"]);
         }
     }
 
-    std::string unint8ArrayToHexString(uint8_t* oldArray, int len) {
-        std::string result;
-        result.reserve(len * 2);
-        static constexpr char hex[] = "0123456789abcdef";
-
-        for (int i = 0; i < len; i++) {
-            if (i != 0) result.push_back(':');
-            result.push_back(hex[oldArray[i] / 16]);
-            result.push_back(hex[oldArray[i] % 16]);
-        }
-        logln(result);
-        return result;
-    }
-
+    // This creates the handshake packet sent to the server when this bot connects to it
     void constructHelloPacket(JsonDocument& packet) {
         packet["type"] = CLIENT_HELLO;
         uint8_t mac[8];
+        // Gets the mac address of this esp
         esp_efuse_mac_get_default(mac);
+        // Converts the mac address into the form the server is expecting
         std::string stringMac = unint8ArrayToHexString(mac, 6);
         packet["macAddress"] = stringMac;
     }
