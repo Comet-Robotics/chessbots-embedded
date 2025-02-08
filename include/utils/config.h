@@ -4,6 +4,9 @@
 // Built-In Libraries
 #include "Arduino.h"
 
+// External Libraries
+#include <ArduinoJson.h>
+
 namespace ChessBot
 {
     static gpio_num_t MOTOR_A_PIN1 = GPIO_NUM_33;
@@ -22,12 +25,14 @@ namespace ChessBot
     static gpio_num_t PHOTODIODE_C_PIN = GPIO_NUM_4;
     static gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 
-    static float_t WHEEL_DIAMETER_INCHES = 4.375;
+    static float WHEEL_DIAMETER_INCHES = 4.375;
 
-    static float_t MOTOR_A_DRIVE_MULTIPLIER;
-    static float_t MOTOR_B_DRIVE_MULTIPLIER;
+    static float MOTOR_A_DRIVE_MULTIPLIER = 1.0;
+    static float MOTOR_B_DRIVE_MULTIPLIER = 1.0;
 
-    static float_t ENCODER_MULTIPLIER;
+    static float ENCODER_MULTIPLIER = 1.0;
+
+    void setConfig(JsonDocument& packet);
 };
 
 #endif
