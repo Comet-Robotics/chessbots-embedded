@@ -1,3 +1,4 @@
+// Sets file name into memory (usually to avoid duplicate imports)
 #ifndef CHESSBOT_MAIN_CPP
 #define CHESSBOT_MAIN_CPP
 
@@ -13,6 +14,7 @@
 #include "robot/control.h"
 #include "../env.h"
 
+// The namespace allows shared functions and variables to be easily accessed
 using namespace ChessBot;
 
 void setup() {
@@ -44,4 +46,5 @@ void loop() {
   	timerStep();
 }
 
+// This is used at the end of each file due to the name definition at the beginning
 #endif
