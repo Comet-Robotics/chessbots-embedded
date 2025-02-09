@@ -7,9 +7,6 @@
 // Built-In Libraries
 #include "Arduino.h"
 
-namespace ChessBot
-{
-    // Will read the values on the encoders. WIP
-};
+// Will read the values on the encoders. WIP
 
 #endif

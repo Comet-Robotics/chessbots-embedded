@@ -14,9 +14,6 @@
 #include "robot/control.h"
 #include "../env.h"
 
-// The namespace allows shared functions and variables to be easily accessed
-using namespace ChessBot;
-
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes

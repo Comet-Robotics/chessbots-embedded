@@ -4,16 +4,13 @@
 #include "Arduino.h"
 #include <ArduinoJson.h>
 
-namespace ChessBot
-{
-    void connect();
-    void disconnect();
-    void reconnect();
-    bool testConnection();
-    void initiateHandshake();
+void connect();
+void disconnect();
+void reconnect();
+bool testConnection();
+void initiateHandshake();
 
-    void acceptData();
-    void sendPacket(JsonDocument& packet);
-};
+void acceptData();
+void sendPacket(JsonDocument& packet);
 
 #endif

@@ -4,13 +4,10 @@
 // Built-In Libraries
 #include "Arduino.h"
 
-namespace ChessBot
-{
-    void setupIR();
-    void activateIR();
-    void deactivateIR();
-    void startLightReading();
-    void readLightLevels();
-};
+void setupIR();
+void activateIR();
+void deactivateIR();
+void startLightReading();
+void readLightLevels();
 
 #endif
