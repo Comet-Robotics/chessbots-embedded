@@ -2,6 +2,7 @@
 #define CHESSBOT_CONFIG_CPP
 
 // Associated Header File
+#include "utils/logging.h"
 #include "utils/config.h"
 
 // Built-In Libraries
@@ -12,29 +13,33 @@
 
 namespace ChessBot
 {
-    void setConfig(JsonDocument& packet) {
-        if (packet["config"]["MOTOR_A_PIN1"]) MOTOR_A_PIN1 = packet["config"]["MOTOR_A_PIN1"];
-        if (packet["config"]["MOTOR_A_PIN2"]) MOTOR_A_PIN2 = packet["config"]["MOTOR_A_PIN2"];
-        if (packet["config"]["MOTOR_B_PIN1"]) MOTOR_B_PIN1 = packet["config"]["MOTOR_B_PIN1"];
-        if (packet["config"]["MOTOR_B_PIN2"]) MOTOR_B_PIN2 = packet["config"]["MOTOR_B_PIN2"];
+    void setConfig(JsonObject config) {
+        if (config["MOTOR_A_PIN1"].is<gpio_num_t>()) Config::getInstance().MOTOR_A_PIN1 = config["MOTOR_A_PIN1"];
+        if (config["MOTOR_A_PIN2"].is<gpio_num_t>()) MOTOR_A_PIN2 = config["MOTOR_A_PIN2"];
+        if (config["MOTOR_B_PIN1"].is<gpio_num_t>()) MOTOR_B_PIN1 = config["MOTOR_B_PIN1"];
+        if (config["MOTOR_B_PIN2"].is<gpio_num_t>()) MOTOR_B_PIN2 = config["MOTOR_B_PIN2"];
 
-        if (packet["config"]["ENCODER_A_PIN1"]) ENCODER_A_PIN1 = packet["config"]["ENCODER_A_PIN1"];
-        if (packet["config"]["ENCODER_A_PIN2"]) ENCODER_A_PIN2 = packet["config"]["ENCODER_A_PIN2"];
-        if (packet["config"]["ENCODER_B_PIN1"]) ENCODER_B_PIN1 = packet["config"]["ENCODER_B_PIN1"];
-        if (packet["config"]["ENCODER_B_PIN2"]) ENCODER_B_PIN2 = packet["config"]["ENCODER_B_PIN2"];
+        if (config["ENCODER_A_PIN1"].is<gpio_num_t>()) ENCODER_A_PIN1 = config["ENCODER_A_PIN1"];
+        if (config["ENCODER_A_PIN2"].is<gpio_num_t>()) ENCODER_A_PIN2 = config["ENCODER_A_PIN2"];
+        if (config["ENCODER_B_PIN1"].is<gpio_num_t>()) ENCODER_B_PIN1 = config["ENCODER_B_PIN1"];
+        if (config["ENCODER_B_PIN2"].is<gpio_num_t>()) ENCODER_B_PIN2 = config["ENCODER_B_PIN2"];
 
-        if (packet["config"]["RELAY_IR_LED_PIN"]) RELAY_IR_LED_PIN = packet["config"]["RELAY_IR_LED_PIN"];
-        if (packet["config"]["PHOTODIODE_B_PIN"]) PHOTODIODE_B_PIN = packet["config"]["PHOTODIODE_B_PIN"];
-        if (packet["config"]["PHOTODIODE_C_PIN"]) PHOTODIODE_C_PIN = packet["config"]["PHOTODIODE_C_PIN"];
-        if (packet["config"]["PHOTODIODE_D_PIN"]) PHOTODIODE_D_PIN = packet["config"]["PHOTODIODE_D_PIN"];
-        if (packet["config"]["PHOTODIODE_A_PIN"]) PHOTODIODE_A_PIN = packet["config"]["PHOTODIODE_A_PIN"];
+        if (config["RELAY_IR_LED_PIN"].is<gpio_num_t>()) RELAY_IR_LED_PIN = config["RELAY_IR_LED_PIN"];
+        if (config["PHOTODIODE_B_PIN"].is<gpio_num_t>()) PHOTODIODE_B_PIN = config["PHOTODIODE_B_PIN"];
+        if (config["PHOTODIODE_C_PIN"].is<gpio_num_t>()) PHOTODIODE_C_PIN = config["PHOTODIODE_C_PIN"];
+        if (config["PHOTODIODE_D_PIN"].is<gpio_num_t>()) PHOTODIODE_D_PIN = config["PHOTODIODE_D_PIN"];
+        if (config["PHOTODIODE_A_PIN"].is<gpio_num_t>()) PHOTODIODE_A_PIN = config["PHOTODIODE_A_PIN"];
 
-        if (packet["config"]["WHEEL_DIAMETER_INCHES"]) WHEEL_DIAMETER_INCHES = packet["config"]["WHEEL_DIAMETER_INCHES"];
+        if (config["WHEEL_DIAMETER_INCHES"].is<float>()) WHEEL_DIAMETER_INCHES = config["WHEEL_DIAMETER_INCHES"];
 
-        if (packet["config"]["MOTOR_A_DRIVE_MULTIPLIER"]) MOTOR_A_DRIVE_MULTIPLIER = packet["config"]["MOTOR_A_DRIVE_MULTIPLIER"];
-        if (packet["config"]["MOTOR_B_DRIVE_MULTIPLIER"]) MOTOR_B_DRIVE_MULTIPLIER = packet["config"]["MOTOR_B_DRIVE_MULTIPLIER"];
+        if (config["MOTOR_A_DRIVE_MULTIPLIER"].is<float>()) {
+            logln((char*)"Detected Name Properly", 2);
+            logln(config["MOTOR_A_DRIVE_MULTIPLIER"].as<float>(), 3);
+            MOTOR_A_DRIVE_MULTIPLIER = config["MOTOR_A_DRIVE_MULTIPLIER"];
+        }
+        if (config["MOTOR_B_DRIVE_MULTIPLIER"].is<float>()) MOTOR_B_DRIVE_MULTIPLIER = config["MOTOR_B_DRIVE_MULTIPLIER"];
 
-        if (packet["config"]["ENCODER_MULTIPLIER"]) ENCODER_MULTIPLIER = packet["config"]["ENCODER_MULTIPLIER"];
+        if (config["ENCODER_MULTIPLIER"].is<float>()) ENCODER_MULTIPLIER = config["ENCODER_MULTIPLIER"];
     }
 };
 

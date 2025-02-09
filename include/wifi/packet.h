@@ -6,7 +6,7 @@
 
 namespace ChessBot
 {
-    void handlePacket(JsonDocument& packet);
+    void handlePacket(JsonDocument packet);
     std::string unint8ArrayToHexString(uint8_t* oldArray, int len);
 
     void constructHelloPacket(JsonDocument& packet);
