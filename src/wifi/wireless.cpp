@@ -43,7 +43,8 @@ bool checkWiFiConnection() {
     return WiFi.status() == WL_CONNECTED;
 }
 
-// 
+// If not connected to WiFi by now, log 'why'
+// Tries to connect until success. After connected to WiFi, starts trying to connect to the server
 void confirmWiFi() {
     if (checkWiFiConnection()) {
         setWiFiConnectionStatus(true);
@@ -74,14 +75,14 @@ void connectWiFI() {
     timerDelay(500, &confirmWiFi);
 }
 
-// Connects to a WiFi network with the SSID and Password set in env.h
+// Completely disconnect from WiFi
 void disconnectWiFI() {
     setWiFiConnectionStatus(false);
     WiFi.disconnect();
     logln((char*)"Disconnected From WiFI!", 2);
 }
 
-// Connects to a WiFi network with the SSID and Password set in env.h
+// If not connected to WiFi (whether by disconnect or by lost connection), reconnects
 void reconnectWiFI() {
     if (!wifiConnecting) {
         setWiFiConnectionStatus(false);

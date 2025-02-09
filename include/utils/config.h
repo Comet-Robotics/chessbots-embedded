@@ -7,6 +7,8 @@
 // external Libraries
 #include <ArduinoJson.h>
 
+// These variables are declared here, and defined in config.cpp
+// config.cpp is the only file that should be modifying these values. Everything else is read-only
 extern gpio_num_t MOTOR_A_PIN1;
 extern gpio_num_t MOTOR_A_PIN2;
 extern gpio_num_t MOTOR_B_PIN1;
