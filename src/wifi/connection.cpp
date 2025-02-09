@@ -18,47 +18,48 @@
 #include "wifi/packet.h"
 #include "../env.h"
 
-bool connecting = false;
+bool serverConnecting = false;
 
 WiFiClient client;
 
 // Called to connect to the server whose info is stored in env.h
-void connect() {
+void connectServer() {
     logln((char*)"Connecting to Server...", 2);
     if (client.connect(SERVER_IP, SERVER_PORT)) {
         // If successful, sets the connection status and stops trying to connect to the server
         setServerConnectionStatus(true);
-        connecting = false;
+        serverConnecting = false;
         logln((char*)"Connected to Server!", 2);
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
         if (DO_HANDSHAKE) { initiateHandshake(); }
     } else {
+        serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
         logln((char*)"Connection To Server Failed! Retrying...", 2);
-        connecting = true;
-        timerDelay(5000, &connect);
+
+        timerDelay(5000, &connectServer);
     }
 }
 
 // Completely disconnect from the server
-void disconnect() {
+void disconnectServer() {
     setServerConnectionStatus(false);
     client.stop();
     logln((char*)"Disconnected From Server!", 2);
 }
 
 // If not connected to the server (whether by disconnect or by lost connection), reconnects
-void reconnect() {
-    if (!connecting) {
+void reconnectServer() {
+    if (!serverConnecting) {
         setServerConnectionStatus(false);
         logln((char*)"Disconnected From Server! Reconnecting...", 2);
-        connect();
+        connectServer();
     }
 }
 
 // Checks whether still connected to server
-bool testConnection() {
+bool checkServerConnection() {
     return client.connected();
 }
 

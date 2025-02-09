@@ -35,6 +35,10 @@ float MOTOR_B_DRIVE_MULTIPLIER = 1.0;
 float ENCODER_MULTIPLIER = 1.0;
 
 void setConfig(JsonObject config) {
+    logln((char*)"Setting Config...", 2);
+
+    // The is<x>() method checks the type of the variable. If the type isn't none, then
+    // we know this variable exists in the config and has a value
     if (config["MOTOR_A_PIN1"].is<gpio_num_t>()) MOTOR_A_PIN1 = config["MOTOR_A_PIN1"];
     if (config["MOTOR_A_PIN2"].is<gpio_num_t>()) MOTOR_A_PIN2 = config["MOTOR_A_PIN2"];
     if (config["MOTOR_B_PIN1"].is<gpio_num_t>()) MOTOR_B_PIN1 = config["MOTOR_B_PIN1"];
@@ -53,14 +57,12 @@ void setConfig(JsonObject config) {
 
     if (config["WHEEL_DIAMETER_INCHES"].is<float>()) WHEEL_DIAMETER_INCHES = config["WHEEL_DIAMETER_INCHES"];
 
-    if (config["MOTOR_A_DRIVE_MULTIPLIER"].is<float>()) {
-        logln((char*)"Detected Name Properly", 2);
-        logln(config["MOTOR_A_DRIVE_MULTIPLIER"].as<float>(), 3);
-        MOTOR_A_DRIVE_MULTIPLIER = config["MOTOR_A_DRIVE_MULTIPLIER"];
-    }
+    if (config["MOTOR_A_DRIVE_MULTIPLIER"].is<float>()) MOTOR_A_DRIVE_MULTIPLIER = config["MOTOR_A_DRIVE_MULTIPLIER"];
     if (config["MOTOR_B_DRIVE_MULTIPLIER"].is<float>()) MOTOR_B_DRIVE_MULTIPLIER = config["MOTOR_B_DRIVE_MULTIPLIER"];
 
     if (config["ENCODER_MULTIPLIER"].is<float>()) ENCODER_MULTIPLIER = config["ENCODER_MULTIPLIER"];
+
+    logln((char*)"Config Set!", 2);
 }
 
 #endif

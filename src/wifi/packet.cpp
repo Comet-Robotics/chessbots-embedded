@@ -40,9 +40,7 @@ void handlePacket(JsonDocument packet) {
     if (packet["type"] == SERVER_HELLO) {
         // When we initiate a handshake, the server sends a handshake back. This server handshake
         // contains any variable that should be changed in this bot's config
-        logln(MOTOR_A_DRIVE_MULTIPLIER, 2);
         setConfig(packet["config"].as<JsonObject>());
-        logln(MOTOR_A_DRIVE_MULTIPLIER, 2);
     } else if (packet["type"] == DRIVE_TANK) {
         // This is received when the bot is being manually controlled via the debug page
         drive(packet["left"], packet["right"]);

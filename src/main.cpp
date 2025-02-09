@@ -32,15 +32,13 @@ void loop() {
     // Checks if any timers have expired
     timerStep();
 
+    // Checks whether bot is still connected to WiFi. Reconnect if not
+    if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
     // Checks whether bot is still connected to the server. Reconnect if not
-    if (!testConnection()) {
-        reconnect();
-    }
+    if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
 
-    // If the bot is connected for the server, check for received data, and accept if if available
-    if (getServerConnectionStatus()) {
-        acceptData();
-    }
+    // If the bot is connected to the server, check for received data, and accept it if available
+    if (getServerConnectionStatus()) acceptData();
 
     if (DO_LIGHT_SENSOR_TEST) readLight();
 

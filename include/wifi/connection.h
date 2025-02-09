@@ -4,10 +4,10 @@
 #include "Arduino.h"
 #include <ArduinoJson.h>
 
-void connect();
-void disconnect();
-void reconnect();
-bool testConnection();
+void connectServer();
+void disconnectServer();
+void reconnectServer();
+bool checkServerConnection();
 void initiateHandshake();
 
 void acceptData();
