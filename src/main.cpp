@@ -20,6 +20,9 @@ void setup() {
     // Serial port for debugging purposes
     if (LOGGING_LEVEL > 0) Serial.begin(115200);
 
+    delay(STARTUP_DELAY);
+    logln((char*)"Finished Delay!", 2);
+
     // Any setup needed to get bot ready
     setupBot();
     // Create a WiFi network for the laptop to connect to

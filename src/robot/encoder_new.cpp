@@ -10,7 +10,7 @@ ESP32Encoder encoderA;
 ESP32Encoder encoderB;
 
 void setupEncodersNew() {
-    log((char *)"Setting up encoders", 3);
+    logln((char *)"Setting up encoders", 3);
 
     // Use weak pull up pins
     ESP32Encoder::useInternalWeakPullResistors = puType::up;

@@ -17,9 +17,11 @@
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
+    logln((char*)"Setting Up Bot...", 2);
     setupMotors();
     setupIR();
-    // setupEncodersNew();
+    setupEncodersNew();
+    logln((char*)"Bot Set Up!", 2);
 }
 
 // Drives a specific amount of tiles (WIP)

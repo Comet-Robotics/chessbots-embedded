@@ -16,9 +16,9 @@ int lightArray[4];
 
 // Sets the IR (Infrared) Blaster to be able to output
 void setupIR() {
-    log((char*)"Setting Up Light Sensors...", 2);
+    logln((char*)"Setting Up Light Sensors...", 2);
     pinMode(RELAY_IR_LED_PIN, OUTPUT);
-    log((char*)"Light Sensors Setup!", 2);
+    logln((char*)"Light Sensors Setup!", 2);
 }
 
 // Turns on the IR Blaster

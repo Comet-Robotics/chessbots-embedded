@@ -14,12 +14,12 @@
 
 // Sets up all the pins for the motors
 void setupMotors() {
-    log((char*)"Setting Up Motors...", 2);
+    logln((char*)"Setting Up Motors...", 2);
     setupPWM(MOTOR_A_PIN1);
     setupPWM(MOTOR_A_PIN2);
     setupPWM(MOTOR_B_PIN1);
     setupPWM(MOTOR_B_PIN2);
-    log((char*)"Motors Setup!", 2);
+    logln((char*)"Motors Setup!", 2);
 }
 
 // This will set how fast and what direction left motor will spin
