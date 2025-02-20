@@ -53,10 +53,9 @@ void EncoderInputLoop(){
     // Read the state of the switch button
     int buttonState = digitalRead(SW); 
 
-    if(buttonState == LOW && (millis() - lastButtonTime) > 50) { // If the button is pressed
+    if (buttonState == LOW && (millis() - lastButtonTime) > 50) { // If the button is pressed
         lastButtonTime = millis(); // Update the last button press time
         logln((char*)"Button Pressed", 4);
     }
-    delay(1);
 }
 #endif

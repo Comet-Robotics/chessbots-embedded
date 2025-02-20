@@ -12,6 +12,7 @@
 #include "wifi/wireless.h"
 #include "wifi/connection.h"
 #include "robot/control.h"
+#include "robot/encoder.h"
 #include "../env.h"
 
 // Setup gets run at startup
@@ -41,6 +42,8 @@ void loop() {
     if (getServerConnectionStatus()) acceptData();
 
     if (DO_LIGHT_SENSOR_TEST) readLight();
+
+    if (DO_ENCODER_TEST) EncoderInputLoop();
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
