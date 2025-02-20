@@ -22,6 +22,10 @@ void log(int value, int loggingLevel) {
     if (loggingLevel <= LOGGING_LEVEL) Serial.print(value);
 }
 
+void log(long value, int loggingLevel) {
+    if (loggingLevel <= LOGGING_LEVEL) Serial.println(value);
+}
+
 void log(float value, int loggingLevel) {
     if (loggingLevel <= LOGGING_LEVEL) Serial.print(value);
 }
@@ -31,6 +35,10 @@ void logln(char message[], int loggingLevel) {
 }
 
 void logln(int value, int loggingLevel) {
+    if (loggingLevel <= LOGGING_LEVEL) Serial.println(value);
+}
+
+void logln(long value, int loggingLevel) {
     if (loggingLevel <= LOGGING_LEVEL) Serial.println(value);
 }
 

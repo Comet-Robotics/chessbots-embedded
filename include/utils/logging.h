@@ -6,9 +6,11 @@
 
 void log(char message[], int loggingLevel);
 void log(int value, int loggingLevel);
+void log(long value, int loggingLevel);
 
 void logln(char message[], int loggingLevel);
 void logln(int value, int loggingLevel);
+void logln(long value, int loggingLevel);
 void logln(float value, int loggingLevel);
 void logln(std::string value, int loggingLevel);
 
