@@ -13,13 +13,13 @@
 #include "utils/config.h"
 #include "robot/motor.h"
 #include "robot/lightSensor.h"
-#include "robot/encoder.h"
+#include "robot/encoder_new.h"
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
     setupMotors();
     setupIR();
-    setupEncoders();
+    // setupEncodersNew();
 }
 
 // Drives a specific amount of tiles (WIP)
