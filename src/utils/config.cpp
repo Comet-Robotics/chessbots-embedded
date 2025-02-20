@@ -35,7 +35,7 @@ float MOTOR_B_DRIVE_MULTIPLIER = 1.0;
 float ENCODER_MULTIPLIER = 1.0;
 
 void setConfig(JsonObject config) {
-    logln((char*)"Setting Config...", 2);
+    serialLogln((char*)"Setting Config...", 2);
 
     // The is<x>() method checks the type of the variable. If the type isn't none, then
     // we know this variable exists in the config and has a value
@@ -62,7 +62,7 @@ void setConfig(JsonObject config) {
 
     if (config["ENCODER_MULTIPLIER"].is<float>()) ENCODER_MULTIPLIER = config["ENCODER_MULTIPLIER"];
 
-    logln((char*)"Config Set!", 2);
+    serialLogln((char*)"Config Set!", 2);
 }
 
 #endif

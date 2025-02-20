@@ -14,12 +14,12 @@
 
 // Sets up all the pins for the motors
 void setupMotors() {
-    logln((char*)"Setting Up Motors...", 2);
+    serialLogln((char*)"Setting Up Motors...", 2);
     setupPWM(MOTOR_A_PIN1);
     setupPWM(MOTOR_A_PIN2);
     setupPWM(MOTOR_B_PIN1);
     setupPWM(MOTOR_B_PIN2);
-    logln((char*)"Motors Setup!", 2);
+    serialLogln((char*)"Motors Setup!", 2);
 }
 
 // This will set how fast and what direction left motor will spin
@@ -37,8 +37,8 @@ void setLeftPower(float power) {
     }
 
     // Logs the power for debugging purposes
-    log((char*)"Left Power: ", 3);
-    logln(power, 3);
+    serialLog((char*)"Left Power: ", 3);
+    serialLogln(power, 3);
 }
 
 // This will set how fast and what direction right motor will spin
@@ -56,8 +56,8 @@ void setRightPower(float power) {
     }
 
     // Logs the power for debugging purposes
-    log((char*)"Right Power: ", 3);
-    logln(power, 3);
+    serialLog((char*)"Right Power: ", 3);
+    serialLogln(power, 3);
 }
 
 #endif

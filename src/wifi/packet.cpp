@@ -36,7 +36,7 @@ const char* ESTOP = "ESTOP";
 // Takes a packet a does specific things based on the type
 void handlePacket(JsonDocument packet) {
     // Sadly a switch case can't be used due to the packet type being a string.
-    // We do this to allow the packets to be more readable when logged
+    // We do this to allow the packets to be more readable when serialLogged
     if (packet["type"] == SERVER_HELLO) {
         // When we initiate a handshake, the server sends a handshake back. This server handshake
         // contains any variable that should be changed in this bot's config
