@@ -14,7 +14,11 @@ int oldPositionB = -999;
 
 void setupEncodersNew() {
     serialLogln((char *)"Setting up encoder", 3);
-    
+}
+
+void resetEncoders() {
+    EncoderA.write(0);
+    EncoderB.write(0);
 }
 
 void encoderLoop() {
