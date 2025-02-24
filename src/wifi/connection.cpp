@@ -32,7 +32,7 @@ void connectServer() {
         logln((char*)"Connected to Server!", 2);
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
-        if (DO_HANDSHAKE) { initiateHandshake(); }
+        if (DO_HANDSHAKE) {createAndSendPacket(2, (char*) "Sending Handshake...", "CLIENT_HELLO");}
     } else {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
@@ -61,14 +61,6 @@ void reconnectServer() {
 // Checks whether still connected to server
 bool checkServerConnection() {
     return client.connected();
-}
-
-// Sends an initial packet to the server. Contains the mac address of this bot
-void initiateHandshake() {
-    JsonDocument packet;
-    constructPacket(packet, "CLIENT_HELLO");
-    logln((char*)"Sending Handshake...", 2);
-    sendPacket(packet);
 }
 
 // The buffer size is 500 characters. If there are issues right after

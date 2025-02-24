@@ -17,6 +17,7 @@
 #include "utils/functions.h"
 #include "utils/config.h"
 #include "robot/control.h"
+#include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
 
@@ -60,6 +61,14 @@ void constructPacket(JsonDocument& packet, std::string packetType) {
     // Converts the mac address into the form the server is expecting
     std::string stringMac = unint8ArrayToHexString(mac, 6);
     packet["macAddress"] = stringMac;
+}
+
+void createAndSendPacket(uint8_t priority, std::string message, char* logMessage)
+{
+    JsonDocument packet;
+    constructPacket(packet, message);
+    logln((char*)logMessage, priority);
+    sendPacket(packet);
 }
 
 #endif

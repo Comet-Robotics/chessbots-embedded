@@ -13,6 +13,7 @@
 #include "utils/config.h"
 #include "robot/motor.h"
 #include "robot/lightSensor.h"
+#include "wifi/packet.h"
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -35,6 +36,8 @@ void drive(float leftPower, float rightPower) {
     log(leftPower, 2);
     log((char*)", ", 2);
     logln(rightPower, 2);
+
+    createAndSendPacket(2, (char*) "Sending Success...", "SUCCESS_MESSAGE");    
 }
 
 // Stops the bot in its tracks

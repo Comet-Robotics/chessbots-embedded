@@ -9,4 +9,6 @@ std::string unint8ArrayToHexString(uint8_t* oldArray, int len);
 
 void constructPacket(JsonDocument& packet, std::string packetType);
 
+void createAndSendPacket(uint8_t priority, std::string message, char* logMessage)
+
 #endif
