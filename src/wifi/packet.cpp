@@ -19,7 +19,9 @@
 #include "robot/control.h"
 
 // These are the various different supported message types that can be sent over TCP
-const char* CLIENT_HELLO = "CLIENT_HELLO";
+
+//Instead of setting constant chars, we'll have the user input their tcp name.
+// const char* CLIENT_HELLO = "CLIENT_HELLO";
 const char* SERVER_HELLO = "SERVER_HELLO";
 const char* PING_SEND = "PING_SEND";
 const char* PING_RESPONSE = "PING_RESPONSE";
@@ -32,6 +34,8 @@ const char* ACTION_SUCCESS = "ACTION_SUCCESS";
 const char* ACTION_FAIL = "ACTION_FAIL";
 const char* DRIVE_TANK = "DRIVE_TANK";
 const char* ESTOP = "ESTOP";
+// const char* SUCCESS_MESSAGE = "SUCCESS_MESSAGE";
+// const char* ERR_MESSAGE = "ERR_MESSAGE";
 
 // Takes a packet a does specific things based on the type
 void handlePacket(JsonDocument packet) {
@@ -48,8 +52,8 @@ void handlePacket(JsonDocument packet) {
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it
-void constructHelloPacket(JsonDocument& packet) {
-    packet["type"] = CLIENT_HELLO;
+void constructPacket(JsonDocument& packet, std::string packetType) {
+    packet["type"] = packetType;
     uint8_t mac[8];
     // Gets the mac address of this esp
     esp_efuse_mac_get_default(mac);
@@ -57,9 +61,5 @@ void constructHelloPacket(JsonDocument& packet) {
     std::string stringMac = unint8ArrayToHexString(mac, 6);
     packet["macAddress"] = stringMac;
 }
-
-void constructSuccessPacket(JsonDocument& packet) {}
-
-void constructFailPacket(JsonDocument& packet) {}
 
 #endif

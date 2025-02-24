@@ -66,7 +66,7 @@ bool checkServerConnection() {
 // Sends an initial packet to the server. Contains the mac address of this bot
 void initiateHandshake() {
     JsonDocument packet;
-    constructHelloPacket(packet);
+    constructPacket(packet, "CLIENT_HELLO");
     logln((char*)"Sending Handshake...", 2);
     sendPacket(packet);
 }
