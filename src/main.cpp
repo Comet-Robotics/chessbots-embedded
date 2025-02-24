@@ -12,12 +12,16 @@
 #include "wifi/wireless.h"
 #include "wifi/connection.h"
 #include "robot/control.h"
+#include "robot/encoder_new.h"
 #include "../env.h"
 
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
     if (LOGGING_LEVEL > 0) Serial.begin(115200);
+
+    delay(STARTUP_DELAY);
+    serialLogln((char*)"Finished Delay!", 2);
 
     // Any setup needed to get bot ready
     setupBot();
@@ -41,6 +45,8 @@ void loop() {
     if (getServerConnectionStatus()) acceptData();
 
     if (DO_LIGHT_SENSOR_TEST) readLight();
+
+    if (DO_ENCODER_TEST) encoderLoop();
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)

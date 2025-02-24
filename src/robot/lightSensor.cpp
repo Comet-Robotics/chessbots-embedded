@@ -16,9 +16,9 @@ int lightArray[4];
 
 // Sets the IR (Infrared) Blaster to be able to output
 void setupIR() {
-    log((char*)"Setting Up Light Sensors...", 2);
+    serialLogln((char*)"Setting Up Light Sensors...", 2);
     pinMode(RELAY_IR_LED_PIN, OUTPUT);
-    log((char*)"Light Sensors Setup!", 2);
+    serialLogln((char*)"Light Sensors Setup!", 2);
 }
 
 // Turns on the IR Blaster
@@ -49,14 +49,14 @@ void readLightLevels() {
     deactivateIR();
 
     // Logs the values for debugging purposes
-    log((char*)"Light Levels: ", 4);
-    log(lightArray[0], 4);
-    log((char*)" ", 4);
-    log(lightArray[1], 4);
-    log((char*)" ", 4);
-    log(lightArray[2], 4);
-    log((char*)" ", 4);
-    logln(lightArray[3], 4);
+    serialLog((char*)"Light Levels: ", 4);
+    serialLog(lightArray[0], 4);
+    serialLog((char*)" ", 4);
+    serialLog(lightArray[1], 4);
+    serialLog((char*)" ", 4);
+    serialLog(lightArray[2], 4);
+    serialLog((char*)" ", 4);
+    serialLogln(lightArray[3], 4);
 }
 
 #endif

@@ -43,22 +43,22 @@ bool checkWiFiConnection() {
     return WiFi.status() == WL_CONNECTED;
 }
 
-// If not connected to WiFi by now, log 'why'
+// If not connected to WiFi by now, serialLog 'why'
 // Tries to connect until success. After connected to WiFi, starts trying to connect to the server
 void confirmWiFi() {
     if (checkWiFiConnection()) {
         setWiFiConnectionStatus(true);
         wifiConnecting = false;
-        logln((char*)"Connected to WiFi Network!", 2);
+        serialLogln((char*)"Connected to WiFi Network!", 2);
 
         // Connect to the server
         connectServer();
     } else {
         setWiFiConnectionStatus(false);
         wifiConnecting = true;
-        log((char*)"Failed To Connect To WiFi: ", 2);
-        log(getWifiStatus(WiFi.status()), 2);
-        logln((char*)". Retrying... ", 2);
+        serialLog((char*)"Failed To Connect To WiFi: ", 2);
+        serialLog(getWifiStatus(WiFi.status()), 2);
+        serialLogln((char*)". Retrying... ", 2);
 
         // Check connection again after half a second
         timerDelay(500, &confirmWiFi);
@@ -68,7 +68,7 @@ void confirmWiFi() {
 // Connects to a WiFi network with the SSID and Password set in env.h
 void connectWiFI() {
     wifiConnecting = true;
-    logln((char*)"Connecting to WiFi Network...", 2);
+    serialLogln((char*)"Connecting to WiFi Network...", 2);
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     // We delay the connection test to give the ESP time to fully connect to the network
@@ -79,23 +79,23 @@ void connectWiFI() {
 void disconnectWiFI() {
     setWiFiConnectionStatus(false);
     WiFi.disconnect();
-    logln((char*)"Disconnected From WiFI!", 2);
+    serialLogln((char*)"Disconnected From WiFI!", 2);
 }
 
 // If not connected to WiFi (whether by disconnect or by lost connection), reconnects
 void reconnectWiFI() {
     if (!wifiConnecting) {
         setWiFiConnectionStatus(false);
-        logln((char*)"Disconnected From WiFI! Reconnecting...", 2);
+        serialLogln((char*)"Disconnected From WiFI! Reconnecting...", 2);
         connectWiFI();
     }
 }
 
 // Creates a WiFi network with the SSID and Password set in env.h
 void createWiFi() {
-    logln((char*)"Creating Access Point", 2);
+    serialLogln((char*)"Creating Access Point", 2);
     WiFi.softAP(WIFI_SSID, WIFI_PASSWORD);
-    logln((char*)"Access Point Created", 2);
+    serialLogln((char*)"Access Point Created", 2);
     connectServer();
 }
 
