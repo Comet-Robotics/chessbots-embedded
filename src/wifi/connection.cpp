@@ -12,10 +12,11 @@
 #include <ArduinoJson.h>
 
 // Custom Libraries
+#include "wifi/packet.h"
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"
-#include "wifi/packet.h"
+
 #include "../env.h"
 
 bool serverConnecting = false;
@@ -32,7 +33,9 @@ void connectServer() {
         logln((char*)"Connected to Server!", 2);
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
-        if (DO_HANDSHAKE) {createAndSendPacket(2, (char*) "Sending Handshake...", "CLIENT_HELLO");}
+        if (DO_HANDSHAKE) {
+            createAndSendPacket(2, "CLIENT_HELLO", (char*) "Sending Handshake...");
+        }
     } else {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
@@ -108,6 +111,14 @@ void sendPacket(JsonDocument& packet) {
     // This takes that JSON object and prints it to Serial (the console) for debugging purposes
     if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
     log((char*)"\n", 2);
+}
+
+void createAndSendPacket(uint8_t priority, std::string message, char* logMessage)
+{
+    JsonDocument packet;
+    constructPacket(packet, message);
+    logln((char*)logMessage, priority);
+    sendPacket(packet);
 }
 
 #endif

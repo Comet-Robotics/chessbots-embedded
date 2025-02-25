@@ -63,12 +63,4 @@ void constructPacket(JsonDocument& packet, std::string packetType) {
     packet["macAddress"] = stringMac;
 }
 
-void createAndSendPacket(uint8_t priority, std::string message, char* logMessage)
-{
-    JsonDocument packet;
-    constructPacket(packet, message);
-    logln((char*)logMessage, priority);
-    sendPacket(packet);
-}
-
 #endif

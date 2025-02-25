@@ -13,7 +13,7 @@
 #include "utils/config.h"
 #include "robot/motor.h"
 #include "robot/lightSensor.h"
-#include "wifi/packet.h"
+#include "wifi/connection.h"
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
