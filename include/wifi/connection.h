@@ -12,6 +12,6 @@ void initiateHandshake();
 
 void acceptData();
 void sendPacket(JsonDocument& packet);
-void createAndSendPacket(uint8_t priority, std::string message, char* logMessage);
+void createAndSendPacket(uint8_t priority, std::string message, char* logMessage, std::string messageId);
 
 #endif

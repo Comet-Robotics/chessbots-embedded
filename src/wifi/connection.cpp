@@ -26,7 +26,8 @@ WiFiClient client;
 // Called to connect to the server whose info is stored in env.h
 void connectServer() {
     logln((char*)"Connecting to Server...", 2);
-    if (client.connect(SERVER_IP, SERVER_PORT)) {
+    if (client.connect(SERVER_IP, SERVER_PORT)) 
+    {
         // If successful, sets the connection status and stops trying to connect to the server
         setServerConnectionStatus(true);
         serverConnecting = false;
@@ -34,9 +35,11 @@ void connectServer() {
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
         if (DO_HANDSHAKE) {
-            createAndSendPacket(2, "CLIENT_HELLO", (char*) "Sending Handshake...");
+            createAndSendPacket(2, "CLIENT_HELLO", (char*) "Sending Handshake...", "Hello");
         }
-    } else {
+    } 
+    else 
+    {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
         logln((char*)"Connection To Server Failed! Retrying...", 2);
@@ -113,10 +116,10 @@ void sendPacket(JsonDocument& packet) {
     log((char*)"\n", 2);
 }
 
-void createAndSendPacket(uint8_t priority, std::string message, char* logMessage)
+void createAndSendPacket(uint8_t priority, std::string message, char* logMessage, std::string messageId)
 {
     JsonDocument packet;
-    constructPacket(packet, message);
+    constructPacket(packet, message, messageId);
     logln((char*)logMessage, priority);
     sendPacket(packet);
 }

@@ -48,13 +48,14 @@ void handlePacket(JsonDocument packet) {
         setConfig(packet["config"].as<JsonObject>());
     } else if (packet["type"] == DRIVE_TANK) {
         // This is received when the bot is being manually controlled via the debug page
-        drive(packet["left"], packet["right"]);
+        drive(packet["left"], packet["right"], packet["packetId"]);
     }
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it
-void constructPacket(JsonDocument& packet, std::string packetType) {
+void constructPacket(JsonDocument& packet, std::string packetType, std::string messageId) {
     packet["type"] = packetType;
+    packet["packetId"] = messageId;
     uint8_t mac[8];
     // Gets the mac address of this esp
     esp_efuse_mac_get_default(mac);

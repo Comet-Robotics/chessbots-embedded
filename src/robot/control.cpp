@@ -27,7 +27,7 @@ void drive(float tiles) {
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
-void drive(float leftPower, float rightPower) {
+void drive(float leftPower, float rightPower, std::string id) {
     setLeftPower(leftPower);
     setRightPower(rightPower);
 
@@ -36,8 +36,10 @@ void drive(float leftPower, float rightPower) {
     log(leftPower, 2);
     log((char*)", ", 2);
     logln(rightPower, 2);
-
-    createAndSendPacket(2, (char*) "Sending Success...", "SUCCESS_MESSAGE");    
+    if(id != "NULL")
+    {
+        createAndSendPacket(2, "ACTION_SUCCESS", (char*) "Moving succeeded!", id);   
+    }
 }
 
 // Stops the bot in its tracks
@@ -55,7 +57,7 @@ void readLight() {
 
 // Tests the motors. This turns the motors on.
 void startDriveTest() {
-    drive(0.5f, 0.5f);
+    drive(0.5f, 0.5f, "NULL");
     timerDelay(2000, &driveTestOff);
 }
 
