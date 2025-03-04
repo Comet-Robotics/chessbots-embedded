@@ -116,6 +116,7 @@ void sendPacket(JsonDocument& packet) {
     log((char*)"\n", 2);
 }
 
+//Additional method created to call the construction of the packet and then to send it.
 void createAndSendPacket(uint8_t priority, std::string message, char* logMessage, std::string messageId)
 {
     JsonDocument packet;

@@ -21,8 +21,7 @@
 
 // These are the various different supported message types that can be sent over TCP
 
-//Instead of setting constant chars, we'll have the user input their tcp name.
-// const char* CLIENT_HELLO = "CLIENT_HELLO";
+const char* CLIENT_HELLO = "CLIENT_HELLO";
 const char* SERVER_HELLO = "SERVER_HELLO";
 const char* PING_SEND = "PING_SEND";
 const char* PING_RESPONSE = "PING_RESPONSE";
@@ -35,8 +34,6 @@ const char* ACTION_SUCCESS = "ACTION_SUCCESS";
 const char* ACTION_FAIL = "ACTION_FAIL";
 const char* DRIVE_TANK = "DRIVE_TANK";
 const char* ESTOP = "ESTOP";
-// const char* SUCCESS_MESSAGE = "SUCCESS_MESSAGE";
-// const char* ERR_MESSAGE = "ERR_MESSAGE";
 
 // Takes a packet a does specific things based on the type
 void handlePacket(JsonDocument packet) {
@@ -54,7 +51,19 @@ void handlePacket(JsonDocument packet) {
 
 // This creates the handshake packet sent to the server when this bot connects to it
 void constructPacket(JsonDocument& packet, std::string packetType, std::string messageId) {
-    packet["type"] = packetType;
+     if(packetType == ACTION_SUCCESS)
+    {
+        packet["type"] = ACTION_SUCCESS;
+    }
+    else if(packetType == ACTION_FAIL)
+    {
+        packet["type"] = ACTION_FAIL;
+    }
+    else
+    {
+        packet["type"] = packetType;
+    }
+    
     packet["packetId"] = messageId;
     uint8_t mac[8];
     // Gets the mac address of this esp

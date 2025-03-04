@@ -36,6 +36,8 @@ void drive(float leftPower, float rightPower, std::string id) {
     log(leftPower, 2);
     log((char*)", ", 2);
     logln(rightPower, 2);
+    //we only send null as id during our test drive. The only other time this drive method is called will be
+    //when the server sends it, meaning it will have an id to send back.
     if(id != "NULL")
     {
         createAndSendPacket(2, "ACTION_SUCCESS", (char*) "Moving succeeded!", id);   
