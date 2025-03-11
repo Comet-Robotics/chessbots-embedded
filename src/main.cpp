@@ -30,12 +30,12 @@ void setup() {
     setupBot();
 
     //For encoder A testing
-    //PIDcontroller( kp,  ki,  kd,  dt,  min,  max); //For argument reference
-    PIDcontroller newControllerA = PIDcontroller(1, 1, 1, 1, 1, 1); //Demo vaues...update with actual encoder ticks
+    //PIDcontroller( kp,  ki,  kd,  min,  max); //For argument reference
+    PIDcontroller newControllerA = PIDcontroller(1, 0, 0, -1, +1); //Demo vaues...update with actual encoder ticks
     newControllerA.Compute(1, 1, 0.1); // calling compute function
 
     //For encoder B testing
-    PIDcontroller newControllerB = PIDcontroller(1, 1, 1, 1, 1, 1); //Demo vaues...update with actual encoder ticks
+    PIDcontroller newControllerB = PIDcontroller(1, 0, 0, -1, +1); //Demo vaues...update with actual encoder ticks
     newControllerB.Compute(1, 1, 0.1); // calling compute function
     // Create a WiFi network for the laptop to connect to
     connectWiFI();
