@@ -49,7 +49,7 @@ double PIDcontroller::Compute(double setpoint, double actual_value, double dt) {
     return output;
 }
 
-void PIDcontroller :: Reset(){
+void PIDcontroller::Reset(){
     integral = 0;
 }
 
