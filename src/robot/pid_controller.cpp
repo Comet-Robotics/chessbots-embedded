@@ -46,6 +46,13 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
         Reset();
     }
 
+    // Clamp output
+    if (output < minOutput) {
+        output = minOutput;
+    } else if (output > maxOutput) {
+        output = maxOutput;
+    }
+
     return output;
 }
 

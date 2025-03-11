@@ -17,7 +17,27 @@
 #include "robot/pid_controller.h"
 #include "../../env.h"
 
-PIDController encoderAController, encoderBController;
+PIDController encoderAController = PIDController(0.001, 0, 0, -1, +1);
+PIDController encoderBController = PIDController(0.001, 0, 0, -1, +1);
+
+int encoderATarget = 0;
+int encoderBTarget = 0;
+boolean testEncoderPID_value = false;
+void testEncoderPID()
+{
+    serialLogln((char *)"Changing encoder PID setpoint!", 2);
+    if (testEncoderPID_value)
+    {
+        testEncoderPID_value = false;
+        encoderATarget = 11900*2;
+        encoderBTarget = -11900*2;
+    }
+    else
+    {
+        testEncoderPID_value = true;
+        encoderATarget = encoderBTarget = 0;
+    }
+}
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -27,14 +47,10 @@ void setupBot() {
     setupEncodersNew();
     serialLogln((char*)"Bot Set Up!", 2);
 
-    // For encoder A testing
-    // PIDController( kp,  ki,  kd,  min,  max); //For argument reference
-    encoderAController = PIDController(0.01, 0, 0, -1, +1); // Demo vaues...update with actual encoder ticks
+    encoderAController.Reset();
+    encoderBController.Reset();
 
-    // For encoder B testing
-    encoderBController = PIDController(0.01, 0, 0, -1, +1); // Demo vaues...update with actual encoder ticks
-
-    timerInterval(10000, &testEncoderPID);
+    // timerInterval(10000, &testEncoderPID);
 }
 
 // Manages control loop (loopDelayMs is for reference)
@@ -47,23 +63,11 @@ void controlLoop(int loopDelayMs) {
 
     double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-    drive(encoderAController.Compute(encoderATarget, readEncoderA(), loopDelaySeconds),
-          encoderBController.Compute(encoderBTarget, readEncoderB(), loopDelaySeconds));
-}
-
-int encoderATarget = 0;
-int encoderBTarget = 0;
-boolean testEncoderPID_value = false;
-void testEncoderPID() {
-    serialLogln((char *)"Changing encoder PID setpoint!", 2);
-    if (testEncoderPID_value) {
-        testEncoderPID_value = false;
-        encoderATarget = 1000;
-        encoderBTarget = -1000;
-    } else {
-        testEncoderPID_value = true;
-        encoderATarget = encoderBTarget = 0;
-    }
+    drive(
+        encoderAController.Compute(encoderATarget, readEncoderA(), loopDelaySeconds),
+        encoderBController.Compute(encoderBTarget, readEncoderB(), loopDelaySeconds)
+    );
+    // setLeftPower(1);
 }
 
 // Drives a specific amount of tiles (WIP)
