@@ -77,6 +77,17 @@ void drive(float tiles) {
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
 void drive(float leftPower, float rightPower) {
+    // TODO: maybe move to motor.cpp?
+    float minPower = 0.14;
+    if (leftPower < minPower && leftPower > -minPower)
+    {
+        leftPower = 0;
+    }
+    if (rightPower < minPower && rightPower > -minPower)
+    {
+        rightPower = 0;
+    }
+
     setLeftPower(leftPower);
     setRightPower(rightPower);
 
