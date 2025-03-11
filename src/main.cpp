@@ -14,17 +14,29 @@
 #include "robot/control.h"
 #include "robot/encoder_new.h"
 #include "../env.h"
+#include "robot/pid_controller.h"
+
 
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
     if (LOGGING_LEVEL > 0) Serial.begin(115200);
 
-    delay(STARTUP_DELAY);
+    //delay(STARTUP_DELAY);
     serialLogln((char*)"Finished Delay!", 2);
+
 
     // Any setup needed to get bot ready
     setupBot();
+
+    //For encoder A testing
+    //PIDcontroller( kp,  ki,  kd,  dt,  min,  max); //For argument reference
+    PIDcontroller newControllerA = PIDcontroller(1, 1, 1, 1, 1, 1); //Demo vaues...update with actual encoder ticks
+    newControllerA.Compute(1, 1, 0.1); // calling compute function
+
+    //For encoder B testing
+    PIDcontroller newControllerB = PIDcontroller(1, 1, 1, 1, 1, 1); //Demo vaues...update with actual encoder ticks
+    newControllerB.Compute(1, 1, 0.1); // calling compute function
     // Create a WiFi network for the laptop to connect to
     connectWiFI();
 
