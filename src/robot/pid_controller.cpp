@@ -21,12 +21,12 @@
 
 using namespace std;
 
-double PIDcontroller::Compute(double setpoint, double actual_value, double dt) {
+double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Calculate error
     double error = setpoint - actual_value;
 
     // Proportional term
-    double val_p = kp * error; //We will be messiing with this while calibrating
+    double val_p = kp * error; //We will be messing with this while calibrating
 
     // Integral term
     integral += error * dt;
@@ -49,10 +49,10 @@ double PIDcontroller::Compute(double setpoint, double actual_value, double dt) {
     return output;
 }
 
-void PIDcontroller::Reset(){
+void PIDController::Reset(){
     integral = 0;
 }
 
-// double PIDcontroller::ActualController() {
+// double PIDController::ActualController() {
     
 // }

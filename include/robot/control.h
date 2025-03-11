@@ -9,4 +9,6 @@ void readLight();
 void startDriveTest();
 void driveTestOff();
 
+void controlLoop(int loopDelayMs);
+
 #endif

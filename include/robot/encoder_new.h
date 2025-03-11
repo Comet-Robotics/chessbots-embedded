@@ -5,4 +5,7 @@ void setupEncodersNew();
 void resetEncoders();
 void encoderLoop();
 
+int readEncoderA();
+int readEncoderB();
+
 #endif

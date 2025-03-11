@@ -38,4 +38,12 @@ void encoderLoop() {
     }
 }
 
+int readEncoderA() {
+    return EncoderA.read();
+}
+
+int readEncoderB() {
+    return EncoderB.read();
+}
+
 #endif

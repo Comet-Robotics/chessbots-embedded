@@ -1,11 +1,11 @@
 #ifndef PID_CONTROLLER_H
 #define PID_CONTROLLER_H
 
-class PIDcontroller
+class PIDController
 {
 public:
-    // PIDcontroller(double kp, double ki, double kd, double min, double max);
-    PIDcontroller(double kp, double ki, double kd, double min, double max) : kp(kp), ki(ki), kd(kd), minOutput(min), maxOutput(max), prev_error(0), integral(0) {}
+    // PIDController(double kp, double ki, double kd, double min, double max);
+    PIDController(double kp, double ki, double kd, double min, double max) : kp(kp), ki(ki), kd(kd), minOutput(min), maxOutput(max), prev_error(0), integral(0) {}
 
     double Compute(double setpoint, double actual_value, double dt);
     void Reset(); // Extra space between void and reset because I can't see uneven indent and spacing after doing python for a long time

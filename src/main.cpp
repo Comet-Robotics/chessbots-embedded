@@ -29,14 +29,6 @@ void setup() {
     // Any setup needed to get bot ready
     setupBot();
 
-    //For encoder A testing
-    //PIDcontroller( kp,  ki,  kd,  min,  max); //For argument reference
-    PIDcontroller newControllerA = PIDcontroller(1, 0, 0, -1, +1); //Demo vaues...update with actual encoder ticks
-    newControllerA.Compute(1, 1, 0.1); // calling compute function
-
-    //For encoder B testing
-    PIDcontroller newControllerB = PIDcontroller(1, 0, 0, -1, +1); //Demo vaues...update with actual encoder ticks
-    newControllerB.Compute(1, 1, 0.1); // calling compute function
     // Create a WiFi network for the laptop to connect to
     connectWiFI();
 
@@ -56,13 +48,14 @@ void loop() {
     // If the bot is connected to the server, check for received data, and accept it if available
     if (getServerConnectionStatus()) acceptData();
 
-    if (DO_LIGHT_SENSOR_TEST) readLight();
+    int delayMilliseconds = 20;
 
-    if (DO_ENCODER_TEST) encoderLoop();
+    // Run control loop
+    controlLoop(delayMilliseconds);
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
-  	delay(100);
+  	delay(delayMilliseconds);
 }
 
 // This is used at the end of each file due to the name definition at the beginning
