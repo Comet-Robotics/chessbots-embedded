@@ -11,37 +11,48 @@
 //      2.4 Implement the Derivative term
 // 3. Implement the PIDController::Reset() method
 //#ifndef PID_CONTROLLER_CPP
-#//define PID_CONTROLLER_CPP
+//#define PID_CONTROLLER_CPP
 
 #include "robot/pid_controller.h"
-
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include "robot/pid_controller.h"
 
 using namespace std;
 
-class PIDcontroller{
-    public:
-        PIDcontroller(double kp, double ki, double kd, double max, double min);
-        double Compute(double setpoint, double pv);
-        void Reset();
-    private:
-        double kp_;
-        double ki_;
-        double kd_;
-        double max_;
-        double min_;
-        double pre_error_;
-        double integral_;
-};
+double PIDcontroller::Compute(double setpoint, double actual_value, double dt) {
+    // Calculate error
+    double error = setpoint - actual_value;
 
-PIDcontroller::PIDcontroller(double kp, double ki, double kd, double max, double min) {
-    kp_ = kp;
-    ki_ = ki;
-    kd_ = kd;
-    max_ = max;
-    min_ = min;
-    pre_error_ = 0;
-    integral_ = 0;
+    // Proportional term
+    double val_p = kp * error; //We will be messiing with this while calibrating
+
+    // Integral term
+    integral += error * dt;
+    double val_i = ki * integral;
+ 
+    // Derivative term
+    double derivative = (error - prev_error) / dt;
+    double val_d = kd * derivative;
+
+    // Calculate total output
+    double output = val_p + val_i + val_d;
+
+    // Save error to previous error
+    prev_error = error;
+
+    if ((prev_error > 0 && error < 0) || (prev_error < 0 && error > 0)) {
+        Reset();
+    }
+
+    return output;
 }
+
+void PIDcontroller :: Reset(){
+    integral = 0;
+}
+
+// double PIDcontroller::ActualController() {
+    
+// }
