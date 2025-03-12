@@ -16,6 +16,7 @@
 #include "../env.h"
 #include "robot/pid_controller.h"
 
+int delayMilliseconds = 10;
 
 // Setup gets run at startup
 void setup() {
@@ -47,8 +48,6 @@ void loop() {
 
     // If the bot is connected to the server, check for received data, and accept it if available
     if (getServerConnectionStatus()) acceptData();
-
-    int delayMilliseconds = 20;
 
     // Run control loop
     controlLoop(delayMilliseconds);

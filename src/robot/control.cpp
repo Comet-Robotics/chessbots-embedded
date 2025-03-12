@@ -17,8 +17,8 @@
 #include "robot/pid_controller.h"
 #include "../../env.h"
 
-PIDController encoderAController = PIDController(0.001, 0, 0, -1, +1);
-PIDController encoderBController = PIDController(0.001, 0, 0, -1, +1);
+PIDController encoderAController = PIDController(0.0011, 0.0000115, 0.000125, -0.8, +0.8);
+PIDController encoderBController = PIDController(0.0011, 0.0000115, 0.000125, -0.8, +0.8);
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -50,7 +50,7 @@ void setupBot() {
     encoderAController.Reset();
     encoderBController.Reset();
 
-    // timerInterval(10000, &testEncoderPID);
+    timerInterval(10000, &testEncoderPID);
 }
 
 // Manages control loop (loopDelayMs is for reference)
