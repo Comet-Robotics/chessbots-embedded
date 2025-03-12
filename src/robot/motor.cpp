@@ -15,10 +15,10 @@
 // Sets up all the pins for the motors
 void setupMotors() {
     serialLogln((char*)"Setting Up Motors...", 2);
-    setupPWM(MOTOR_A_PIN1);
-    setupPWM(MOTOR_A_PIN2);
-    setupPWM(MOTOR_B_PIN1);
-    setupPWM(MOTOR_B_PIN2);
+    setupPWM(MOTOR_A_PIN1, 1);
+    setupPWM(MOTOR_A_PIN2, 2);
+    setupPWM(MOTOR_B_PIN1, 3);
+    setupPWM(MOTOR_B_PIN2, 4);
     serialLogln((char*)"Motors Setup!", 2);
 }
 
@@ -29,11 +29,11 @@ void setLeftPower(float power) {
     // To spin the motor, you set one of the pins to 0, and the other to a PWM for speed.
     // The pins you set to each determine the spin direction
     if (power > 0) {
-        writePWM(MOTOR_A_PIN2, 0);
-        writePWM(MOTOR_A_PIN1, mapPowerToDuty(power));
+        writePWM(2, 0);
+        writePWM(1, mapPowerToDuty(power));
     } else {
-        writePWM(MOTOR_A_PIN1, 0);
-        writePWM(MOTOR_A_PIN2, mapPowerToDuty(-power));
+        writePWM(1, 0);
+        writePWM(2, mapPowerToDuty(-power));
     }
 
     // Logs the power for debugging purposes
@@ -48,11 +48,11 @@ void setRightPower(float power) {
     // To spin the motor, you set one of the pins to 0, and the other to a PWM for speed.
     // The pins you set to each determine the spin direction
     if (power > 0) {
-        writePWM(MOTOR_B_PIN2, 0);
-        writePWM(MOTOR_B_PIN1, mapPowerToDuty(power));
+        writePWM(4, 0);
+        writePWM(3, mapPowerToDuty(power));
     } else {
-        writePWM(MOTOR_B_PIN1, 0);
-        writePWM(MOTOR_B_PIN2, mapPowerToDuty(-power));
+        writePWM(3, 0);
+        writePWM(4, mapPowerToDuty(-power));
     }
 
     // Logs the power for debugging purposes
