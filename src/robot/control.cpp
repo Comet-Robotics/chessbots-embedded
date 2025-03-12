@@ -29,8 +29,8 @@ void testEncoderPID()
     if (testEncoderPID_value)
     {
         testEncoderPID_value = false;
-        encoderATarget = 11900*2;
-        encoderBTarget = -11900*2;
+        encoderATarget = 11900*3;
+        encoderBTarget = -11900*3;
     }
     else
     {
@@ -50,7 +50,7 @@ void setupBot() {
     encoderAController.Reset();
     encoderBController.Reset();
 
-    timerInterval(10000, &testEncoderPID);
+    timerInterval(5000, &testEncoderPID);
 }
 
 // Manages control loop (loopDelayMs is for reference)
