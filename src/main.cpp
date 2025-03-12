@@ -31,7 +31,7 @@ void setup() {
     setupBot();
 
     // Create a WiFi network for the laptop to connect to
-    connectWiFI();
+    // connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
 }
@@ -41,13 +41,13 @@ void loop() {
     // Checks if any timers have expired
     timerStep();
 
-    // Checks whether bot is still connected to WiFi. Reconnect if not
-    if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
-    // Checks whether bot is still connected to the server. Reconnect if not
-    if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
+    // // Checks whether bot is still connected to WiFi. Reconnect if not
+    // if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
+    // // Checks whether bot is still connected to the server. Reconnect if not
+    // if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
 
-    // If the bot is connected to the server, check for received data, and accept it if available
-    if (getServerConnectionStatus()) acceptData();
+    // // If the bot is connected to the server, check for received data, and accept it if available
+    // if (getServerConnectionStatus()) acceptData();
 
     // Run control loop
     controlLoop(delayMilliseconds);
