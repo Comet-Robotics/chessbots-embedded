@@ -125,7 +125,7 @@ void createAndSendPacket(uint8_t priority, std::string message, std::string mess
     if(message == "hello")
     {
         logln((char*)"Sending handshake...", priority);
-        constructHelloPacket(packet, messageId);
+        constructHelloPacket(packet);
     }
     else if(message == "success")
     {

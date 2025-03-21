@@ -8,7 +8,7 @@
 void handlePacket(JsonDocument packet);
 std::string unint8ArrayToHexString(uint8_t* oldArray, int len);
 
-void constructHelloPacket(JsonDocument& packet, std::string messageId);
+void constructHelloPacket(JsonDocument& packet);
 void constructSuccessPacket(JsonDocument& packet, std::string messageId);
 void constructFailPacket(JsonDocument& packet, std::string messageId);
 #endif

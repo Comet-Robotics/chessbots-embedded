@@ -49,10 +49,9 @@ void handlePacket(JsonDocument packet) {
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it
-void constructHelloPacket(JsonDocument& packet, std::string messageId) 
+void constructHelloPacket(JsonDocument& packet) 
 {
     packet["type"] = CLIENT_HELLO;
-    packet["packetId"] = messageId;
     uint8_t mac[8];
     // Gets the mac address of this esp
     esp_efuse_mac_get_default(mac);
