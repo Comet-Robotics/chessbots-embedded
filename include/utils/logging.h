@@ -4,14 +4,15 @@
 // Built-In Libraries
 #include <string>
 
-void log(char message[], int loggingLevel);
-void log(int value, int loggingLevel);
+void serialLog(char message[], int serialLoggingLevel);
+void serialLog(int value, int serialLoggingLevel);
+void serialLog(float value, int serialLoggingLevel);
 
-void logln(char message[], int loggingLevel);
-void logln(int value, int loggingLevel);
-void logln(float value, int loggingLevel);
-void logln(std::string value, int loggingLevel);
+void serialLogln(char message[], int serialLoggingLevel);
+void serialLogln(int value, int serialLoggingLevel);
+void serialLogln(float value, int serialLoggingLevel);
+void serialLogln(std::string value, int serialLoggingLevel);
 
-void logError(char message[], int error);
+void serialLogError(char message[], int error);
 
 #endif

@@ -32,7 +32,7 @@ std::string unint8ArrayToHexString(uint8_t* oldArray, int len) {
         result.push_back(hex[oldArray[i] / 16]);
         result.push_back(hex[oldArray[i] % 16]);
     }
-    logln(result, 4);
+    serialLogln(result, 4);
     return result;
 }
 

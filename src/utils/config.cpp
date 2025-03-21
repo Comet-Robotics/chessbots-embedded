@@ -16,10 +16,10 @@ gpio_num_t MOTOR_A_PIN2 = GPIO_NUM_38;
 gpio_num_t MOTOR_B_PIN1 = GPIO_NUM_39;
 gpio_num_t MOTOR_B_PIN2 = GPIO_NUM_40;
 
-gpio_num_t ENCODER_A_PIN1 = GPIO_NUM_32;
-gpio_num_t ENCODER_A_PIN2 = GPIO_NUM_31;
-gpio_num_t ENCODER_B_PIN1 = GPIO_NUM_18;
-gpio_num_t ENCODER_B_PIN2 = GPIO_NUM_34;
+gpio_num_t ENCODER_A_PIN1 = GPIO_NUM_18;
+gpio_num_t ENCODER_A_PIN2 = GPIO_NUM_21;
+gpio_num_t ENCODER_B_PIN1 = GPIO_NUM_16;
+gpio_num_t ENCODER_B_PIN2 = GPIO_NUM_17;
 
 gpio_num_t RELAY_IR_LED_PIN = GPIO_NUM_15;
 gpio_num_t PHOTODIODE_A_PIN = GPIO_NUM_1;
@@ -35,7 +35,7 @@ float MOTOR_B_DRIVE_MULTIPLIER = 1.0;
 float ENCODER_MULTIPLIER = 1.0;
 
 void setConfig(JsonObject config) {
-    logln((char*)"Setting Config...", 2);
+    serialLogln((char*)"Setting Config...", 2);
 
     // The is<x>() method checks the type of the variable. If the type isn't none, then
     // we know this variable exists in the config and has a value
@@ -62,7 +62,7 @@ void setConfig(JsonObject config) {
 
     if (config["ENCODER_MULTIPLIER"].is<float>()) ENCODER_MULTIPLIER = config["ENCODER_MULTIPLIER"];
 
-    logln((char*)"Config Set!", 2);
+    serialLogln((char*)"Config Set!", 2);
 }
 
 #endif
