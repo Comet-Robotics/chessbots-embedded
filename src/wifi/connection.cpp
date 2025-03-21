@@ -123,17 +123,17 @@ void createAndSendPacket(uint8_t priority, std::string message, std::string mess
     //be inefficient and require changing.
     if(message == "hello")
     {
-        logln((char*)"Sending handshake...", priority);
+        serialLogln((char*)"Sending handshake...", priority);
         constructHelloPacket(packet);
     }
     else if(message == "success")
     {
-        logln((char*)"Action succeeded!", priority);
+        serialLogln((char*)"Action succeeded!", priority);
         constructSuccessPacket(packet, messageId);
     }
     else if(message == "fail")
     {
-        logln((char*)"Action failed!", priority);
+        serialLogln((char*)"Action failed!", priority);
         constructFailPacket(packet, messageId);
     }
     sendPacket(packet);
