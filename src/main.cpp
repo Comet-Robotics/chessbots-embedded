@@ -35,9 +35,13 @@ void setup() {
 void loop() {
     // Checks if any timers have expired
     timerStep();
-
+    
     // Checks whether bot is still connected to WiFi. Reconnect if not
-    if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
+    if (getWiFiConnectionStatus() && !checkWiFiConnection())
+    {
+        reconnectWiFI();
+    }
+
     // Checks whether bot is still connected to the server. Reconnect if not
     if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
 

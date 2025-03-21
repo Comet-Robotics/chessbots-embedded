@@ -12,10 +12,11 @@
 #include <ArduinoJson.h>
 
 // Custom Libraries
+#include "wifi/packet.h"
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"
-#include "wifi/packet.h"
+
 #include "../env.h"
 
 bool serverConnecting = false;
@@ -32,8 +33,12 @@ void connectServer() {
         serialLogln((char*)"Connected to Server!", 2);
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
-        if (DO_HANDSHAKE) { initiateHandshake(); }
-    } else {
+        if (DO_HANDSHAKE) {
+            createAndSendPacket(2, "hello", "Hello");
+        }
+    } 
+    else 
+    {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
         serialLogln((char*)"Connection To Server Failed! Retrying...", 2);
@@ -61,14 +66,6 @@ void reconnectServer() {
 // Checks whether still connected to server
 bool checkServerConnection() {
     return client.connected();
-}
-
-// Sends an initial packet to the server. Contains the mac address of this bot
-void initiateHandshake() {
-    JsonDocument packet;
-    constructHelloPacket(packet);
-    serialLogln((char*)"Sending Handshake...", 2);
-    sendPacket(packet);
 }
 
 // The buffer size is 500 characters. If there are issues right after
@@ -116,6 +113,30 @@ void sendPacket(JsonDocument& packet) {
     // This takes that JSON object and prints it to Serial (the console) for debugging purposes
     if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
     serialLog((char*)"\n", 2);
+}
+
+//Additional method created to call the construction of the packet and then to send it.
+void createAndSendPacket(uint8_t priority, std::string message, std::string messageId)
+{
+    JsonDocument packet;
+    //How I have it right now is it calls the different packet messages according to the message. Might
+    //be inefficient and require changing.
+    if(message == "hello")
+    {
+        serialLogln((char*)"Sending handshake...", priority);
+        constructHelloPacket(packet);
+    }
+    else if(message == "success")
+    {
+        serialLogln((char*)"Action succeeded!", priority);
+        constructSuccessPacket(packet, messageId);
+    }
+    else if(message == "fail")
+    {
+        serialLogln((char*)"Action failed!", priority);
+        constructFailPacket(packet, messageId);
+    }
+    sendPacket(packet);
 }
 
 #endif
