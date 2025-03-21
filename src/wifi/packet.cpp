@@ -20,8 +20,6 @@
 #include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
-
-// Decided not to use as the definitions are best used to verify which message types are allowed. 
 const char* CLIENT_HELLO = "CLIENT_HELLO";
 const char* SERVER_HELLO = "SERVER_HELLO";
 const char* PING_SEND = "PING_SEND";
@@ -31,9 +29,7 @@ const char* QUERY_RESPONSE = "QUERY_RESPONSE";
 const char* SET_VAR = "SET_VAR";
 const char* TURN_BY_ANGLE = "TURN_BY_ANGLE";
 const char* DRIVE_TILES = "DRIVE_TILES";
-// Decided not to use as the definitions are best used to verify which message types are allowed. 
 const char* ACTION_SUCCESS = "ACTION_SUCCESS";
-// Decided not to use as the definitions are best used to verify which message types are allowed. 
 const char* ACTION_FAIL = "ACTION_FAIL";
 const char* DRIVE_TANK = "DRIVE_TANK";
 const char* ESTOP = "ESTOP";
@@ -53,9 +49,9 @@ void handlePacket(JsonDocument packet) {
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it
-void constructPacket(JsonDocument& packet, std::string packetType, std::string messageId) 
+void constructHelloPacket(JsonDocument& packet, std::string messageId) 
 {
-    packet["type"] = packetType;
+    packet["type"] = CLIENT_HELLO;
     packet["packetId"] = messageId;
     uint8_t mac[8];
     // Gets the mac address of this esp
@@ -63,6 +59,21 @@ void constructPacket(JsonDocument& packet, std::string packetType, std::string m
     // Converts the mac address into the form the server is expecting
     std::string stringMac = unint8ArrayToHexString(mac, 6);
     packet["macAddress"] = stringMac;
+}
+
+//Note that the assigning of the messageId to the packetId happens in all the methods. One way to better
+//streamline this might be to make a general method "constructPacket" that just handles that. For now I
+//thought it wouldn't be necessary. As we get more types of messages this may be needed.
+void constructSuccessPacket(JsonDocument& packet, std::string messageId)
+{
+    packet["type"] = ACTION_SUCCESS;
+    packet["packetId"] = messageId;
+}
+
+void constructFailPacket(JsonDocument& packet, std::string messageId)
+{
+    packet["type"] = ACTION_FAIL;
+    packet["packetId"] = messageId;
 }
 
 #endif

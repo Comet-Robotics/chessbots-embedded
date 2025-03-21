@@ -40,7 +40,7 @@ void drive(float leftPower, float rightPower, std::string id) {
     //when the server sends it, meaning it will have an id to send back.
     if(id != "NULL")
     {
-        createAndSendPacket(2, "ACTION_SUCCESS", (char*) "Moving succeeded!", id);   
+        createAndSendPacket(2, "success", id);   
     }
 }
 

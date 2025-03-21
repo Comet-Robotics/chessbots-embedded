@@ -36,15 +36,7 @@ void loop() {
     if (getWiFiConnectionStatus() && !checkWiFiConnection())
     {
         reconnectWiFI();
-    } 
-    
-    // else
-    // {
-    //     //if no need to reconnect to wifi, just verifying it is connected.
-    //     const char* boolean = checkWiFiConnection() ? "True!" : "False!";
-
-    //     logln(boolean, 2);
-    // }
+    }
 
     // Checks whether bot is still connected to the server. Reconnect if not
     if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();

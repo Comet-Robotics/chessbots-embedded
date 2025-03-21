@@ -35,7 +35,7 @@ void connectServer() {
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
         if (DO_HANDSHAKE) {
-            createAndSendPacket(2, "CLIENT_HELLO", (char*) "Sending Handshake...", "Hello");
+            createAndSendPacket(2, "hello", "Hello");
         }
     } 
     else 
@@ -117,11 +117,26 @@ void sendPacket(JsonDocument& packet) {
 }
 
 //Additional method created to call the construction of the packet and then to send it.
-void createAndSendPacket(uint8_t priority, std::string message, char* logMessage, std::string messageId)
+void createAndSendPacket(uint8_t priority, std::string message, std::string messageId)
 {
     JsonDocument packet;
-    constructPacket(packet, message, messageId);
-    logln((char*)logMessage, priority);
+    //How I have it right now is it calls the different packet messages according to the message. Might
+    //be inefficient and require changing.
+    if(message == "hello")
+    {
+        logln((char*)"Sending handshake...", priority);
+        constructHelloPacket(packet, messageId);
+    }
+    else if(message == "success")
+    {
+        logln((char*)"Action succeeded!", priority);
+        constructSuccessPacket(packet, messageId);
+    }
+    else if(message == "fail")
+    {
+        logln((char*)"Action failed!", priority);
+        constructFailPacket(packet, messageId);
+    }
     sendPacket(packet);
 }
 
