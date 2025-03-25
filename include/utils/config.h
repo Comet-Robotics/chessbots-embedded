@@ -27,9 +27,6 @@ extern gpio_num_t PHOTODIODE_D_PIN;
 
 extern float WHEEL_DIAMETER_INCHES;
 
-extern float MOTOR_A_DRIVE_MULTIPLIER;
-extern float MOTOR_B_DRIVE_MULTIPLIER;
-
 extern float ENCODER_MULTIPLIER;
 
 void setConfig(JsonObject config);
