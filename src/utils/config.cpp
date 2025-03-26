@@ -2,11 +2,13 @@
 #define CHESSBOT_CONFIG_CPP
 
 // Associated Header File
-#include "utils/logging.h"
 #include "utils/config.h"
 
 // Built-In Libraries
 #include "Arduino.h"
+
+// Custom Libraries
+#include "utils/logging.h"
 
 // External Libraries
 #include <ArduinoJson.h>
@@ -26,6 +28,8 @@ gpio_num_t PHOTODIODE_A_PIN = GPIO_NUM_1;
 gpio_num_t PHOTODIODE_B_PIN = GPIO_NUM_2;
 gpio_num_t PHOTODIODE_C_PIN = GPIO_NUM_4;
 gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
+
+gpio_num_t BATTERY_VOLTAGE_PIN = GPIO_NUM_10;
 
 float WHEEL_DIAMETER_INCHES = 4.375;
 

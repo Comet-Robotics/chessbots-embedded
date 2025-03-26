@@ -9,6 +9,7 @@ void disconnectServer();
 void reconnectServer();
 bool checkServerConnection();
 void initiateHandshake();
+void pingServer();
 
 void acceptData();
 void sendPacket(JsonDocument& packet);

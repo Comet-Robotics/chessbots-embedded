@@ -10,5 +10,6 @@ std::string unint8ArrayToHexString(uint8_t* oldArray, int len);
 void constructHelloPacket(JsonDocument& packet);
 void constructSuccessPacket(JsonDocument& packet);
 void constructFailPacket(JsonDocument& packet);
+void constructPingPacket(JsonDocument& packet);
 
 #endif

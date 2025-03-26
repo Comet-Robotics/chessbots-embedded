@@ -27,6 +27,8 @@ void setup() {
     setupBot();
     // Create a WiFi network for the laptop to connect to
     connectWiFI();
+    // Periodically message the server and send information like battery voltage along
+    pingServer();
 
     if (DO_DRIVE_TEST) startDriveTest();
 }

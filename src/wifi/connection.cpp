@@ -33,12 +33,13 @@ void connectServer() {
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
         if (DO_HANDSHAKE) { initiateHandshake(); }
+        if (DO_PINGING) {}
     } else {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
         serialLogln((char*)"Connection To Server Failed! Retrying...", 2);
 
-        timerDelay(5000, &connectServer);
+        timerDelay(HANDSHAKE_INTERVAL, &connectServer);
     }
 }
 
@@ -69,6 +70,18 @@ void initiateHandshake() {
     constructHelloPacket(packet);
     serialLogln((char*)"Sending Handshake...", 2);
     sendPacket(packet);
+}
+
+void pingServer() {
+    if (getServerConnectionStatus()) {
+        JsonDocument packet;
+        constructPingPacket(packet);
+        serialLogln((char*)"Sending Ping...", 4);
+        sendPacket(packet);
+    }
+
+    // Ping again after set amount of time
+    timerDelay(PING_INTERVAL, &pingServer);
 }
 
 // The buffer size is 500 characters. If there are issues right after

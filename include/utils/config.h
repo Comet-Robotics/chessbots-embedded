@@ -25,6 +25,8 @@ extern gpio_num_t PHOTODIODE_B_PIN;
 extern gpio_num_t PHOTODIODE_C_PIN;
 extern gpio_num_t PHOTODIODE_D_PIN;
 
+extern gpio_num_t BATTERY_VOLTAGE_PIN;
+
 extern float WHEEL_DIAMETER_INCHES;
 
 extern float MOTOR_A_DRIVE_MULTIPLIER;

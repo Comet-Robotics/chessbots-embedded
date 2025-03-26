@@ -17,6 +17,7 @@
 #include "utils/functions.h"
 #include "utils/config.h"
 #include "robot/control.h"
+#include "robot/battery.h"
 
 // These are the various different supported message types that can be sent over TCP
 const char* CLIENT_HELLO = "CLIENT_HELLO";
@@ -61,5 +62,10 @@ void constructHelloPacket(JsonDocument& packet) {
 void constructSuccessPacket(JsonDocument& packet) {}
 
 void constructFailPacket(JsonDocument& packet) {}
+
+void constructPingPacket(JsonDocument& packet) {
+    packet["type"] = PING_SEND;
+    packet["batteryLevel"] = getBatteryLevel();
+}
 
 #endif
