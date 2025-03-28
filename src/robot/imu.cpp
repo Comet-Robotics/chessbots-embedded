@@ -37,11 +37,11 @@ float computeHeading(float x, float y){
     return heading;
 }
 
-void loop(){
+void imuLoop(){
+
 xyzFloat coordinates;
 botIMU.getMagValues(&coordinates);
 
 float orientation = computeHeading(coordinates.x, coordinates.y);
 cout << orientation << endl;
-
 }
