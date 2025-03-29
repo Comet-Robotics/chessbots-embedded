@@ -9,12 +9,15 @@ public:
 private:
     int startEncoderA;
     int startEncoderB;
+    bool testSuccessful;
     const int ENCODER_TOLERANCE = 100;
 
     void init();
     void testLeftMotor();
     void testWait();
     void testRightMotor();
+    void testDriveForward();
+    void testDriveDone();
 };
 
 #endif
