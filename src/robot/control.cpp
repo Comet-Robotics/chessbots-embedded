@@ -18,16 +18,12 @@
 #include "../../env.h"
 #include <algorithm>
 
-// // PIDController(double kp, double ki, double kd, double min, double max); 
-// PIDController postionPIDController = PIDController(0.0011, 0.0000115, 0.000125, -1, +1);
-// PIDController motorSyncController = PIDController(0.0011, 0.0000115, 0.000125, -1, +1);
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 
-PIDController encoderAVelocityController(0.0001, 0, 0, -1, +1);
-PIDController encoderBVelocityController(0.0001, 0, 0, -1, +1);
+PIDController encoderAVelocityController(0.001, 0, 0, -1, +1);
+PIDController encoderBVelocityController(0.001, 0, 0, -1, +1);
 
-// int postionPIDTarget = 0;
 int encoderATarget = 0;
 int encoderBTarget = 0;
 int prevPositionA = 0;
@@ -39,14 +35,12 @@ void testEncoderPID()
     if (testEncoderPID_value)
     {
         testEncoderPID_value = false;
-        //postionPIDTarget = 11900*3;
         encoderATarget = 11900*3;
         encoderBTarget = -11900*3;
     }
     else
     {
         testEncoderPID_value = true;
-        //postionPIDTarget = 0;
         encoderATarget = encoderBTarget = 0;
     }
 }
@@ -59,8 +53,6 @@ void setupBot() {
     setupEncodersNew();
     serialLogln((char*)"Bot Set Up!", 2);
 
-    // postionPIDController.Reset();
-    // motorSyncController.Reset();
     encoderAController.Reset();
     encoderBController.Reset();
 
@@ -76,16 +68,12 @@ void controlLoop(int loopDelayMs) {
         encoderLoop();
 
     double loopDelaySeconds = ((double) loopDelayMs) / 1000;
-    // int positionCorrect = postionPIDController.Compute(postionPIDTarget, ((readEncoderA() - readEncoderB())/2), loopDelaySeconds);
-    // int motorSyncCorrect = motorSyncController.Compute(0, (readEncoderA() + readEncoderB()), loopDelaySeconds);
-    // int rightMotorPower = clamp((positionCorrect + motorSyncCorrect), -1, 1);
-    // int leftMotorPower = clamp((positionCorrect - motorSyncCorrect), -1, 1);
 
     double currentPositionEncoderA = readEncoderA();
     double currentPositionEncoderB = readEncoderB();
 
-    double desiredVelocityA = encoderAController.ComputePosition(encoderATarget, currentPositionEncoderA, loopDelaySeconds);
-    double desiredVelocityB = encoderBController.ComputePosition(encoderBTarget, currentPositionEncoderB, loopDelaySeconds);
+    double desiredVelocityA = encoderAController.Compute(encoderATarget, currentPositionEncoderA, loopDelaySeconds);
+    double desiredVelocityB = encoderBController.Compute(encoderBTarget, currentPositionEncoderB, loopDelaySeconds);
 
     double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
     double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
@@ -93,8 +81,8 @@ void controlLoop(int loopDelayMs) {
     prevPositionA = currentPositionEncoderA;
     prevPositionB = currentPositionEncoderB;
 
-    double leftMotorPower = encoderAVelocityController.ComputeVelocity(desiredVelocityA, currentVelocityA, loopDelaySeconds);
-    double rightMotorPower = encoderBVelocityController.ComputeVelocity(desiredVelocityB, currentVelocityB, loopDelaySeconds);
+    double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
+    double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
 
     serialLog((char *)"Encoder A", 2);
     serialLog((float) currentPositionEncoderA, 2);
@@ -114,14 +102,9 @@ void controlLoop(int loopDelayMs) {
     serialLogln((float) rightMotorPower, 2);
     
     drive(
-        // leftMotorPower,
-        // rightMotorPower
-        // encoderAController.ComputePosition(encoderATarget, readEncoderA(), loopDelaySeconds),
-        // encoderBController.ComputePosition(encoderBTarget, readEncoderB(), loopDelaySeconds)
         leftMotorPower,
         rightMotorPower
     );
-    // setLeftPower(1);
 }
 
 // Drives a specific amount of tiles (WIP)
