@@ -15,6 +15,7 @@
 #include "robot/lightSensor.h"
 #include "robot/encoder_new.h"
 #include "robot/pid_controller.h"
+#include "robot/driveTest.h"
 #include "../../env.h"
 #include <algorithm>
 
@@ -56,7 +57,7 @@ void setupBot() {
     encoderAController.Reset();
     encoderBController.Reset();
 
-    timerInterval(15000, &testEncoderPID);
+    // timerInterval(15000, &testEncoderPID);
 }
 
 // Manages control loop (loopDelayMs is for reference)
@@ -67,44 +68,46 @@ void controlLoop(int loopDelayMs) {
     if (DO_ENCODER_TEST)
         encoderLoop();
 
-    double loopDelaySeconds = ((double) loopDelayMs) / 1000;
+    if (DO_PID_TEST) {
+        double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-    double currentPositionEncoderA = readEncoderA();
-    double currentPositionEncoderB = readEncoderB();
+        double currentPositionEncoderA = readEncoderA();
+        double currentPositionEncoderB = readEncoderB();
 
-    double desiredVelocityA = encoderAController.Compute(encoderATarget, currentPositionEncoderA, loopDelaySeconds);
-    double desiredVelocityB = encoderBController.Compute(encoderBTarget, currentPositionEncoderB, loopDelaySeconds);
+        double desiredVelocityA = encoderAController.Compute(encoderATarget, currentPositionEncoderA, loopDelaySeconds);
+        double desiredVelocityB = encoderBController.Compute(encoderBTarget, currentPositionEncoderB, loopDelaySeconds);
 
-    double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
-    double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
+        double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
+        double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
 
-    prevPositionA = currentPositionEncoderA;
-    prevPositionB = currentPositionEncoderB;
+        prevPositionA = currentPositionEncoderA;
+        prevPositionB = currentPositionEncoderB;
 
-    double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
-    double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
+        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
+        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
 
-    serialLog((char *)"Encoder A", 2);
-    serialLog((float) currentPositionEncoderA, 2);
-    serialLog((char *)" Encoder B", 2);
-    serialLog((float) currentPositionEncoderB, 2);
-    serialLog((char *)" Desired Velocity A", 2);
-    serialLog((float) desiredVelocityA, 2);
-    serialLog((char *)" Desired Velocity B", 2);
-    serialLog((float) desiredVelocityB, 2);
-    serialLog((char *)" Current Velocity A", 2);
-    serialLog((float) currentVelocityA, 2);
-    serialLog((char *)" Current Velocity B", 2);
-    serialLog((float) currentVelocityB, 2);
-    serialLog((char *)" Left Motor Power", 2);
-    serialLog((float) leftMotorPower, 2);
-    serialLog((char *)" Right Motor Power", 2);
-    serialLogln((float) rightMotorPower, 2);
-    
-    drive(
-        leftMotorPower,
-        rightMotorPower
-    );
+        serialLog((char *)"Encoder A ", 2);
+        serialLog((float) currentPositionEncoderA, 2);
+        serialLog((char *)" Encoder B ", 2);
+        serialLog((float) currentPositionEncoderB, 2);
+        serialLog((char *)" Desired Velocity A ", 2);
+        serialLog((float) desiredVelocityA, 2);
+        serialLog((char *)" Desired Velocity B ", 2);
+        serialLog((float) desiredVelocityB, 2);
+        serialLog((char *)" Current Velocity A ", 2);
+        serialLog((float) currentVelocityA, 2);
+        serialLog((char *)" Current Velocity B ", 2);
+        serialLog((float) currentVelocityB, 2);
+        serialLog((char *)" Left Motor Power ", 2);
+        serialLog((float) leftMotorPower, 2);
+        serialLog((char *)" Right Motor Power ", 2);
+        serialLogln((float) rightMotorPower, 2);
+        
+        drive(
+            leftMotorPower,
+            rightMotorPower
+        );
+    }
 }
 
 // Drives a specific amount of tiles (WIP)
@@ -146,6 +149,11 @@ void stop() {
 // Reads in the light value of all light sensors
 void readLight() {
     startLightReading();
+}
+
+// Test motor and encoder synchronization
+void startMotorAndEncoderTest() {
+    (new MotorEncoderTest())->startMotorAndEncoderTest();
 }
 
 // Tests the motors. This turns the motors on.

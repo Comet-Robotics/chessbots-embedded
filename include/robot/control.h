@@ -6,6 +6,7 @@ void drive(float tiles);
 void drive(float leftPower, float rightPower);
 void stop();
 void readLight();
+void startMotorAndEncoderTest();
 void startDriveTest();
 void driveTestOff();
 

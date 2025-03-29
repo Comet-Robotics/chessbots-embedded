@@ -34,6 +34,8 @@ void setup() {
     // connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
+
+    if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
