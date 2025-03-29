@@ -8,6 +8,7 @@ public:
 
 private:
     int startEncoderA;
+    int _startEncoderB;
     int startEncoderB;
     bool testSuccessful;
     const int ENCODER_TOLERANCE = 100;
