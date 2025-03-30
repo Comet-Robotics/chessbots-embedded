@@ -57,7 +57,8 @@ void setupBot() {
     encoderAController.Reset();
     encoderBController.Reset();
 
-    // timerInterval(15000, &testEncoderPID);
+    if (DO_PID_TEST)
+        timerInterval(15000, &testEncoderPID);
 }
 
 // Manages control loop (loopDelayMs is for reference)
