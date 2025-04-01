@@ -31,11 +31,27 @@ void deactivateIR() {
     digitalWrite(RELAY_IR_LED_PIN, LOW);
 }
 
-void startLightReading() {
+void startLightReading(uint8_t counter, int prevTickVals[], const uint8_t TICK_DIST) {
     // The Infrared Blaster must be activated first to get a clear reading
     activateIR();
     // To give time for the IR Blaster to activate, only reads light values after 50 milliseconds
     timerDelay(50, &readLightLevels);
+    if(counter == TICK_DIST)
+    {
+        serialLogln((char*) "Time to update ticks!", 2);
+        for(int i = 0; i < 4; i++)
+        {
+            if(abs(prevTickVals[i] - lightArray[i]) >= 80 && prevTickVals[i] != -1)
+            {
+                serialLogln((char*) "THE DIFFERENCE IS BIG SO WE HAVE CHANGED COLOR GRAHH", 2);
+            }
+            prevTickVals[i] = lightArray[i];
+        }
+    }
+    else
+    {
+        serialLogln((char*) "Not time to get tickrate yet.", 2);
+    }
 }
 
 void readLightLevels() {

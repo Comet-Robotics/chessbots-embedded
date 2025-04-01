@@ -15,6 +15,15 @@
 #include "robot/encoder_new.h"
 #include "../env.h"
 
+// int currentTick = 0;
+// const int MAX_TICK = 20;
+// int lightSum[4] = {0, 0, 0, 0};
+// int prevSum[4] = {0, 0, 0, 0};
+
+const uint8_t DIFF_TICK = 5;
+int prevTick[4] = {-1, -1, -1, -1};
+uint8_t counter = 0;
+
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
@@ -48,13 +57,14 @@ void loop() {
     // If the bot is connected to the server, check for received data, and accept it if available
     if (getServerConnectionStatus()) acceptData();
 
-    if (DO_LIGHT_SENSOR_TEST) readLight();
+    if (DO_LIGHT_SENSOR_TEST) readLight(counter, prevTick, DIFF_TICK);
 
     if (DO_ENCODER_TEST) encoderLoop();
 
     // This delay determines how often the code in loop is run
-    // (Forcefully pauses the thread for about the amount of milliseconds passed in)
+    // (Forcefully pauses the thread for about the amount of milliseconds passed in) 
   	delay(100);
+    counter++;
 }
 
 // This is used at the end of each file due to the name definition at the beginning
