@@ -112,7 +112,7 @@ void controlLoop(int loopDelayMs) {
         );
     }
     if(DO_DRIVE_DISTANCE){
-        driveDistance(20000);
+        driveTicks(20000, "NULL");
     }
 }
 
@@ -121,17 +121,19 @@ void drive(float tiles) {
 
 }
 
-void driveDistance(int distance){
+void driveTicks(int tickDistance, std::string id)
+{
     const int encoderStartValueA = readEncoderA();
     // const int encoderCurrentValueB = readEncoderB();
     int encoderNewValueA = readEncoderA();
     // int encoderNewValueB = readEncoderB();
 
-    while(abs(encoderNewValueA - encoderStartValueA) < distance){
-        drive(1, 1);
+    while (abs(encoderNewValueA - encoderStartValueA) < tickDistance)
+    {
+        drive(1, 1, id);
         encoderNewValueA = readEncoderA();
     }
-        drive(0,0);
+    drive(0, 0, id);
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
