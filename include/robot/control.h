@@ -11,7 +11,7 @@ void readLight();
 void startMotorAndEncoderTest();
 void startDriveTest();
 void driveTestOff();
-
+void driveDistance(int distance);
 void controlLoop(int loopDelayMs);
 
 #endif
