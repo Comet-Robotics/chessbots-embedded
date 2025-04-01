@@ -57,8 +57,8 @@ void stop() {
 }
 
 // Reads in the light value of all light sensors
-void readLight() {
-    startLightReading();
+void readLight(uint8_t counter, int prevTickVals[], const uint8_t TICK_DIST) {
+    startLightReading(counter, prevTickVals, TICK_DIST);
 }
 
 // Tests the motors. This turns the motors on.
