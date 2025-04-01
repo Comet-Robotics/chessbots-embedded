@@ -43,13 +43,15 @@ void loop() {
     // Checks if any timers have expired
     timerStep();
 
-    // // Checks whether bot is still connected to WiFi. Reconnect if not
-    // if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
-    // // Checks whether bot is still connected to the server. Reconnect if not
-    // if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
+    if (!RUN_OFFLINE) {
+        // Checks whether bot is still connected to WiFi. Reconnect if not
+        if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
+        // Checks whether bot is still connected to the server. Reconnect if not
+        if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
 
-    // // If the bot is connected to the server, check for received data, and accept it if available
-    // if (getServerConnectionStatus()) acceptData();
+        // If the bot is connected to the server, check for received data, and accept it if available
+        if (getServerConnectionStatus()) acceptData();
+    }
 
     // Run control loop
     controlLoop(delayMilliseconds);
