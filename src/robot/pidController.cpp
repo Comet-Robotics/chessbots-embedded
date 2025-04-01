@@ -13,11 +13,10 @@
 //#ifndef PID_CONTROLLER_CPP
 //#define PID_CONTROLLER_CPP
 
-#include "robot/pid_controller.h"
+#include "robot/pidController.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
-#include "robot/pid_controller.h"
 
 using namespace std;
 

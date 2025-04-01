@@ -1,5 +1,5 @@
-#ifndef CHESSBOT_ENCODER_NEW_H
-#define CHESSBOT_ENCODER_NEW_H
+#ifndef CHESSBOT_ENCODER_H
+#define CHESSBOT_ENCODER_H
 
 void setupEncodersNew();
 void resetEncoders();

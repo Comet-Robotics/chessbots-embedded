@@ -4,7 +4,7 @@
 #include "robot/driveTest.h"
 #include "Arduino.h"
 #include "robot/motor.h"
-#include "robot/encoder_new.h"
+#include "robot/encoder.h"
 #include "utils/timer.h"
 #include "utils/logging.h"
 

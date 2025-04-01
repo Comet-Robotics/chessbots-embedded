@@ -12,9 +12,9 @@
 #include "wifi/wireless.h"
 #include "wifi/connection.h"
 #include "robot/control.h"
-#include "robot/encoder_new.h"
+#include "robot/encoder.h"
 #include "../env.h"
-#include "robot/pid_controller.h"
+#include "robot/pidController.h"
 
 int delayMilliseconds = 10;
 

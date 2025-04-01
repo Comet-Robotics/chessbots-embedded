@@ -1,8 +1,8 @@
-#ifndef CHESSBOT_ENCODER_NEW
-#define CHESSBOT_ENCODER_NEW
+#ifndef CHESSBOT_ENCODER_CPP
+#define CHESSBOT_ENCODER_CPP
 
 #include "Encoder.h"
-#include "robot/encoder_new.h"
+#include "robot/encoder.h"
 #include "utils/config.h"
 #include "utils/logging.h"
 

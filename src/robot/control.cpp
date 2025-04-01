@@ -14,8 +14,8 @@
 #include "robot/motor.h"
 #include "robot/lightSensor.h"
 #include "wifi/connection.h"
-#include "robot/encoder_new.h"
-#include "robot/pid_controller.h"
+#include "robot/encoder.h"
+#include "robot/pidController.h"
 #include "robot/driveTest.h"
 #include "../../env.h"
 #include <algorithm>
