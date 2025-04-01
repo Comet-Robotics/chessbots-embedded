@@ -23,8 +23,8 @@
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 
-PIDController encoderAVelocityController(0.00006009999, 0.00039, 0, -1, +1);
-PIDController encoderBVelocityController(0.00006009999, 0.00039, 0, -1, +1);
+PIDController encoderAVelocityController(0.00006, 0, 0, -1, +1);
+PIDController encoderBVelocityController(0.00006, 0, 0, -1, +1);
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -58,10 +58,10 @@ void setupBot() {
     encoderAController.Reset();
     encoderBController.Reset();
 
-    if (DO_PID_TEST)
-        timerInterval(7500, &testEncoderPID);
+    // if (DO_PID_TEST)
+        // timerInterval(7500, &testEncoderPID);
 }
-
+// + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
 void controlLoop(int loopDelayMs) {
     if (DO_LIGHT_SENSOR_TEST)
@@ -85,8 +85,8 @@ void controlLoop(int loopDelayMs) {
         prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
-        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
-        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
+        double leftMotorPower = (encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds));
+        double rightMotorPower = (encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds));
 
         serialLog((char *)"Encoder A ", 2);
         serialLog((float) currentPositionEncoderA, 2);
@@ -120,17 +120,9 @@ void drive(float tiles) {
 
 void driveTicks(int tickDistance, std::string id)
 {
-    const int encoderStartValueA = readEncoderA();
-    // const int encoderCurrentValueB = readEncoderB();
-    int encoderNewValueA = readEncoderA();
-    // int encoderNewValueB = readEncoderB();
+    encoderATarget = readEncoderA() + tickDistance;
+    encoderBTarget = readEncoderB() - tickDistance;
 
-    while (abs(encoderNewValueA - encoderStartValueA) < tickDistance)
-    {
-        drive(1, 1, id);
-        encoderNewValueA = readEncoderA();
-    }
-    drive(0, 0, id);
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
