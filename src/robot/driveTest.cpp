@@ -14,8 +14,8 @@ void MotorEncoderTest::init()
 
     this->testSuccessful = true;
 
-    this->startEncoderA = readEncoderA();
-    this->_startEncoderB = readEncoderB();
+    this->startEncoderA = readLeftEncoder();
+    this->_startEncoderB = readRightEncoder();
 
     setLeftPower(1);
     setRightPower(0);
@@ -25,7 +25,7 @@ void MotorEncoderTest::init()
 
 void MotorEncoderTest::testLeftMotor()
 {
-    int encoderAValue = readEncoderA();
+    int encoderAValue = readLeftEncoder();
     if (encoderAValue > (this->startEncoderA + this->ENCODER_TOLERANCE))
     {
         serialLogln((char *)"Encoder A (RightEncoder) is aligned with left motor (M1). (Positive motor = positive encoder = CW from Motor POV)", 2);
@@ -48,7 +48,7 @@ void MotorEncoderTest::testLeftMotor()
 
 void MotorEncoderTest::testWait()
 {
-    this->startEncoderB = readEncoderB();
+    this->startEncoderB = readRightEncoder();
 
     setLeftPower(0);
     setRightPower(1);
@@ -58,7 +58,7 @@ void MotorEncoderTest::testWait()
 
 void MotorEncoderTest::testRightMotor()
 {
-    int encoderBValue = readEncoderB();
+    int encoderBValue = readRightEncoder();
     if (encoderBValue > (this->startEncoderB + this->ENCODER_TOLERANCE))
     {
         serialLogln((char *)"Encoder B (LeftEncoder) is aligned with right motor (M2). (Positive motor = positive encoder = CW from Motor POV)", 2);
@@ -83,7 +83,7 @@ void MotorEncoderTest::testRightMotor()
     }
     else
     {
-        int encoderAValue = readEncoderA();
+        int encoderAValue = readLeftEncoder();
         if ((this->startEncoderA - this->ENCODER_TOLERANCE) <= encoderAValue && encoderAValue <= (this->startEncoderA + this->ENCODER_TOLERANCE)) {
             serialLogln((char *)"[WARN] Encoder A (RightEncoder) did not significantly change over the course of the test!", 2);
         }
@@ -103,7 +103,7 @@ void MotorEncoderTest::testDriveForward()
 {
     serialLogln((char *)"Setting motors to go 'forward' for 7 seconds...", 2);
     setLeftPower(1);
-    setRightPower(-1);
+    setRightPower(1);
     auto fp = std::bind(&MotorEncoderTest::testDriveDone, this);
     timerDelay(7000, fp);
 }

@@ -37,8 +37,7 @@ void testEncoderPID()
     if (testEncoderPID_value)
     {
         testEncoderPID_value = false;
-        encoderATarget = 11900*3;
-        encoderBTarget = -11900*3;
+        encoderATarget = encoderBTarget = 11900*3;
     }
     else
     {
@@ -73,8 +72,8 @@ void controlLoop(int loopDelayMs) {
     if (DO_PID_TEST) {
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-        double currentPositionEncoderA = readEncoderA();
-        double currentPositionEncoderB = readEncoderB();
+        double currentPositionEncoderA = readLeftEncoder();
+        double currentPositionEncoderB = readRightEncoder();
 
         double desiredVelocityA = encoderAController.Compute(encoderATarget, currentPositionEncoderA, loopDelaySeconds);
         double desiredVelocityB = encoderBController.Compute(encoderBTarget, currentPositionEncoderB, loopDelaySeconds);
