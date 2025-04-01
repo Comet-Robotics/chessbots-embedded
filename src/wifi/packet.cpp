@@ -17,6 +17,7 @@
 #include "utils/functions.h"
 #include "utils/config.h"
 #include "robot/control.h"
+#include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
 const char* CLIENT_HELLO = "CLIENT_HELLO";
@@ -43,12 +44,13 @@ void handlePacket(JsonDocument packet) {
         setConfig(packet["config"].as<JsonObject>());
     } else if (packet["type"] == DRIVE_TANK) {
         // This is received when the bot is being manually controlled via the debug page
-        drive(packet["left"], packet["right"]);
+        drive(packet["left"], packet["right"], packet["packetId"]);
     }
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it
-void constructHelloPacket(JsonDocument& packet) {
+void constructHelloPacket(JsonDocument& packet) 
+{
     packet["type"] = CLIENT_HELLO;
     uint8_t mac[8];
     // Gets the mac address of this esp
@@ -58,8 +60,19 @@ void constructHelloPacket(JsonDocument& packet) {
     packet["macAddress"] = stringMac;
 }
 
-void constructSuccessPacket(JsonDocument& packet) {}
+//Note that the assigning of the messageId to the packetId happens in all the methods. One way to better
+//streamline this might be to make a general method "constructPacket" that just handles that. For now I
+//thought it wouldn't be necessary. As we get more types of messages this may be needed.
+void constructSuccessPacket(JsonDocument& packet, std::string messageId)
+{
+    packet["type"] = ACTION_SUCCESS;
+    packet["packetId"] = messageId;
+}
 
-void constructFailPacket(JsonDocument& packet) {}
+void constructFailPacket(JsonDocument& packet, std::string messageId)
+{
+    packet["type"] = ACTION_FAIL;
+    packet["packetId"] = messageId;
+}
 
 #endif

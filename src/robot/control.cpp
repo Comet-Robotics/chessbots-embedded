@@ -13,6 +13,7 @@
 #include "utils/config.h"
 #include "robot/motor.h"
 #include "robot/lightSensor.h"
+#include "wifi/connection.h"
 #include "robot/encoder_new.h"
 #include "robot/pid_controller.h"
 #include "robot/driveTest.h"
@@ -106,7 +107,8 @@ void controlLoop(int loopDelayMs) {
         
         drive(
             leftMotorPower,
-            rightMotorPower
+            rightMotorPower,
+            "NULL"
         );
     }
 }
@@ -117,7 +119,7 @@ void drive(float tiles) {
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
-void drive(float leftPower, float rightPower) {
+void drive(float leftPower, float rightPower, std::string id) {
     // TODO: maybe move to motor.cpp?
     float minPower = 0.14;
     if (leftPower < minPower && leftPower > -minPower)
@@ -137,6 +139,12 @@ void drive(float leftPower, float rightPower) {
     serialLog(leftPower, 3);
     serialLog((char*)", ", 3);
     serialLogln(rightPower, 3);
+    //we only send null as id during our test drive. The only other time this drive method is called will be
+    //when the server sends it, meaning it will have an id to send back.
+    if(id != "NULL")
+    {
+        createAndSendPacket(2, "success", id);   
+    }
 }
 
 // Stops the bot in its tracks
@@ -159,7 +167,7 @@ void startMotorAndEncoderTest() {
 
 // Tests the motors. This turns the motors on.
 void startDriveTest() {
-    drive(0.5f, 0.5f);
+    drive(0.5f, 0.5f, "NULL");
     timerDelay(2000, &driveTestOff);
 }
 
