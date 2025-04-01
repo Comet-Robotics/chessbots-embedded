@@ -111,9 +111,6 @@ void controlLoop(int loopDelayMs) {
             "NULL"
         );
     }
-    if(DO_DRIVE_DISTANCE){
-        driveTicks(20000, "NULL");
-    }
 }
 
 // Drives a specific amount of tiles (WIP)

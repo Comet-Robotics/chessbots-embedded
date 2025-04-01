@@ -35,6 +35,8 @@ void setup() {
 
     if (DO_DRIVE_TEST) startDriveTest();
 
+    if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
+
     if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
 }
 
