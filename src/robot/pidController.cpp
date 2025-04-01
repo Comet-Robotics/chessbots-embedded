@@ -1,30 +1,16 @@
-//PID Implementation [ Proportional-Integral-Derivative ]
-//Mudit Upadhyay
-//Tasks:
-// 1. Implement the PIDController class
-//      1.1 Declare public methods
-//      1.2 Declare private members
-// 2. Implement the PIDController::Compute() method
-//      2.1 Implement the error term
-//      2.2 Implement the Proportional term
-//      2.3 Implement the Integral term
-//      2.4 Implement the Derivative term
-// 3. Implement the PIDController::Reset() method
-//#ifndef PID_CONTROLLER_CPP
-//#define PID_CONTROLLER_CPP
+#ifndef PID_CONTROLLER_CPP
+#define PID_CONTROLLER_CPP
 
 #include "robot/pidController.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
 
-using namespace std;
-
 double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Calculate error
     double error = setpoint - actual_value;
 
-    if(abs(error) < 2) {
+    if(std::abs(error) < 2) {
         return 0;
     }
 
@@ -50,7 +36,7 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     }
 
     // Clamp output
-    output = max(minOutput, min(maxOutput, output));
+    output = std::max(minOutput, std::min(maxOutput, output));
 
     return output;
 }
@@ -58,3 +44,5 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
 void PIDController::Reset(){
     integral = 0;
 }
+
+#endif

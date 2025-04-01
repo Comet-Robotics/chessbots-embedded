@@ -23,7 +23,7 @@ void setup() {
     // Serial port for debugging purposes
     if (LOGGING_LEVEL > 0) Serial.begin(115200);
 
-    //delay(STARTUP_DELAY);
+    delay(STARTUP_DELAY);
     serialLogln((char*)"Finished Delay!", 2);
 
 
@@ -31,7 +31,7 @@ void setup() {
     setupBot();
 
     // Create a WiFi network for the laptop to connect to
-    // connectWiFI();
+    if (!RUN_OFFLINE) connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
 
