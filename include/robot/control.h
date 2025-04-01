@@ -8,7 +8,10 @@ void drive(float tiles);
 void drive(float leftPower, float rightPower, std::string id);
 void stop();
 void readLight();
+void startMotorAndEncoderTest();
 void startDriveTest();
 void driveTestOff();
+
+void controlLoop(int loopDelayMs);
 
 #endif

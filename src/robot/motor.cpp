@@ -14,6 +14,7 @@
 
 // Sets up all the pins for the motors
 void setupMotors() {
+    analogWriteResolution(12);
     serialLogln((char*)"Setting Up Motors...", 2);
     setupPWM(MOTOR_A_PIN1);
     setupPWM(MOTOR_A_PIN2);

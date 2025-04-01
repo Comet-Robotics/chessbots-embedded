@@ -27,12 +27,7 @@ gpio_num_t PHOTODIODE_B_PIN = GPIO_NUM_2;
 gpio_num_t PHOTODIODE_C_PIN = GPIO_NUM_4;
 gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 
-float WHEEL_DIAMETER_INCHES = 4.375;
-
-float MOTOR_A_DRIVE_MULTIPLIER = 1.0;
-float MOTOR_B_DRIVE_MULTIPLIER = 1.0;
-
-float ENCODER_MULTIPLIER = 1.0;
+float WHEEL_DIAMETER_INCHES = 4.75;
 
 void setConfig(JsonObject config) {
     serialLogln((char*)"Setting Config...", 2);
@@ -56,11 +51,6 @@ void setConfig(JsonObject config) {
     if (config["PHOTODIODE_A_PIN"].is<gpio_num_t>()) PHOTODIODE_A_PIN = config["PHOTODIODE_A_PIN"];
 
     if (config["WHEEL_DIAMETER_INCHES"].is<float>()) WHEEL_DIAMETER_INCHES = config["WHEEL_DIAMETER_INCHES"];
-
-    if (config["MOTOR_A_DRIVE_MULTIPLIER"].is<float>()) MOTOR_A_DRIVE_MULTIPLIER = config["MOTOR_A_DRIVE_MULTIPLIER"];
-    if (config["MOTOR_B_DRIVE_MULTIPLIER"].is<float>()) MOTOR_B_DRIVE_MULTIPLIER = config["MOTOR_B_DRIVE_MULTIPLIER"];
-
-    if (config["ENCODER_MULTIPLIER"].is<float>()) ENCODER_MULTIPLIER = config["ENCODER_MULTIPLIER"];
 
     serialLogln((char*)"Config Set!", 2);
 }

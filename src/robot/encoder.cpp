@@ -1,8 +1,8 @@
-#ifndef CHESSBOT_ENCODER_NEW
-#define CHESSBOT_ENCODER_NEW
+#ifndef CHESSBOT_ENCODER_CPP
+#define CHESSBOT_ENCODER_CPP
 
 #include "Encoder.h"
-#include "robot/encoder_new.h"
+#include "robot/encoder.h"
 #include "utils/config.h"
 #include "utils/logging.h"
 
@@ -27,15 +27,23 @@ void encoderLoop() {
 
     if(oldPositionA != newPosition_EncA){
         oldPositionA = newPosition_EncA;
-        serialLog((char *)"Encoder A: ", 4);
-        serialLogln(newPosition_EncA, 4);
+        serialLog((char *)"Encoder A: ", 2);
+        serialLogln(newPosition_EncA, 2);
     }
 
     if(oldPositionB != newPosition_EncB){
         oldPositionB = newPosition_EncB;
-        serialLog((char *)"Encoder B: ", 4);
-        serialLogln(newPosition_EncB, 4);
+        serialLog((char *)"Encoder B: ", 2);
+        serialLogln(newPosition_EncB, 2);
     }
+}
+
+int readEncoderA() {
+    return EncoderA.read();
+}
+
+int readEncoderB() {
+    return EncoderB.read();
 }
 
 #endif
