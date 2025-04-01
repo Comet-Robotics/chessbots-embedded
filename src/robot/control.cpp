@@ -20,11 +20,11 @@
 #include "../../env.h"
 #include <algorithm>
 
-PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
-PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
+PIDController encoderAController = PIDController(0.5, 0, 0, -20000, +20000);
+PIDController encoderBController = PIDController(0.5, 0, 0, -20000, +20000);
 
-PIDController encoderAVelocityController(0.00006009999, 0.00038, 0, -1, +1);
-PIDController encoderBVelocityController(0.00006009999, 0.00038, 0, -1, +1);
+PIDController encoderAVelocityController(0.0001, 0, 0, -1, +1);
+PIDController encoderBVelocityController(0.0001, 0, 0, -1, +1);
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -85,8 +85,8 @@ void controlLoop(int loopDelayMs) {
         prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
-        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
-        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
+        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds) + (0.0001 * desiredVelocityA);
+        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds) + (0.0001 * desiredVelocityB);
 
         serialLog((char *)"Encoder A ", 2);
         serialLog((float) currentPositionEncoderA, 2);
