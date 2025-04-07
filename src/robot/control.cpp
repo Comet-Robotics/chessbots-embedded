@@ -57,7 +57,7 @@ void stop() {
 }
 
 // Reads in the light value of all light sensors
-void readLight(uint8_t counter, int prevTickVals[], const uint8_t TICK_DIST) {
+void readLight(uint8_t counter, float prevTickVals[], const uint8_t TICK_DIST) {
     startLightReading(counter, prevTickVals, TICK_DIST);
 }
 

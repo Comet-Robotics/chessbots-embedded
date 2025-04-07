@@ -21,7 +21,7 @@
 // int prevSum[4] = {0, 0, 0, 0};
 
 const uint8_t DIFF_TICK = 5;
-int prevTick[4] = {-1, -1, -1, -1};
+float prevTick[4] = {-1, -1, -1, -1};
 uint8_t counter = 0;
 
 // Setup gets run at startup

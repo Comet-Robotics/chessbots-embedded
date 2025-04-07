@@ -7,7 +7,7 @@
 void setupIR();
 void activateIR();
 void deactivateIR();
-void startLightReading(uint8_t counter, int prevTickVals[], const uint8_t TICK_DIST);
+void startLightReading(uint8_t counter, float prevTickVals[], const uint8_t TICK_DIST);
 void readLightLevels();
 
 #endif

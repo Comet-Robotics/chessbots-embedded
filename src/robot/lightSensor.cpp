@@ -31,7 +31,7 @@ void deactivateIR() {
     digitalWrite(RELAY_IR_LED_PIN, LOW);
 }
 
-void startLightReading(uint8_t counter, int prevTickVals[], const uint8_t TICK_DIST) {
+void startLightReading(uint8_t counter, float prevTickVals[], const uint8_t TICK_DIST) {
     // The Infrared Blaster must be activated first to get a clear reading
     activateIR();
     // To give time for the IR Blaster to activate, only reads light values after 50 milliseconds
@@ -46,9 +46,18 @@ void startLightReading(uint8_t counter, int prevTickVals[], const uint8_t TICK_D
             {
                 serialLogln((char*) "THE DIFFERENCE IS BIG SO WE HAVE CHANGED COLOR GRAHH", 2);
             }
-            prevTickVals[i] = lightArray[i];
+            prevTickVals[i] = (float) lightArray[i] / TICK_DIST;
         }
-    } 
+    }
+    else
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            prevTickVals[i] += (float) lightArray[i] / TICK_DIST;
+        }
+        std::string finalStr = "At counter " + std::to_string(counter) + ", the current fraction is " + std::to_string(prevTickVals[0]) + " for light sensor 0.";
+        serialLogln(finalStr.c_str(), 4);
+    }
 }
 
 void readLightLevels() {
