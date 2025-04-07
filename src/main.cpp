@@ -64,6 +64,10 @@ void loop() {
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in) 
   	delay(100);
+    if(counter == DIFF_TICK)
+    {
+        counter = 0;
+    }
     counter++;
 }
 

@@ -39,6 +39,7 @@ void startLightReading(uint8_t counter, int prevTickVals[], const uint8_t TICK_D
     if(counter == TICK_DIST)
     {
         serialLogln((char*) "Time to update ticks!", 2);
+        //for each tick, check if its previous value is too far from what it was before. If it is, consider that the encoder has changed color.
         for(int i = 0; i < 4; i++)
         {
             if(abs(prevTickVals[i] - lightArray[i]) >= 80 && prevTickVals[i] != -1)
@@ -47,11 +48,7 @@ void startLightReading(uint8_t counter, int prevTickVals[], const uint8_t TICK_D
             }
             prevTickVals[i] = lightArray[i];
         }
-    }
-    else
-    {
-        serialLogln((char*) "Not time to get tickrate yet.", 2);
-    }
+    } 
 }
 
 void readLightLevels() {
