@@ -155,9 +155,6 @@ void drive(float leftPower, float rightPower, std::string id) {
 }
 
 void turn(float angleRadians, std::string id) {
-    int startEncoderLeft = readLeftEncoder();
-    int startEncoderRight = readRightEncoder();
-
     float offsetInches = TRACK_WIDTH_INCHES * angleRadians / 2;
     int offsetTicks = (int) (offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
 
