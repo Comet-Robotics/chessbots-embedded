@@ -28,12 +28,13 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Calculate total output
     double output = val_p + val_i + val_d;
 
-    // Save error to previous error
-    prev_error = error;
-
+    // If error and prev error have different signs, reset integral accumulator
     if ((prev_error > 0 && error < 0) || (prev_error < 0 && error > 0)) {
         Reset();
     }
+
+    // Save error to previous error
+    prev_error = error;
 
     // Clamp output
     output = std::max(minOutput, std::min(maxOutput, output));
