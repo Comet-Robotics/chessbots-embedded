@@ -51,9 +51,14 @@ int testTurn_angle = 0;
 void testTurn()
 {
     serialLog((char *)"Changing destination angle to ", 2);
-    serialLogln(testTurn_angle, 2);
+    serialLog(testTurn_angle, 2);
     testTurn_angle = (testTurn_angle + 90) % 360;
     turn(M_PI / 2, "NULL");
+    serialLog((char *)" (", 2);
+    serialLog(encoderATarget, 2);
+    serialLog((char *)", ", 2);
+    serialLog(encoderBTarget, 2);
+    serialLogln((char *)")", 2);
 }
 
 // Sets up all the aspects needed for the bot to work
@@ -85,8 +90,8 @@ void controlLoop(int loopDelayMs) {
     if (DO_PID) {
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-        double currentPositionEncoderA = readLeftEncoder();
-        double currentPositionEncoderB = readRightEncoder();
+        int currentPositionEncoderA = readLeftEncoder();
+        int currentPositionEncoderB = readRightEncoder();
 
         double desiredVelocityA = encoderAController.Compute(encoderATarget, currentPositionEncoderA, loopDelaySeconds);
         double desiredVelocityB = encoderBController.Compute(encoderBTarget, currentPositionEncoderB, loopDelaySeconds);
@@ -100,23 +105,26 @@ void controlLoop(int loopDelayMs) {
         double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
         double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
 
-        serialLog((char *)"Encoder A ", 3);
-        serialLog((float) currentPositionEncoderA, 3);
-        serialLog((char *)" Encoder B ", 3);
-        serialLog((float) currentPositionEncoderB, 3);
-        serialLog((char *)" Desired Velocity A ", 3);
+        serialLog(currentPositionEncoderA, 3);
+        serialLog((char *)",", 3);
+        serialLog(currentPositionEncoderB, 3);
+        serialLog((char *)",", 3);
         serialLog((float) desiredVelocityA, 3);
-        serialLog((char *)" Desired Velocity B ", 3);
+        serialLog((char *)",", 3);
         serialLog((float) desiredVelocityB, 3);
-        serialLog((char *)" Current Velocity A ", 3);
+        serialLog((char *)",", 3);
         serialLog((float) currentVelocityA, 3);
-        serialLog((char *)" Current Velocity B ", 3);
+        serialLog((char *)",", 3);
         serialLog((float) currentVelocityB, 3);
-        serialLog((char *)" Left Motor Power ", 3);
+        serialLog((char *)",", 3);
         serialLog((float) leftMotorPower, 3);
-        serialLog((char *)" Right Motor Power ", 3);
-        serialLogln((float) rightMotorPower, 3);
-        
+        serialLog((char *)",", 3);
+        serialLog((float) rightMotorPower, 3);
+        serialLog((char *)",", 3);
+        serialLog(encoderATarget, 3);
+        serialLog((char *)",", 3);
+        serialLogln(encoderBTarget, 3);
+
         drive(
             leftMotorPower,
             rightMotorPower,
