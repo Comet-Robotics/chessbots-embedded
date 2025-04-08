@@ -27,8 +27,8 @@ gpio_num_t PHOTODIODE_B_PIN = GPIO_NUM_2;
 gpio_num_t PHOTODIODE_C_PIN = GPIO_NUM_4;
 gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 
-int TICKS_PER_ROTATION = 11900;
-float TRACK_WIDTH_INCHES = 8.125;
+int TICKS_PER_ROTATION = 12000;
+float TRACK_WIDTH_INCHES = 8.3;
 float WHEEL_DIAMETER_INCHES = 4.75;
 
 void setConfig(JsonObject config) {
