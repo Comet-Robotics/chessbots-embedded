@@ -7,7 +7,7 @@ void setupBot();
 void drive(float tiles);
 void drive(float leftPower, float rightPower, std::string id);
 void stop();
-void readLight(uint8_t counter, float prevTickVals[], const uint8_t TICK_DIST);
+void readLight();
 void startDriveTest();
 void driveTestOff();
 
