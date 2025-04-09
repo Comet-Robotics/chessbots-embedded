@@ -30,6 +30,7 @@ int encoderATarget = 0;
 int encoderBTarget = 0;
 int prevPositionA = 0;
 int prevPositionB = 0;
+
 boolean testEncoderPID_value = false;
 void testEncoderPID()
 {
@@ -37,14 +38,27 @@ void testEncoderPID()
     if (testEncoderPID_value)
     {
         testEncoderPID_value = false;
-        encoderATarget = 11900*3;
-        encoderBTarget = -11900*3;
+        encoderATarget = encoderBTarget = TICKS_PER_ROTATION*10;
     }
     else
     {
         testEncoderPID_value = true;
         encoderATarget = encoderBTarget = 0;
     }
+}
+
+int testTurn_angle = 0;
+void testTurn()
+{
+    serialLog((char *)"Changing destination angle to ", 2);
+    serialLog(testTurn_angle, 2);
+    testTurn_angle = (testTurn_angle + 90) % 360;
+    turn(M_PI / 2, "NULL");
+    serialLog((char *)" (", 2);
+    serialLog(encoderATarget, 2);
+    serialLog((char *)", ", 2);
+    serialLog(encoderBTarget, 2);
+    serialLogln((char *)")", 2);
 }
 
 // Sets up all the aspects needed for the bot to work
@@ -58,8 +72,11 @@ void setupBot() {
     encoderAController.Reset();
     encoderBController.Reset();
 
-    // if (DO_PID_TEST)
-        // timerInterval(7500, &testEncoderPID);
+    if (DO_PID_TEST)
+        timerInterval(20000, &testEncoderPID);
+    
+    if (DO_TURN_TEST)
+        timerInterval(5000, &testTurn);
 }
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
@@ -70,11 +87,11 @@ void controlLoop(int loopDelayMs) {
     if (DO_ENCODER_TEST)
         encoderLoop();
 
-    if (DO_PID_TEST) {
+    if (DO_PID) {
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-        double currentPositionEncoderA = readEncoderA();
-        double currentPositionEncoderB = readEncoderB();
+        int currentPositionEncoderA = readLeftEncoder();
+        int currentPositionEncoderB = readRightEncoder();
 
         double desiredVelocityA = encoderAController.Compute(encoderATarget, currentPositionEncoderA, loopDelaySeconds);
         double desiredVelocityB = encoderBController.Compute(encoderBTarget, currentPositionEncoderB, loopDelaySeconds);
@@ -88,23 +105,26 @@ void controlLoop(int loopDelayMs) {
         double leftMotorPower = (encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds));
         double rightMotorPower = (encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds));
 
-        serialLog((char *)"Encoder A ", 2);
-        serialLog((float) currentPositionEncoderA, 2);
-        serialLog((char *)" Encoder B ", 2);
-        serialLog((float) currentPositionEncoderB, 2);
-        serialLog((char *)" Desired Velocity A ", 2);
-        serialLog((float) desiredVelocityA, 2);
-        serialLog((char *)" Desired Velocity B ", 2);
-        serialLog((float) desiredVelocityB, 2);
-        serialLog((char *)" Current Velocity A ", 2);
-        serialLog((float) currentVelocityA, 2);
-        serialLog((char *)" Current Velocity B ", 2);
-        serialLog((float) currentVelocityB, 2);
-        serialLog((char *)" Left Motor Power ", 2);
-        serialLog((float) leftMotorPower, 2);
-        serialLog((char *)" Right Motor Power ", 2);
-        serialLogln((float) rightMotorPower, 2);
-        
+        serialLog(currentPositionEncoderA, 3);
+        serialLog((char *)",", 3);
+        serialLog(currentPositionEncoderB, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) desiredVelocityA, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) desiredVelocityB, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) currentVelocityA, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) currentVelocityB, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) leftMotorPower, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) rightMotorPower, 3);
+        serialLog((char *)",", 3);
+        serialLog(encoderATarget, 3);
+        serialLog((char *)",", 3);
+        serialLogln(encoderBTarget, 3);
+
         drive(
             leftMotorPower,
             rightMotorPower,
@@ -120,15 +140,15 @@ void drive(float tiles) {
 
 void driveTicks(int tickDistance, std::string id)
 {
-    encoderATarget = readEncoderA() + tickDistance;
-    encoderBTarget = readEncoderB() - tickDistance;
+    encoderATarget = readLeftEncoder() + tickDistance;
+    encoderBTarget = readRightEncoder() - tickDistance;
 
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
 void drive(float leftPower, float rightPower, std::string id) {
     // TODO: maybe move to motor.cpp?
-    float minPower = 0.14;
+    float minPower = 0.16;
     if (leftPower < minPower && leftPower > -minPower)
     {
         leftPower = 0;
@@ -141,16 +161,25 @@ void drive(float leftPower, float rightPower, std::string id) {
     setLeftPower(leftPower);
     setRightPower(rightPower);
 
-    // Logs the Drive values for debugging purposes
-    serialLog((char*)"Drive: ", 3);
-    serialLog(leftPower, 3);
-    serialLog((char*)", ", 3);
-    serialLogln(rightPower, 3);
     //we only send null as id during our test drive. The only other time this drive method is called will be
     //when the server sends it, meaning it will have an id to send back.
     if(id != "NULL")
     {
         createAndSendPacket(2, "success", id);   
+    }
+}
+
+void turn(float angleRadians, std::string id) {
+    float offsetInches = TRACK_WIDTH_INCHES * angleRadians / 2;
+    int offsetTicks = (int) (offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
+
+    encoderATarget -= offsetTicks;
+    encoderBTarget += offsetTicks;
+
+    // TODO wait for pid to reach target
+    if (id != "NULL")
+    {
+        createAndSendPacket(2, "success", id);
     }
 }
 

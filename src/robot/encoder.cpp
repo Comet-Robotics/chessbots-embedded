@@ -6,8 +6,8 @@
 #include "utils/config.h"
 #include "utils/logging.h"
 
-Encoder EncoderA(ENCODER_A_PIN1, ENCODER_A_PIN2);
-Encoder EncoderB(ENCODER_B_PIN1, ENCODER_B_PIN2);
+Encoder EncoderA(ENCODER_A_PIN1, ENCODER_A_PIN2); // right
+Encoder EncoderB(ENCODER_B_PIN1, ENCODER_B_PIN2); // left
 int oldPositionA = -999;
 int oldPositionB = -999;
 
@@ -22,8 +22,8 @@ void resetEncoders() {
 }
 
 void encoderLoop() {
-    int newPosition_EncA = EncoderA.read();
-    int newPosition_EncB = EncoderB.read();
+    int newPosition_EncA = readLeftEncoder();
+    int newPosition_EncB = readRightEncoder();
 
     if(oldPositionA != newPosition_EncA){
         oldPositionA = newPosition_EncA;
@@ -38,12 +38,13 @@ void encoderLoop() {
     }
 }
 
-int readEncoderA() {
+int readLeftEncoder() {
+    // TODO swap encoders and rename debug logs
     return EncoderA.read();
 }
 
-int readEncoderB() {
-    return EncoderB.read();
+int readRightEncoder() {
+    return -EncoderB.read();
 }
 
 #endif
