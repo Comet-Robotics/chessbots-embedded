@@ -91,6 +91,11 @@ void startLightReading() {
         }
         if(counter == DIFF_TICK)
         {
+            //only print once
+            if(i == 0)
+            {
+                serialLogln((char*) "Checking tick values!", 4);
+            }
             //call the function, and if true then reset cooldown
             if(checkForLightChange(i))
             {
