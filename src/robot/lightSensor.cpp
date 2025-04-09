@@ -13,6 +13,7 @@
 #include "utils/timer.h"
 
 int lightArray[4];
+//MUST BE MULTIPLE OF DIFF_TICK
 const uint8_t COOLDOWN_TIME = 5;
 uint8_t cooldown[4] = {0, 0, 0, 0};
 float prevTickVals[4] = {-1, -1, -1, -1};
@@ -48,22 +49,21 @@ void startLightReading() {
         //for each tick, check if its previous value is too far from what it was before. If it is, consider that the encoder has changed color.
         for(int i = 0; i < 4; i++)
         {
+            //first if our cooldown's active, don't do anything until we've reached cooldown time, then reset cooldown timer and exit cooldown.
             if(cooldown[i] != 0)
             {
                 cooldown[i]++;
-                if(cooldown[i] == COOLDOWN_TIME)
+                if(cooldown[i] == COOLDOWN_TIME + 1)
                 {
                     cooldown[i] = 0;
                 }
-                serialLogln((char*) "tick on cooldown!", 2);
+                serialLogln((char*) "tick on cooldown!", 4);
                 continue;
             }
+            //ifdifference to great and we're not at the start where prevTick is -1, declare that the encoder has changed color, and assign cooldown.
             if(abs(prevTickVals[i] - lightArray[i]) >= 200 && prevTickVals[i] != -1)
             {
                 serialLogln((char*) "THE DIFFERENCE IS BIG SO WE HAVE CHANGED COLOR GRAHH", 2);
-                serialLog((char*) "bruh", 2);
-                serialLog(prevTickVals[i], 2);
-                serialLogln((char*) "bruh", 2);
                 cooldown[i] = 1;
             }
             prevTickVals[i] = 0;
@@ -71,28 +71,27 @@ void startLightReading() {
     }
     else
     {
-        serialLogln((char*) "update sum in the meantime", 2);
         //now, update it for each encoder.
         for(int i = 0; i < 4; i++)
         {
+            //first if our cooldown's active, don't do anything until we've reached cooldown time, then reset cooldown timer and exit cooldown.
             if(cooldown[i] != 0)
             {
                 cooldown[i]++;
-                if(cooldown[i] == COOLDOWN_TIME)
+                if(cooldown[i] == COOLDOWN_TIME + 1)
                 {
                     cooldown[i] = 0;
                 }
-                serialLogln((char*) "tick on cooldown!", 2);
+                serialLogln((char*) "tick on cooldown!", 4);
                 continue;
             }
+            //do DIFF_TICK - 1 because counter can have values 1, 2, 3, 4, and 5, and when count = 5 then we reset. So only 4 samples used.
             prevTickVals[i] += (float) lightArray[i] / (DIFF_TICK - 1);
-            serialLog(prevTickVals[i], 2);
-            serialLogln((char*) " - Val", 2);
         }
         std::string finalStr = "At counter " + std::to_string(counter) + ", the current fraction is " + std::to_string(prevTickVals[0]) + " for light sensor 0.";
         serialLogln(finalStr.c_str(), 4);
     }
-
+    //updating counter
     counter++;
     if(counter == DIFF_TICK + 1)
     {
