@@ -10,7 +10,7 @@
 
 void MotorEncoderTest::init()
 {
-    serialLogln((char *)"Starting Motor & Encoder Test", 2);
+    serialLogln("Starting Motor & Encoder Test", 2);
 
     this->testSuccessful = true;
 
@@ -28,16 +28,16 @@ void MotorEncoderTest::testLeftMotor()
     int encoderAValue = readLeftEncoder();
     if (encoderAValue > (this->startEncoderA + this->ENCODER_TOLERANCE))
     {
-        serialLogln((char *)"Encoder A (lbl RightEncoder) is aligned with left motor (lbl M1). (Positive motor = positive encoder = CW from Motor POV)", 2);
+        serialLogln("Encoder A (lbl RightEncoder) is aligned with left motor (lbl M1). (Positive motor = positive encoder = CW from Motor POV)", 2);
     }
     else if (encoderAValue < (this->startEncoderA - this->ENCODER_TOLERANCE))
     {
-        serialLogln((char *)"[WARN] Encoder A (lbl RightEncoder) is inverted with left motor (lbl M1)!", 2);
+        serialLogln("[WARN] Encoder A (lbl RightEncoder) is inverted with left motor (lbl M1)!", 2);
         this->testSuccessful = false;
     }
     else
     {
-        serialLogln((char *)"[ERR] Encoder A (lbl RightEncoder) is not associated with left motor (lbl M1)!", 2);
+        serialLogln("[ERR] Encoder A (lbl RightEncoder) is not associated with left motor (lbl M1)!", 2);
         this->testSuccessful = false;
     }
     setLeftPower(0);
@@ -61,23 +61,23 @@ void MotorEncoderTest::testRightMotor()
     int encoderBValue = readRightEncoder();
     if (encoderBValue > (this->startEncoderB + this->ENCODER_TOLERANCE))
     {
-        serialLogln((char *)"Encoder B (lbl LeftEncoder) is aligned with right motor (lbl M2). (Positive motor = positive encoder = CCW from Motor POV)", 2);
+        serialLogln("Encoder B (lbl LeftEncoder) is aligned with right motor (lbl M2). (Positive motor = positive encoder = CCW from Motor POV)", 2);
     }
     else if (encoderBValue < (this->startEncoderB - this->ENCODER_TOLERANCE))
     {
-        serialLogln((char *)"[WARN] Encoder B (lbl LeftEncoder) is inverted with right motor (lbl M2)!", 2);
+        serialLogln("[WARN] Encoder B (lbl LeftEncoder) is inverted with right motor (lbl M2)!", 2);
         this->testSuccessful = false;
     }
     else
     {
-        serialLogln((char *)"[ERR] Encoder B (lbl LeftEncoder) is not associated with right motor (lbl M2)!", 2);
+        serialLogln("[ERR] Encoder B (lbl LeftEncoder) is not associated with right motor (lbl M2)!", 2);
         this->testSuccessful = false;
     }
     setRightPower(0);
     if (this->testSuccessful)
     {
-        serialLogln((char *)"Test successful!", 2);
-        serialLogln((char *)"To go forward, both left and right should be set positive.", 2);
+        serialLogln("Test successful!", 2);
+        serialLogln("To go forward, both left and right should be set positive.", 2);
         auto fp = std::bind(&MotorEncoderTest::testDriveForward, this);
         timerDelay(2000, fp);
     }
@@ -85,23 +85,23 @@ void MotorEncoderTest::testRightMotor()
     {
         int encoderAValue = readLeftEncoder();
         if ((this->startEncoderA - this->ENCODER_TOLERANCE) <= encoderAValue && encoderAValue <= (this->startEncoderA + this->ENCODER_TOLERANCE)) {
-            serialLogln((char *)"[WARN] Encoder A (lbl RightEncoder) did not significantly change over the course of the test!", 2);
+            serialLogln("[WARN] Encoder A (lbl RightEncoder) did not significantly change over the course of the test!", 2);
         }
         if ((this->_startEncoderB - this->ENCODER_TOLERANCE) <= encoderBValue && encoderBValue <= (this->_startEncoderB + this->ENCODER_TOLERANCE))
         {
-            serialLogln((char *)"[WARN] Encoder B (lbl LeftEncoder) did not significantly change over the course of the test!", 2);
+            serialLogln("[WARN] Encoder B (lbl LeftEncoder) did not significantly change over the course of the test!", 2);
         }
-        serialLogln((char *)"Test failed for one or more reasons, listed above.", 2);
+        serialLogln("Test failed for one or more reasons, listed above.", 2);
         if (((this->startEncoderA - this->ENCODER_TOLERANCE) > encoderAValue || encoderAValue > (this->startEncoderA + this->ENCODER_TOLERANCE))
          && ((this->_startEncoderB - this->ENCODER_TOLERANCE) > encoderBValue || encoderBValue > (this->_startEncoderB + this->ENCODER_TOLERANCE))) {
-            serialLogln((char *)"Encoder A and B changed but did not have the correct associations. Maybe swap the motors or the encoders?", 2);
+            serialLogln("Encoder A and B changed but did not have the correct associations. Maybe swap the motors or the encoders?", 2);
         }
     }
 }
 
 void MotorEncoderTest::testDriveForward()
 {
-    serialLogln((char *)"Setting motors to go 'forward' for 7 seconds...", 2);
+    serialLogln("Setting motors to go 'forward' for 7 seconds...", 2);
     setLeftPower(1);
     setRightPower(1);
     auto fp = std::bind(&MotorEncoderTest::testDriveDone, this);
@@ -110,7 +110,7 @@ void MotorEncoderTest::testDriveForward()
 
 void MotorEncoderTest::testDriveDone()
 {
-    serialLogln((char *)"Driving done!", 2);
+    serialLogln("Driving done!", 2);
     setLeftPower(0);
     setRightPower(0);
 }
