@@ -32,7 +32,7 @@ float TRACK_WIDTH_INCHES = 8.29;
 float WHEEL_DIAMETER_INCHES = 4.75;
 
 void setConfig(JsonObject config) {
-    serialLogln((char*)"Setting Config...", 2);
+    serialLogln("Setting Config...", 2);
 
     // The is<x>() method checks the type of the variable. If the type isn't none, then
     // we know this variable exists in the config and has a value
@@ -56,7 +56,7 @@ void setConfig(JsonObject config) {
     if (config["TRACK_WIDTH_INCHES"].is<float>()) TRACK_WIDTH_INCHES = config["TRACK_WIDTH_INCHES"];
     if (config["WHEEL_DIAMETER_INCHES"].is<float>()) WHEEL_DIAMETER_INCHES = config["WHEEL_DIAMETER_INCHES"];
 
-    serialLogln((char*)"Config Set!", 2);
+    serialLogln("Config Set!", 2);
 }
 
 #endif
