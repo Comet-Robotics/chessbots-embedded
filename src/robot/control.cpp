@@ -23,8 +23,8 @@
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 
-PIDController encoderAVelocityController(0.00006, 0, 0, -1, +1);
-PIDController encoderBVelocityController(0.00006, 0, 0, -1, +1);
+PIDController encoderAVelocityController(0.00013, 0.000000015, 0.0000001, -1, +1);
+PIDController encoderBVelocityController(0.00013, 0.000000015, 0.0000001, -1, +1);
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
