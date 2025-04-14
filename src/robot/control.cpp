@@ -57,8 +57,8 @@ void stop() {
 }
 
 // Reads in the light value of all light sensors
-void readLight() {
-    startLightReading();
+void readLight(bool* onFirstTile) {
+    startLightReading(onFirstTile);
 }
 
 // Tests the motors. This turns the motors on.

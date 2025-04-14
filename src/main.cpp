@@ -20,6 +20,9 @@
 // int lightSum[4] = {0, 0, 0, 0};
 // int prevSum[4] = {0, 0, 0, 0};
 
+//may want to make this value accessible from other files? Because we are going to be passing it around a lot
+bool onFirstTile[4] = {false, false, false, false};
+
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
@@ -34,6 +37,21 @@ void setup() {
     connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
+}
+
+void printSensorStatus()
+{
+        //know our char will be 4 bits plus null term
+        char vals[5];
+        //read the booleans as char
+        for(uint8_t i = 0; i < 4; i++)
+        {
+            vals[i] = onFirstTile[i] ? '1' : '0';
+        }
+        //must null terminate
+        vals[4] = '\0';
+        serialLog((char*) "Light statuses: ", 4);
+        serialLogln((char*) vals, 2);    
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
@@ -53,7 +71,12 @@ void loop() {
     // If the bot is connected to the server, check for received data, and accept it if available
     if (getServerConnectionStatus()) acceptData();
 
-    if (DO_LIGHT_SENSOR_TEST) readLight();
+#ifdef DO_LIGHT_SENSOR_TEST
+    readLight(onFirstTile);
+    printSensorStatus();
+#endif
+
+    
 
     if (DO_ENCODER_TEST) encoderLoop();
 

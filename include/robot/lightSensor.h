@@ -7,7 +7,7 @@
 void setupIR();
 void activateIR();
 void deactivateIR();
-void startLightReading();
+void startLightReading(bool* onFirstTile);
 void readLightLevels();
 
 #endif
