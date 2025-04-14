@@ -23,6 +23,8 @@
 //may want to make this value accessible from other files? Because we are going to be passing it around a lot
 bool onFirstTile[4] = {false, false, false, false};
 
+bool drivingRobot = true;
+
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
@@ -37,21 +39,6 @@ void setup() {
     connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
-}
-
-void printSensorStatus()
-{
-        //know our char will be 4 bits plus null term
-        char vals[5];
-        //read the booleans as char
-        for(uint8_t i = 0; i < 4; i++)
-        {
-            vals[i] = onFirstTile[i] ? '1' : '0';
-        }
-        //must null terminate
-        vals[4] = '\0';
-        serialLog((char*) "Light statuses: ", 4);
-        serialLogln((char*) vals, 2);    
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
@@ -71,12 +58,36 @@ void loop() {
     // If the bot is connected to the server, check for received data, and accept it if available
     if (getServerConnectionStatus()) acceptData();
 
-#ifdef DO_LIGHT_SENSOR_TEST
+
+#if DO_LIGHT_SENSOR_TEST
     readLight(onFirstTile);
-    printSensorStatus();
+    //know our char will be 4 bits
+    char vals[5];
+    //read the booleans as char
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        vals[i] = onFirstTile[i] ? '1' : '0';
+    }
+    //must null terminate
+    vals[4] = '\0';
+    serialLog((char*) "Light statuses: ", 4);
+    serialLogln((char*) vals, 2);
 #endif
 
     
+    if(drivingRobot)
+    {
+        bool finished = driveRobotUntilNewTile(onFirstTile);
+        if(finished)
+        {
+            drivingRobot = false;
+            serialLogln((char*) "STOP DRIVING!", 4);
+        }
+        else
+        {
+            serialLogln((char*) "DRIVING", 4);
+        }
+    }
 
     if (DO_ENCODER_TEST) encoderLoop();
 

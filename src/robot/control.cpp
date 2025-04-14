@@ -16,6 +16,14 @@
 #include "wifi/connection.h"
 #include "robot/encoder_new.h"
 
+bool setupDrive = true;
+bool topLeftEncodeVal = false;
+bool topRightEncodeVal = false;
+const uint8_t Top_Left_Encoder_Index = 2;
+const uint8_t Top_Right_Encoder_Index = 3;
+const uint8_t Bottom_Left_Encoder_Index = 4;
+const uint8_t Bottom_Right_Encoder_Index = 1;
+
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
     serialLogln((char*)"Setting Up Bot...", 2);
@@ -63,8 +71,29 @@ void readLight(bool* onFirstTile) {
 
 // Tests the motors. This turns the motors on.
 void startDriveTest() {
-    drive(0.5f, 0.5f, "NULL");
+    drive(-0.5f, -0.5f, "NULL");
     timerDelay(2000, &driveTestOff);
+}
+
+//drives until the first two encoders are considered to hit a new value
+bool driveRobotUntilNewTile(bool* onFirstTile) 
+{
+    //intially set this up
+    if(setupDrive)
+    {
+        drive(0.5f, 0.5f, "NULL");
+        //assign values here, will detect when they change
+        topLeftEncodeVal = onFirstTile[Top_Left_Encoder_Index];
+        topRightEncodeVal = onFirstTile[Top_Right_Encoder_Index];
+    }
+    setupDrive = false;
+    //on change, stop
+    if(onFirstTile[Top_Left_Encoder_Index] != topLeftEncodeVal || onFirstTile[Top_Right_Encoder_Index] != topRightEncodeVal)
+    {
+        stop();
+        return true;
+    }
+    return false;
 }
 
 // Tests the motors. This turns the motors off.

@@ -9,6 +9,7 @@ void drive(float leftPower, float rightPower, std::string id);
 void stop();
 void readLight(bool* onFirstTile);
 void startDriveTest();
+bool driveRobotUntilNewTile(bool* onFirstTile);
 void driveTestOff();
 
 #endif
