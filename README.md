@@ -1,7 +1,7 @@
 # ChessBots Embedded
 Welcome to the ChessBots Embedded repo!
 
-Adding this stuff for myself for the light sensor task, on what's remaining:
+Adding this stuff for myself for the light sensor task, on what's remaining. Should delete and replace with normal README at the end:
 - [ ] Determine if it's needed to have the polled value also be a sum, or if taking a sample at one point is fine.
 - [ ] Determine how to track what tile each sensor is on. Will likely need this because how else can we tell if one part of the sensor is on a different color from another sensor?
 - [ ] Determine how we will use auto-alignment upon reaching an edge. Likely, will have the forward motor stay static while the back motor moves until it detects a change.
@@ -13,5 +13,3 @@ Adding this stuff for myself for the light sensor task, on what's remaining:
   - [ ] Then, as normal move the motor forwards or backwards until it reaches the tile edge. Let's say in thsi example we move it backwrds. Then, move it forwards by tileLength/2 ticks, so that now it's centered vertically, albeit not horizontally just yet.
   - [ ] To center it horizontally, now all we do is we rotate it 90 degrees (let's say to the right), and repeat the same process of driving backwards to the edge, then going forwards by tileLength/2. Then rotate left.
 - [ ] One small issue: is there code to rotate perfectly 90 degrees? If not, we might have to code that.
-
-For more information about the project and how to contribute, please take a look at the [Wiki](https://github.com/Comet-Robotics/chessbot-embedded/wiki)
