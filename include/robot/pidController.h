@@ -17,9 +17,9 @@ public:
     double integral;   // Integral accumulator
 };
 // Manually making the clamp function
-template <typename T>
-T clamp(T value, T minValue, T maxValue) {
-    return (value < minValue) ? minValue : (value > maxValue) ? maxValue : value;
-}
+// template <typename T>
+// T clamp(T value, T minValue, T maxValue) {
+//     return (value < minValue) ? minValue : (value > maxValue) ? maxValue : value;
+// }
 
 #endif // PID_CONTROLLER_H

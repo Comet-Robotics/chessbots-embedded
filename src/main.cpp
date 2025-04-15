@@ -16,7 +16,7 @@
 #include "../env.h"
 #include "robot/pidController.h"
 
-int delayMilliseconds = 10;
+int delayMilliseconds = 20;
 
 // Setup gets run at startup
 void setup() {
