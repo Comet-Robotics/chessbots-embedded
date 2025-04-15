@@ -39,6 +39,7 @@ void setup() {
     connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
+    delay(2000);
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
@@ -74,7 +75,6 @@ void loop() {
     serialLogln((char*) vals, 2);
 #endif
 
-    
     if(drivingRobot)
     {
         bool finished = driveRobotUntilNewTile(onFirstTile);

@@ -66,7 +66,10 @@ void stop() {
 
 // Reads in the light value of all light sensors
 void readLight(bool* onFirstTile) {
-    startLightReading(onFirstTile);
+    // The Infrared Blaster must be activated first to get a clear reading
+    activateIR();
+    //this way, we can pass in a parameter to timerDelay as well, but we don't have to
+    timerDelay(50, std::bind(startLightReading, onFirstTile));
 }
 
 // Tests the motors. This turns the motors on.

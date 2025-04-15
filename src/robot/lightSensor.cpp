@@ -58,9 +58,12 @@ bool checkForLightChange(uint8_t i)
 {
     //first if our cooldown's active, don't do anything until we've reached cooldown time, then reset cooldown timer and exit cooldown.
     //ifdifference to great and we're not at the start where prevTick is -1, declare that the encoder has changed color, and assign cooldown.
-    if(abs(prevTickVals[i] - lightArray[i]) >= 200 && prevTickVals[i] != -1)
+    if(abs(prevTickVals[i] - lightArray[i]) >= 500 || prevTickVals[i] == -1)
     {
+        serialLog(prevTickVals[i], 4);
+        serialLogln((char*) "", 4);
         serialLogln((char*) "THE DIFFERENCE IS BIG SO WE HAVE CHANGED COLOR GRAHH", 3);
+        cooldown[i] = 1;
         return true;
     }
     return false;
@@ -76,12 +79,8 @@ void updateCounter() {
 }
 
 void startLightReading(bool* onFirstTile) {
-    // The Infrared Blaster must be activated first to get a clear reading
-    activateIR();
-    // To give time for the IR Blaster to activate, only reads light values after 50 milliseconds
-    timerDelay(50, &readLightLevels);
-    
     //for each tick, check if its previous value is too far from what it was before. If it is, consider that the encoder has changed color.
+    readLightLevels();
     for(uint8_t i = 0; i < 4; i++)
     {
         //if updating cooldown, skip what's below.
@@ -89,6 +88,7 @@ void startLightReading(bool* onFirstTile) {
         {
             continue;
         }
+        //if its time to change the tick
         if(counter == DIFF_TICK)
         {
             //only print once
@@ -101,8 +101,6 @@ void startLightReading(bool* onFirstTile) {
             {
                 //invert value
                 onFirstTile[i] = !onFirstTile[i];
-                //reset cooldown
-                cooldown[i] = 1;
             }
             //reset the tick values
             prevTickVals[i] = 0;
