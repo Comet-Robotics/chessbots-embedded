@@ -14,10 +14,10 @@
 
 int lightArray[4];
 //MUST BE MULTIPLE OF DIFF_TICK
-const uint8_t COOLDOWN_TIME = 5;
+const uint8_t COOLDOWN_TIME = 2;
 uint8_t cooldown[4] = {0, 0, 0, 0};
 float prevTickVals[4] = {-1, -1, -1, -1};
-const uint8_t DIFF_TICK = 5;
+const uint8_t DIFF_TICK = 2;
 uint8_t counter = 1;
 
 // Sets the IR (Infrared) Blaster to be able to output

@@ -24,6 +24,7 @@
 bool onFirstTile[4] = {false, false, false, false};
 
 bool drivingRobot = true;
+bool reversing = false;
 
 // Setup gets run at startup
 void setup() {
@@ -82,10 +83,20 @@ void loop() {
         {
             drivingRobot = false;
             serialLogln((char*) "STOP DRIVING!", 4);
+            setReverseTicks(3);
+            reversing = true;
         }
         else
         {
             serialLogln((char*) "DRIVING", 4);
+        }
+    }
+
+    if(reversing)
+    {
+        if(!reverseRobotXTicks())
+        {
+            reversing = false;
         }
     }
 

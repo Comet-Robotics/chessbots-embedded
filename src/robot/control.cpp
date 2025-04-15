@@ -19,10 +19,14 @@
 bool setupDrive = true;
 bool topLeftEncodeVal = false;
 bool topRightEncodeVal = false;
-const uint8_t Top_Left_Encoder_Index = 2;
-const uint8_t Top_Right_Encoder_Index = 3;
-const uint8_t Bottom_Left_Encoder_Index = 4;
-const uint8_t Bottom_Right_Encoder_Index = 1;
+
+uint8_t iteration = 0;
+uint8_t maxTicks = -1;
+
+const uint8_t Top_Left_Encoder_Index = 1;
+const uint8_t Top_Right_Encoder_Index = 2;
+const uint8_t Bottom_Left_Encoder_Index = 3;
+const uint8_t Bottom_Right_Encoder_Index = 0;
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -84,7 +88,7 @@ bool driveRobotUntilNewTile(bool* onFirstTile)
     //intially set this up
     if(setupDrive)
     {
-        drive(0.5f, 0.5f, "NULL");
+        drive(-0.5f, -0.5f, "NULL");
         //assign values here, will detect when they change
         topLeftEncodeVal = onFirstTile[Top_Left_Encoder_Index];
         topRightEncodeVal = onFirstTile[Top_Right_Encoder_Index];
@@ -97,6 +101,27 @@ bool driveRobotUntilNewTile(bool* onFirstTile)
         return true;
     }
     return false;
+}
+
+void setReverseTicks(uint8_t max_ticks)
+{
+    maxTicks = max_ticks;
+}
+
+bool reverseRobotXTicks()
+{
+    if(iteration == 0)
+    {
+        drive(0.5f, 0.5f, "NULL");
+    }
+    if(iteration == maxTicks)
+    {
+        iteration = 0;
+        stop();
+        return false;
+    }
+    iteration++;
+    return true;
 }
 
 // Tests the motors. This turns the motors off.
