@@ -24,8 +24,8 @@
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
-PIDController encoderAVelocityController(0.00207101491, 0, 0.00000005, -1, +1); //Blue
-PIDController encoderBVelocityController(0.00190499921, 0, 0.00000005, -1, +1); //Red
+PIDController encoderAVelocityController(0.00209901491, 0.00000000000000000005, 0.0000000005, -1, +1); //Blue
+PIDController encoderBVelocityController(0.00196499921, 0.00000000000000000005, 0.0000000005, -1, +1); //Red
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -97,8 +97,8 @@ void controlLoop(int loopDelayMs) {
         static int prevPositionA = 0;
         static int prevPositionB = 0;
 
-        static MotionProfile profileA = {4000, 5000, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
-        static MotionProfile profileB = {4000, 5000, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileA = {40000, 5000, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileB = {40000, 5000, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
 
         profileA.targetPosition = encoderATarget;
         profileA.currentPosition = currentPositionEncoderA;
