@@ -23,9 +23,9 @@
 
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
-
-PIDController encoderAVelocityController(0.00275, 0, 0.000000000001, -1, +1); //Blue
-PIDController encoderBVelocityController(0.00225, 0, 0.000000125, -1, +1); //Red
+//PLEASE ONLY USE CHESSBOT #4 FOR TESTING
+PIDController encoderAVelocityController(0.00207101491, 0, 0.00000005, -1, +1); //Blue
+PIDController encoderBVelocityController(0.00190499921, 0, 0.00000005, -1, +1); //Red
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
