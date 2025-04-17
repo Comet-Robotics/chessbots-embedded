@@ -24,8 +24,8 @@
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 
-PIDController encoderAVelocityController(0.000135105, 0.0000000153305, 0.00000014082055, -1, +1); //Blue
-PIDController encoderBVelocityController(0.000135105, 0.0000000153305, 0.00000014082055, -1, +1); //Red
+PIDController encoderAVelocityController(0.00275, 0, 0.000000000001, -1, +1); //Blue
+PIDController encoderBVelocityController(0.00225, 0, 0.000000125, -1, +1); //Red
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -97,29 +97,31 @@ void controlLoop(int loopDelayMs) {
         static int prevPositionA = 0;
         static int prevPositionB = 0;
 
-        static MotionProfile profileA = {4000, 5000, 0, 0, 1000}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
-        static MotionProfile profileB = {4000, 5000, 0, 0, 1000}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileA = {4000, 5000, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileB = {4000, 5000, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
 
         profileA.targetPosition = encoderATarget;
         profileA.currentPosition = currentPositionEncoderA;
 
         profileB.targetPosition = encoderBTarget;
         profileB.currentPosition = currentPositionEncoderB;
-
-        double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds);
+        
         double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
         profileA.currentVelocity = currentVelocityA;
         
-        prevPositionA = currentPositionEncoderA;
-        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
         
-
-        double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds);
         double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
         profileB.currentVelocity = currentVelocityB;
-
+        
+        double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds);
+        double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds);
+        
+        prevPositionA = currentPositionEncoderA;        
         prevPositionB = currentPositionEncoderB;
+
+        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
         double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
+
         serialLog(currentPositionEncoderA, 3);
         serialLog((char *)",", 3);
         serialLog(currentPositionEncoderB, 3);
@@ -141,8 +143,8 @@ void controlLoop(int loopDelayMs) {
         serialLogln(encoderBTarget, 3);
 
         drive(
-            leftMotorPower,
-            rightMotorPower,
+            leftMotorPower, // leftMotorPower,
+            rightMotorPower, // rightMotorPower,
             "NULL"
         );
     }
