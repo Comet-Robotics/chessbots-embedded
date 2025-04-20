@@ -24,8 +24,8 @@
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
-PIDController encoderAVelocityController(0.00220051695, 0.000000000000005, 0.00000025, -1, +1); //Blue
-PIDController encoderBVelocityController(0.00215782345, 0.000000000000005, 0.00000025, -1, +1); //Red
+PIDController encoderAVelocityController(0.0005264451, 0 , 0, -1, +1); //Blue
+PIDController encoderBVelocityController(0.0005264451, 0 , 0, -1, +1); //Red
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -89,6 +89,7 @@ void controlLoop(int loopDelayMs) {
         encoderLoop();
 
     if (DO_PID) {
+        //delay(5000); // Delay to prevent CPU overload
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
         int currentPositionEncoderA = readLeftEncoder();
@@ -97,8 +98,8 @@ void controlLoop(int loopDelayMs) {
         static int prevPositionA = 0;
         static int prevPositionB = 0;
 
-        static MotionProfile profileA = {48000, 7300, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
-        static MotionProfile profileB = {48000, 7300, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileA = {10000, 7300, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileB = {10000, 7300, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
 
         profileA.targetPosition = encoderATarget;
         profileA.currentPosition = currentPositionEncoderA;

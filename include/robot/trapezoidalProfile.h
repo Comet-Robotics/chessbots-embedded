@@ -4,6 +4,7 @@ struct MotionProfile {
     double currentPosition;
     double targetPosition;
     double currentVelocity;
+    double requiredVelocity;
 };
 
 double updateTrapezoidalProfile(MotionProfile &profile, double dt);

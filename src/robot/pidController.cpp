@@ -39,7 +39,7 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Clamp output
     output = std::max(minOutput, std::min(maxOutput, output));
 
-    return output;
+    return (output);
 }
 
 void PIDController::Reset(){
