@@ -83,8 +83,8 @@ void loop() {
         {
             drivingRobot = false;
             serialLogln((char*) "STOP DRIVING!", 4);
-            setReverseTicks(3);
-            reversing = true;
+            beginReverseDrive(3);
+
         }
         else
         {
@@ -92,13 +92,7 @@ void loop() {
         }
     }
 
-    if(reversing)
-    {
-        if(!reverseRobotXTicks())
-        {
-            reversing = false;
-        }
-    }
+    reverseRobotXTicks();
 
     if (DO_ENCODER_TEST) encoderLoop();
 

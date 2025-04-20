@@ -22,6 +22,7 @@ bool topRightEncodeVal = false;
 
 uint8_t iteration = 0;
 uint8_t maxTicks = -1;
+bool reversingXTicks = false;
 
 const uint8_t Top_Left_Encoder_Index = 1;
 const uint8_t Top_Right_Encoder_Index = 2;
@@ -103,25 +104,28 @@ bool driveRobotUntilNewTile(bool* onFirstTile)
     return false;
 }
 
-void setReverseTicks(uint8_t max_ticks)
+void beginReverseDrive(uint8_t max_ticks)
 {
     maxTicks = max_ticks;
+    reversingXTicks = true;
 }
 
-bool reverseRobotXTicks()
+void reverseRobotXTicks()
 {
-    if(iteration == 0)
+    if(reversingXTicks)
     {
-        drive(0.5f, 0.5f, "NULL");
+        if(iteration == 0)
+        {
+            drive(0.5f, 0.5f, "NULL");
+        }
+        if(iteration == maxTicks)
+        {
+            iteration = 0;
+            stop();
+            reversingXTicks = false;
+        }
+        iteration++;
     }
-    if(iteration == maxTicks)
-    {
-        iteration = 0;
-        stop();
-        return false;
-    }
-    iteration++;
-    return true;
 }
 
 // Tests the motors. This turns the motors off.
