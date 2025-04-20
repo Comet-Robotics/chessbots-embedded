@@ -24,7 +24,6 @@
 bool onFirstTile[4] = {false, false, false, false};
 
 bool drivingRobot = true;
-bool reversing = false;
 
 // Setup gets run at startup
 void setup() {
@@ -83,7 +82,7 @@ void loop() {
         {
             drivingRobot = false;
             serialLogln((char*) "STOP DRIVING!", 4);
-            beginReverseDrive(3);
+            beginXTicksDrive(3, true);
 
         }
         else
@@ -92,7 +91,7 @@ void loop() {
         }
     }
 
-    reverseRobotXTicks();
+    moveRobotXTicks();
 
     if (DO_ENCODER_TEST) encoderLoop();
 

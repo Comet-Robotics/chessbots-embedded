@@ -10,8 +10,8 @@ void stop();
 void readLight(bool* onFirstTile);
 void startDriveTest();
 bool driveRobotUntilNewTile(bool* onFirstTile);
-void beginReverseDrive(uint8_t max_ticks);
-void reverseRobotXTicks();
+void beginXTicksDrive(uint8_t max_ticks, bool inReverse);
+void moveRobotXTicks();
 void driveTestOff();
 
 #endif

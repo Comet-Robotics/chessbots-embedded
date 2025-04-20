@@ -22,7 +22,8 @@ bool topRightEncodeVal = false;
 
 uint8_t iteration = 0;
 uint8_t maxTicks = -1;
-bool reversingXTicks = false;
+bool movingXTicks = false;
+bool reversing = false;
 
 const uint8_t Top_Left_Encoder_Index = 1;
 const uint8_t Top_Right_Encoder_Index = 2;
@@ -104,27 +105,36 @@ bool driveRobotUntilNewTile(bool* onFirstTile)
     return false;
 }
 
-void beginReverseDrive(uint8_t max_ticks)
+void beginXTicksDrive(uint8_t max_ticks, bool inReverse)
 {
     maxTicks = max_ticks;
-    reversingXTicks = true;
+    movingXTicks = true;
+    reversing = inReverse;
 }
 
-void reverseRobotXTicks()
+void moveRobotXTicks()
 {
-    if(reversingXTicks)
+    if(movingXTicks)
     {
         if(iteration == 0)
         {
-            drive(0.5f, 0.5f, "NULL");
+            if(reversing)
+            {
+                //for some reason, positive drive values move it backward? Or maybe I don't understand the direction of the robot.
+                drive(0.5f, 0.5f, "NULL");
+            }
+            else
+            {
+                drive(-0.5f, -0.5f, "NULL");
+            }
         }
+        iteration++;
         if(iteration == maxTicks)
         {
             iteration = 0;
             stop();
-            reversingXTicks = false;
+            movingXTicks = false;
         }
-        iteration++;
     }
 }
 
