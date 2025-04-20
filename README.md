@@ -2,12 +2,14 @@
 Welcome to the ChessBots Embedded repo!
 
 Adding this stuff for myself for the light sensor task, on what's remaining. Should delete and replace with normal README at the end:
-- [ ] Determine if it's needed to have the polled value also be a sum, or if taking a sample at one point is fine.
+- [X] Determine if it's needed to have the polled value also be a sum, or if taking a sample at one point is fine.
+  - So basically we'd likely hvae to repeat a cycle of prev->pollAndCompare->prev->pollAndCompare, because the bot moves so fast that otherwise we can''t really tell when the light sensor changed.
 - [X] Determine how to track what tile each sensor is on. Will likely need this because how else can we tell if one part of the sensor is on a different color from another sensor?
 - [X] Determine how we will use auto-alignment upon reaching an edge. Likely, will have the forward motor stay static while the back motor moves until it detects a change.
-  - [ ] First, have it stop moving when moving forward upon detecting a change.
+  - [X] First, have it stop moving when moving forward upon detecting a change.
+  - [X] Then, move the whole motor backward until we're back to the edge, because we likely overshoot the edge.
+    - [ ] One issue is, this somewhat works but isn't very reliable. Can we measure the speed upon hitting the edge, and then use that to go back by an exact distance?
   - [ ] Then, have the other motor continue moving until it's aligned.
-  - [ ] Implement a slow down function to stop it slowly.
 - [ ] Determine how we will center the robot into the middle of the tile.
   - [ ] First, write code to measure the length of a single tile.
     - [ ] To do this, first move the motor forwards until it reaches the edge. Then, move the motor back until the back sensors detect a tile change. The ticks it takes to move backwards will be the length
