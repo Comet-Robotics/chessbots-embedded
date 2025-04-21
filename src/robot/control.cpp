@@ -16,7 +16,7 @@
 #include "wifi/connection.h"
 #include "robot/encoder_new.h"
 
-bool setupDrive = true;
+bool driveUntilChange = false;
 bool topLeftEncodeVal = false;
 bool topRightEncodeVal = false;
 
@@ -84,25 +84,51 @@ void startDriveTest() {
     timerDelay(2000, &driveTestOff);
 }
 
-//drives until the first two encoders are considered to hit a new value
-bool driveRobotUntilNewTile(bool* onFirstTile) 
+void createDriveUntilNewTile(bool* onFirstTile)
 {
-    //intially set this up
-    if(setupDrive)
+    drive(-0.5f, -0.5f, "NULL");
+    //assign values here, will detect when they change
+    topLeftEncodeVal = onFirstTile[Top_Left_Encoder_Index];
+    topRightEncodeVal = onFirstTile[Top_Right_Encoder_Index];
+    driveUntilChange = true;
+}
+
+//drives until the first two encoders are considered to hit a new value.
+//Returns a status bit, with the correspnding values:
+    // 0 - drive is not active
+    // 1 - drive is active
+    // 2 - just at this moment, we have reached our destination and are going to begin reversing now.
+    // 3 - we are now currently reversing the desired ticks
+    // 4 - we have now reached the desired ticks.
+uint8_t driveUntilNewTile(bool* onFirstTile) 
+{
+    if(driveUntilChange)
     {
-        drive(-0.5f, -0.5f, "NULL");
-        //assign values here, will detect when they change
-        topLeftEncodeVal = onFirstTile[Top_Left_Encoder_Index];
-        topRightEncodeVal = onFirstTile[Top_Right_Encoder_Index];
+        //when both cross, we done.
+        if(onFirstTile[Top_Left_Encoder_Index] != topLeftEncodeVal && onFirstTile[Top_Right_Encoder_Index] != topRightEncodeVal)
+        {
+            stop();
+            driveUntilChange = false;
+            beginXTicksDrive(3, true);
+            return 2;
+        }
+        return 1;
     }
-    setupDrive = false;
-    //on change, stop
-    if(onFirstTile[Top_Left_Encoder_Index] != topLeftEncodeVal || onFirstTile[Top_Right_Encoder_Index] != topRightEncodeVal)
+    //this will only be true when we're reversing
+    else if(movingXTicks)
     {
-        stop();
-        return true;
+        moveRobotXTicks();
+        //if we're still moving, then return a different status
+        if(movingXTicks)
+        {
+            return 3;
+        }
+        else
+        {
+            return 4;
+        }
     }
-    return false;
+    return 0;
 }
 
 void beginXTicksDrive(uint8_t max_ticks, bool inReverse)
@@ -132,8 +158,8 @@ void moveRobotXTicks()
         if(iteration == maxTicks)
         {
             iteration = 0;
-            stop();
             movingXTicks = false;
+            stop();
         }
     }
 }

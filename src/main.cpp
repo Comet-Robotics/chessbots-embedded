@@ -23,8 +23,6 @@
 //may want to make this value accessible from other files? Because we are going to be passing it around a lot
 bool onFirstTile[4] = {false, false, false, false};
 
-bool drivingRobot = true;
-
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
@@ -40,6 +38,8 @@ void setup() {
 
     if (DO_DRIVE_TEST) startDriveTest();
     delay(2000);
+
+    createDriveUntilNewTile(onFirstTile);
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
@@ -60,8 +60,9 @@ void loop() {
     if (getServerConnectionStatus()) acceptData();
 
 
-#if DO_LIGHT_SENSOR_TEST
     readLight(onFirstTile);
+    uint8_t status = driveUntilNewTile(onFirstTile);
+#if DO_LIGHT_SENSOR_TEST
     //know our char will be 4 bits
     char vals[5];
     //read the booleans as char
@@ -73,27 +74,28 @@ void loop() {
     vals[4] = '\0';
     serialLog((char*) "Light statuses: ", 4);
     serialLogln((char*) vals, 2);
+    switch(status)
+    {
+        case 0:
+            serialLogln((char*) "Driving not active!", 4);    
+            break;
+        case 1:
+            serialLogln((char*) "Driving to tile!", 4);  
+            break;
+        case 2:
+            serialLogln((char*) "We've reached the place!", 4); 
+            break;
+        case 3:
+            serialLogln((char*) "Reversing backward!", 4); 
+            break;
+        case 4:
+            serialLogln((char*) "Finished reversing back!", 4); 
+    }
 #endif
 
-    if(drivingRobot)
-    {
-        bool finished = driveRobotUntilNewTile(onFirstTile);
-        if(finished)
-        {
-            drivingRobot = false;
-            serialLogln((char*) "STOP DRIVING!", 4);
-            beginXTicksDrive(3, true);
-
-        }
-        else
-        {
-            serialLogln((char*) "DRIVING", 4);
-        }
-    }
-
-    moveRobotXTicks();
-
-    if (DO_ENCODER_TEST) encoderLoop();
+#if DO_ENCODER_TEST
+    encoderLoop();
+#endif
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in) 
