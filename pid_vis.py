@@ -16,6 +16,7 @@ with Path('pid_test.csv').open('r') as f:
             lists[k].append(val)
 
     power_deadzone = [0.15] * len(lists["EncoderLeft"])
+    neg_power_deadzone = [-0.15] * len(lists["EncoderLeft"])
 
     fig, (ax_enc, ax_vel, ax_pow) = plt.subplots(3, 1)
     ax_enc.set_title("Encoder Values")
@@ -33,5 +34,5 @@ with Path('pid_test.csv').open('r') as f:
         lists["DesiredVelocityRight"], "--m",
     )
     ax_pow.set_title("Motor Powers")
-    ax_pow.plot(power_deadzone, "--k", lists["LeftPower"], "-g", lists["RightPower"], "-y")
+    ax_pow.plot(power_deadzone, "--k", neg_power_deadzone, "--k", lists["LeftPower"], "-g", lists["RightPower"], "-y")
     plt.show()

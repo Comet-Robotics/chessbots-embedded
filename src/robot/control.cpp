@@ -22,8 +22,8 @@
 #include <algorithm>
 
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
-PIDController encoderAVelocityController(0.000138, 0 , 0, -1, +1); //Blue
-PIDController encoderBVelocityController(0.000161775, 0 , 0, -1, +1); //Red
+PIDController encoderAVelocityController(0.00008, 0.000001, 0, -1, +1); //Blue
+PIDController encoderBVelocityController(0.00008, 0.000001, 0, -1, +1); //Red
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -37,14 +37,14 @@ boolean testEncoderPID_value = false;
 void testEncoderPID()
 {
     serialLogln((char *)"Changing encoder PID setpoint!", 2);
-    if (testEncoderPID_value)
+    if (!testEncoderPID_value)
     {
-        testEncoderPID_value = false;
-        encoderATarget = encoderBTarget = TICKS_PER_ROTATION*10;
+        testEncoderPID_value = true;
+        encoderATarget = encoderBTarget = TICKS_PER_ROTATION*5;
     }
     else
     {
-        testEncoderPID_value = true;
+        testEncoderPID_value = false;
         encoderATarget = encoderBTarget = 0;
     }
 }
@@ -74,12 +74,17 @@ void setupBot() {
     encoderAVelocityController.Reset();
     encoderBVelocityController.Reset();
 
-    if (DO_PID_TEST)
-        timerInterval(20000, &testEncoderPID);
+    if (DO_PID_TEST) {
+        testEncoderPID();
+        timerInterval(8000, &testEncoderPID);
+    }
     
-    if (DO_TURN_TEST)
+    if (DO_TURN_TEST) {
+        testTurn();
         timerInterval(5000, &testTurn);
+    }
 }
+
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
 void controlLoop(int loopDelayMs) {
@@ -114,8 +119,16 @@ void controlLoop(int loopDelayMs) {
         prevPositionA = currentPositionEncoderA;        
         prevPositionB = currentPositionEncoderB;
 
-        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds);
-        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds);
+        double leftFeedForward = desiredVelocityA / MAX_VELOCITY_TPS;
+        double rightFeedForward = desiredVelocityB / MAX_VELOCITY_TPS;
+
+        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds) + leftFeedForward;
+        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds) + rightFeedForward;
+
+        if (leftMotorPower > 1) leftMotorPower = 1;
+        if (leftMotorPower < -1) leftMotorPower = -1;
+        if (rightMotorPower > 1) rightMotorPower = 1;
+        if (rightMotorPower < -1) rightMotorPower = -1;
 
         serialLog(currentPositionEncoderA, 3);
         serialLog((char *)",", 3);
@@ -135,8 +148,8 @@ void controlLoop(int loopDelayMs) {
         serialLog((char *)",", 3);
         serialLog(encoderATarget, 3);
         serialLog((char *)",", 3);
-        serialLog(encoderBTarget, 3);
-        serialLog((char *)"", 3);
+        serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        serialLog((char *)",", 3);
         serialLogln(float(loopDelaySeconds), 3);
 
 

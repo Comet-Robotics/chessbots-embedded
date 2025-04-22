@@ -11,7 +11,7 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Calculate error
     double error = setpoint - actual_value;
 
-    if(std::abs(error) < 2) {
+    if (abs(error) < 100) {
         return 0;
     }
 
@@ -43,9 +43,9 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // serialLog((char *)"PID is outputting: ", 3);
     // serialLog(float(output), 3);
     // serialLogln((char *)",", 3);
-    if(output < 0.25){
-        output = 0;
-    }
+    // if (abs(output) < 0.2) {
+    //     output = 0;
+    // }
 
     return (output);
 }

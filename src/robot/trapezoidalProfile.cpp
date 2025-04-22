@@ -11,7 +11,7 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
     double distanceToGo = profile.targetPosition - profile.currentPosition;
 
     // Formula is v^2 / 2a
-    double stoppingDistance = (profile.maxVelocity * profile.maxVelocity) / (2.0 * profile.maxAcceleration);
+    double stoppingDistance = 1.1 * (profile.currentVelocity * profile.currentVelocity) / (2.0 * profile.maxAcceleration);
 
     double changeInVelocity = 0;
     
@@ -20,7 +20,6 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
         changeInVelocity = profile.maxAcceleration * dt * (distanceToGo > 0 ? 1 : -1);
 
     // Deceleration if we’re getting close to target
-    
     if (abs(distanceToGo) <= stoppingDistance)
         changeInVelocity = -1 * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
 

@@ -30,8 +30,8 @@ gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 int TICKS_PER_ROTATION = 12000;
 float TRACK_WIDTH_INCHES = 8.29;
 float WHEEL_DIAMETER_INCHES = 4.75;
-int MAX_VELOCITY_TPS = 32500;
-int MAX_ACCELERATION_TPSPS = 6500;
+float MAX_VELOCITY_TPS = 32500;
+float MAX_ACCELERATION_TPSPS = 6500;
 
 void setConfig(JsonObject config) {
     serialLogln((char*)"Setting Config...", 2);
