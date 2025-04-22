@@ -21,8 +21,6 @@
 #include "../../env.h"
 #include <algorithm>
 
-PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
-PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
 PIDController encoderAVelocityController(0.000138, 0 , 0, -1, +1); //Blue
 PIDController encoderBVelocityController(0.000161775, 0 , 0, -1, +1); //Red
@@ -32,8 +30,9 @@ int encoderBTarget = 0;
 int prevPositionA = 0;
 int prevPositionB = 0;
 
-static MotionProfile profileA = {30000, 6500, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
-static MotionProfile profileB = {30000, 6500, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
+MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
+
 boolean testEncoderPID_value = false;
 void testEncoderPID()
 {
@@ -72,8 +71,8 @@ void setupBot() {
     setupEncodersNew();
     serialLogln((char*)"Bot Set Up!", 2);
 
-    encoderAController.Reset();
-    encoderBController.Reset();
+    encoderAVelocityController.Reset();
+    encoderBVelocityController.Reset();
 
     if (DO_PID_TEST)
         timerInterval(20000, &testEncoderPID);
@@ -97,8 +96,6 @@ void controlLoop(int loopDelayMs) {
         int currentPositionEncoderA = readLeftEncoder();
         int currentPositionEncoderB = readRightEncoder();
 
-
-
         profileA.targetPosition = encoderATarget;
         profileA.currentPosition = currentPositionEncoderA;
 
@@ -107,7 +104,6 @@ void controlLoop(int loopDelayMs) {
         
         double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
         profileA.currentVelocity = currentVelocityA;
-        
         
         double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
         profileB.currentVelocity = currentVelocityB;

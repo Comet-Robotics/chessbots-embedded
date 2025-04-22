@@ -2,9 +2,9 @@ struct MotionProfile {
     double maxVelocity;
     double maxAcceleration;
     double currentPosition;
-    double targetPosition;
     double currentVelocity;
-    double requiredVelocity;
+    double targetPosition;
+    double targetVelocity;
 };
 
 double updateTrapezoidalProfile(MotionProfile &profile, double dt);
