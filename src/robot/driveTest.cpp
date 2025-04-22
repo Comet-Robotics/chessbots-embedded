@@ -105,23 +105,31 @@ void MotorEncoderTest::checkEncoderVelocity()
     int encB = readRightEncoder();
     float encAVel = (encA - prevEncA) / (float) 0.02;
     float encBVel = (encB - prevEncB) / (float) 0.02;
+    float encAAccel = (encAVel - prevEncVelA);
+    float encBAccel = (encBVel - prevEncVelB);
     if (abs(encAVel) > maxEncoderVelocity) maxEncoderVelocity = abs(encAVel);
     if (abs(encBVel) > maxEncoderVelocity) maxEncoderVelocity = abs(encBVel);
+    if (abs(encAAccel) > maxEncoderAccel) maxEncoderAccel = abs(encAAccel);
+    if (abs(encBAccel) > maxEncoderAccel) maxEncoderAccel = abs(encBAccel);
     prevEncA = encA;
     prevEncB = encB;
+    prevEncVelA = encAVel;
+    prevEncVelB = encBVel;
 }
 
 void MotorEncoderTest::testDriveForward()
 {
     prevEncA = readLeftEncoder();
     prevEncB = readRightEncoder();
-    serialLogln((char *)"Setting motors to go 'forward' for 7 seconds...", 2);
+    prevEncVelA = 0;
+    prevEncVelB = 0;
+    serialLogln((char *)"Setting motors to go 'forward' for 5 seconds...", 2);
     setLeftPower(1);
     setRightPower(1);
     auto fp2 = std::bind(&MotorEncoderTest::checkEncoderVelocity, this);
     encoderCheckTimerId = timerInterval(20, fp2);
     auto fp = std::bind(&MotorEncoderTest::testDriveDone, this);
-    timerDelay(7000, fp);
+    timerDelay(5000, fp);
 }
 
 void MotorEncoderTest::testDriveDone()
@@ -129,6 +137,8 @@ void MotorEncoderTest::testDriveDone()
     serialLogln((char *)"Driving done!", 2);
     serialLog((char *)"Max encoder velocity is ", 2);
     serialLogln(maxEncoderVelocity, 2);
+    serialLog((char *)"Max encoder acceleration is ", 2);
+    serialLogln(maxEncoderAccel, 2);
     timerCancel(encoderCheckTimerId);
     setLeftPower(0);
     setRightPower(0);

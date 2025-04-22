@@ -13,6 +13,9 @@ private:
     int prevEncA;
     int prevEncB;
     float maxEncoderVelocity = 0;
+    float prevEncVelA;
+    float prevEncVelB;
+    float maxEncoderAccel = 0;
     int encoderCheckTimerId;
     bool testSuccessful;
     const int ENCODER_TOLERANCE = 100;
