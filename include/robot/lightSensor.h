@@ -5,6 +5,7 @@
 #include "Arduino.h"
 
 void setupIR();
+void readGarbageVals();
 void activateIR();
 void deactivateIR();
 void startLightReading(bool* onFirstTile);

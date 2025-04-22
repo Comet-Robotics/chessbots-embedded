@@ -16,19 +16,30 @@
 #include "wifi/connection.h"
 #include "robot/encoder_new.h"
 
-bool driveUntilChange = false;
-bool topLeftEncodeVal = false;
-bool topRightEncodeVal = false;
+bool firstEncoderVal = false;
+bool secondEncoderVal = false;
 
+bool driveUntilChange = false;
 uint8_t iteration = 0;
 uint8_t maxTicks = -1;
 bool movingXTicks = false;
 bool reversing = false;
 
+//Here are the possible values:
+    //0 = no encoder leading.
+    //1 = left encoder leading.
+    //2 = right encoder leading
+uint8_t leadingEncoder = 0;
+//Ticks it tackes for back encoder to reach tile change after the front tile does.
+int8_t backEncoderDist = -1;
+
 const uint8_t Top_Left_Encoder_Index = 1;
 const uint8_t Top_Right_Encoder_Index = 2;
 const uint8_t Bottom_Left_Encoder_Index = 3;
 const uint8_t Bottom_Right_Encoder_Index = 0;
+
+//put this in manually for each bot. Dist between the two front encoders, or the two back encoders.
+const float encoderDist = 0.07;
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -88,8 +99,8 @@ void createDriveUntilNewTile(bool* onFirstTile)
 {
     drive(-0.5f, -0.5f, "NULL");
     //assign values here, will detect when they change
-    topLeftEncodeVal = onFirstTile[Top_Left_Encoder_Index];
-    topRightEncodeVal = onFirstTile[Top_Right_Encoder_Index];
+    firstEncoderVal = onFirstTile[Top_Left_Encoder_Index];
+    secondEncoderVal = onFirstTile[Top_Right_Encoder_Index];
     driveUntilChange = true;
 }
 
@@ -104,13 +115,46 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
 {
     if(driveUntilChange)
     {
-        //when both cross, we done.
-        if(onFirstTile[Top_Left_Encoder_Index] != topLeftEncodeVal && onFirstTile[Top_Right_Encoder_Index] != topRightEncodeVal)
+        bool leftEncoderChange = onFirstTile[Top_Left_Encoder_Index] != firstEncoderVal;
+        bool rightEncoderChange = onFirstTile[Top_Right_Encoder_Index] != secondEncoderVal;
+        if(leftEncoderChange || rightEncoderChange)
         {
-            stop();
-            driveUntilChange = false;
-            beginXTicksDrive(3, true);
-            return 2;
+            //when both cross, we done.
+            if(leftEncoderChange && rightEncoderChange)
+            {
+                stop();
+                driveUntilChange = false;
+                beginXTicksDrive(3, true);
+
+
+                serialLog((char*) " Encoder in front is gonna be: ", 2);
+                serialLogln(leadingEncoder, 2);
+                serialLog((char*) "And distance back encoder was behind is: ", 2);
+                serialLogln(backEncoderDist, 2);
+
+                backEncoderDist = -1;
+                leadingEncoder = 0;
+                return 2;    
+            }
+            //otherwise, want to see which one crossed. This is cond1 XOR cond2 btw.
+            else if(backEncoderDist == -1)
+            {
+                //if the left one has crossed but the right hasn't, then just label that's the one crossing now.
+                if(leftEncoderChange)
+                {
+                    leadingEncoder = 1;
+                }
+                else
+                {
+                    leadingEncoder = 2;
+                }
+                backEncoderDist = 0;
+            }
+            //otherwise, continue moving the back encoder and just make sure we update its dist until it stops moving
+            else
+            {
+                backEncoderDist++;
+            }
         }
         return 1;
     }

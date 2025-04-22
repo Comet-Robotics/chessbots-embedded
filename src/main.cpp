@@ -37,9 +37,11 @@ void setup() {
     connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
+
     delay(2000);
 
     createDriveUntilNewTile(onFirstTile);
+    //start reading the light
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
@@ -60,8 +62,8 @@ void loop() {
     if (getServerConnectionStatus()) acceptData();
 
 
-    readLight(onFirstTile);
     uint8_t status = driveUntilNewTile(onFirstTile);
+    readLight(onFirstTile);
 #if DO_LIGHT_SENSOR_TEST
     //know our char will be 4 bits
     char vals[5];
@@ -73,7 +75,7 @@ void loop() {
     //must null terminate
     vals[4] = '\0';
     serialLog((char*) "Light statuses: ", 4);
-    serialLogln((char*) vals, 2);
+    serialLogln((char*) vals, 4);
     switch(status)
     {
         case 0:

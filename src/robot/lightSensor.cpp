@@ -12,7 +12,7 @@
 #include "utils/config.h"
 #include "utils/timer.h"
 
-int lightArray[4];
+short lightArray[4];
 //MUST BE MULTIPLE OF DIFF_TICK
 const uint8_t COOLDOWN_TIME = 2;
 uint8_t cooldown[4] = {0, 0, 0, 0};
@@ -20,11 +20,24 @@ float prevTickVals[4] = {-1, -1, -1, -1};
 const uint8_t DIFF_TICK = 2;
 uint8_t counter = 1;
 
+const short LIMIT_TO_CHANGE = 200;
+
 // Sets the IR (Infrared) Blaster to be able to output
 void setupIR() {
     serialLogln((char*)"Setting Up Light Sensors...", 2);
     pinMode(RELAY_IR_LED_PIN, OUTPUT);
+    for(uint8_t i = 0; i < 20; i++)
+    {
+        readGarbageVals();
+    }
     serialLogln((char*)"Light Sensors Setup!", 2);
+}
+
+void readGarbageVals() {
+    digitalWrite(RELAY_IR_LED_PIN, HIGH);
+    delay(50);
+    digitalWrite(RELAY_IR_LED_PIN, LOW);
+    delay(5);
 }
 
 // Turns on the IR Blaster
@@ -58,7 +71,7 @@ bool checkForLightChange(uint8_t i)
 {
     //first if our cooldown's active, don't do anything until we've reached cooldown time, then reset cooldown timer and exit cooldown.
     //ifdifference to great and we're not at the start where prevTick is -1, declare that the encoder has changed color, and assign cooldown.
-    if(abs(prevTickVals[i] - lightArray[i]) >= 500 || prevTickVals[i] == -1)
+    if(abs(prevTickVals[i] - lightArray[i]) >= LIMIT_TO_CHANGE || prevTickVals[i] == -1)
     {
         serialLog(prevTickVals[i], 4);
         serialLogln((char*) "", 4);
@@ -81,6 +94,7 @@ void updateCounter() {
 void startLightReading(bool* onFirstTile) {
     //for each tick, check if its previous value is too far from what it was before. If it is, consider that the encoder has changed color.
     readLightLevels();
+
     for(uint8_t i = 0; i < 4; i++)
     {
         //if updating cooldown, skip what's below.
