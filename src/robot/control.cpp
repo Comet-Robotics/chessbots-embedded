@@ -31,6 +31,8 @@ bool movingXTicks = false;
 uint8_t leadingEncoder = 0;
 //Ticks it tackes for back encoder to reach tile change after the front tile does.
 uint8_t backEncoderDist = 0;
+bool leftEncoderChange = false;
+bool rightEncoderChange = false;
 
 const uint8_t Top_Left_Encoder_Index = 1;
 const uint8_t Top_Right_Encoder_Index = 2;
@@ -114,8 +116,9 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
 {
     if(driveUntilChange)
     {
-        bool leftEncoderChange = onFirstTile[Top_Left_Encoder_Index] != firstEncoderVal;
-        bool rightEncoderChange = onFirstTile[Top_Right_Encoder_Index] != secondEncoderVal;
+        //if we already changed it, don't change it back again
+        leftEncoderChange = leftEncoderChange || (onFirstTile[Top_Left_Encoder_Index] != firstEncoderVal);
+        rightEncoderChange = rightEncoderChange || (onFirstTile[Top_Right_Encoder_Index] != secondEncoderVal);
         if(leftEncoderChange || rightEncoderChange)
         {
             //when both cross, we done.
@@ -123,8 +126,10 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
             {
                 stop();
                 driveUntilChange = false;
-                beginXTicksDrive(backEncoderDist, true);
-
+                if(leadingEncoder != 0)
+                {
+                    beginXTicksDrive(leadingEncoder, backEncoderDist, true);
+                }
 
                 serialLog((char*) " Encoder in front is gonna be: ", 2);
                 serialLogln(leadingEncoder, 2);
@@ -133,7 +138,8 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
 
                 backEncoderDist = 0;
                 leadingEncoder = 0;
-                return 2;    
+                //if the encoder returned 0, no need to reverse so skip to status 4.
+                return (leadingEncoder == 0) ? 4 : 2;    
             }
             //otherwise, want to see which one crossed. This is cond1 XOR cond2 btw.
             else if(backEncoderDist == 0)
@@ -174,19 +180,20 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
     return 0;
 }
 
-void beginXTicksDrive(uint8_t max_ticks, bool inReverse)
+void beginXTicksDrive(uint8_t leadingEncoderLabel, uint8_t max_ticks, bool inReverse)
 {
+    //for some reason, positive drive values move it backward? Or maybe I don't understand the direction of the robot.
     maxTicks = max_ticks;
     movingXTicks = true;
-    if(inReverse)
-    {
-        //for some reason, positive drive values move it backward? Or maybe I don't understand the direction of the robot.
-        drive(0.5f, 0.5f, "NULL");
-    }
-    else
-    {
-        drive(-0.5f, -0.5f, "NULL");
-    }
+    //so this is actually 1 if going in reverse, if going forward it will be -1. Which is what we kinda want.
+    //We want to use arithmetic instead to make it faster than say if we did conditionals
+    int8_t negativeMultiplier = inReverse * 2 - 1;
+    //so when the label is 2, 2 - 2 = 0, good. When label is 1, 2 - 1 is 1, good.
+    uint8_t leftEncoderMultiplier = 2 - leadingEncoderLabel;
+    //when label is 2, 2 - 1 is 1, good. When label is 1, 1 - 1 is 0, good.
+    uint8_t rightEncoderMultiplier = leadingEncoderLabel - 1;
+
+    drive(0.5 * negativeMultiplier * leftEncoderMultiplier, 0.5 * negativeMultiplier * rightEncoderMultiplier, "NULL");
 }
 
 void moveRobotXTicks()

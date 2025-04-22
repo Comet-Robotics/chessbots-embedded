@@ -20,7 +20,7 @@ float prevTickVals[4] = {-1, -1, -1, -1};
 const uint8_t DIFF_TICK = 2;
 uint8_t counter = 1;
 
-const short LIMIT_TO_CHANGE = 300;
+const short LIMIT_TO_CHANGE = 500;
 
 // Sets the IR (Infrared) Blaster to be able to output
 void setupIR() {
@@ -69,9 +69,8 @@ bool updateCooldown(uint8_t i)
 //detects the light change. returns true if change, returns false otherwise
 bool checkForLightChange(uint8_t i)
 {
-    //first if our cooldown's active, don't do anything until we've reached cooldown time, then reset cooldown timer and exit cooldown.
-    //ifdifference to great and we're not at the start where prevTick is -1, declare that the encoder has changed color, and assign cooldown.
-    if(abs(prevTickVals[i] - lightArray[i]) >= LIMIT_TO_CHANGE || prevTickVals[i] == -1)
+    //if difference to great and we're not at the start where prevTick is -1, declare that the encoder has changed color, and assign cooldown.
+    if(fabs(prevTickVals[i] - lightArray[i]) >= LIMIT_TO_CHANGE || (short) prevTickVals[i] == -1)
     {
         serialLog(prevTickVals[i], 4);
         serialLogln((char*) "", 4);
