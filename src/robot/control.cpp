@@ -24,8 +24,8 @@
 PIDController encoderAController = PIDController(1, 0, 0, -20000, +20000);
 PIDController encoderBController = PIDController(1, 0, 0, -20000, +20000);
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
-PIDController encoderAVelocityController(0.0005264451, 0 , 0, -1, +1); //Blue
-PIDController encoderBVelocityController(0.0005264451, 0 , 0, -1, +1); //Red
+PIDController encoderAVelocityController(0.0015, 0 , 0, -1, +1); //Blue
+PIDController encoderBVelocityController(0.002, 0 , 0, -1, +1); //Red
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -84,17 +84,6 @@ void setupBot() {
 void controlLoop(int loopDelayMs) {
     if (DO_LIGHT_SENSOR_TEST)
         readLight();
-
-    if (DO_VELOCITY_TEST){
-        int currentPositionEncoderA = readLeftEncoder();
-        double currentvelocityA;
-        //while(time < 1000)
-        {
-            drive(1, 1, "NULL");
-            currentvelocityA = (currentPositionEncoderA - prevPositionA) / 0.02;
-        }
-        double maxVelocityA = std::max(currentvelocityA, maxVelocityA);
-    }
 
     if (DO_ENCODER_TEST)
         encoderLoop();

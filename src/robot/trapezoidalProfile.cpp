@@ -1,4 +1,5 @@
 #include "robot/trapezoidalProfile.h"
+#include "utils/logging.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -23,10 +24,14 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
     if (abs(distanceToGo) <= stoppingDistance)
         changeInVelocity = -1 * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
 
-    profile.currentVelocity += changeInVelocity;
+        profile.requiredVelocity += changeInVelocity;
     
     if (abs(profile.currentVelocity) > profile.maxVelocity)
         profile.currentVelocity = profile.maxVelocity * (profile.currentVelocity > 0 ? 1 : -1);
 
-    return profile.currentVelocity;
+    // serialLog((char *)"Motion profile is outputting: ", 3);
+    // serialLog(float(profile.currentVelocity), 3);
+    // serialLogln((char *)",", 3);
+
+    return profile.requiredVelocity;
 }

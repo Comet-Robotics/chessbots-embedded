@@ -2,6 +2,7 @@
 #define PID_CONTROLLER_CPP
 
 #include "robot/pidController.h"
+#include "utils/logging.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -38,6 +39,10 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
 
     // Clamp output
     output = std::max(minOutput, std::min(maxOutput, output));
+
+    // serialLog((char *)"PID is outputting: ", 3);
+    // serialLog(float(output), 3);
+    // serialLogln((char *)",", 3);
 
     return (output);
 }
