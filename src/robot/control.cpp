@@ -85,6 +85,17 @@ void controlLoop(int loopDelayMs) {
     if (DO_LIGHT_SENSOR_TEST)
         readLight();
 
+    if (DO_VELOCITY_TEST){
+        int currentPositionEncoderA = readLeftEncoder();
+        double currentvelocityA;
+        //while(time < 1000)
+        {
+            drive(1, 1, "NULL");
+            currentvelocityA = (currentPositionEncoderA - prevPositionA) / 0.02;
+        }
+        double maxVelocityA = std::max(currentvelocityA, maxVelocityA);
+    }
+
     if (DO_ENCODER_TEST)
         encoderLoop();
 
@@ -98,8 +109,8 @@ void controlLoop(int loopDelayMs) {
         static int prevPositionA = 0;
         static int prevPositionB = 0;
 
-        static MotionProfile profileA = {10000, 7300, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
-        static MotionProfile profileB = {10000, 7300, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileA = {30000, 6500, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
+        static MotionProfile profileB = {30000, 6500, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, targetPosition, currentVelocity
 
         profileA.targetPosition = encoderATarget;
         profileA.currentPosition = currentPositionEncoderA;
@@ -141,7 +152,10 @@ void controlLoop(int loopDelayMs) {
         serialLog((char *)",", 3);
         serialLog(encoderATarget, 3);
         serialLog((char *)",", 3);
-        serialLogln(encoderBTarget, 3);
+        serialLog(encoderBTarget, 3);
+        serialLog((char *)"", 3);
+        serialLogln(float(loopDelaySeconds), 3);
+
 
         drive(
             leftMotorPower, // leftMotorPower,
