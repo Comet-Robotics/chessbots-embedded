@@ -43,6 +43,9 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // serialLog((char *)"PID is outputting: ", 3);
     // serialLog(float(output), 3);
     // serialLogln((char *)",", 3);
+    if(output < 0.25){
+        output = 0;
+    }
 
     return (output);
 }

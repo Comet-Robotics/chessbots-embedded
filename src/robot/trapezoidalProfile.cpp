@@ -29,6 +29,9 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
     if (abs(profile.currentVelocity) > profile.maxVelocity)
         profile.currentVelocity = profile.maxVelocity * (profile.currentVelocity > 0 ? 1 : -1);
 
+    if(abs(distanceToGo) < 100)
+        profile.requiredVelocity = 0;
+
     // serialLog((char *)"Motion profile is outputting: ", 3);
     // serialLog(float(profile.currentVelocity), 3);
     // serialLogln((char *)",", 3);
