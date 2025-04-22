@@ -21,9 +21,8 @@ bool secondEncoderVal = false;
 
 bool driveUntilChange = false;
 uint8_t iteration = 0;
-uint8_t maxTicks = -1;
+uint8_t maxTicks = 0;
 bool movingXTicks = false;
-bool reversing = false;
 
 //Here are the possible values:
     //0 = no encoder leading.
@@ -31,7 +30,7 @@ bool reversing = false;
     //2 = right encoder leading
 uint8_t leadingEncoder = 0;
 //Ticks it tackes for back encoder to reach tile change after the front tile does.
-int8_t backEncoderDist = -1;
+uint8_t backEncoderDist = 0;
 
 const uint8_t Top_Left_Encoder_Index = 1;
 const uint8_t Top_Right_Encoder_Index = 2;
@@ -124,7 +123,7 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
             {
                 stop();
                 driveUntilChange = false;
-                beginXTicksDrive(3, true);
+                beginXTicksDrive(backEncoderDist, true);
 
 
                 serialLog((char*) " Encoder in front is gonna be: ", 2);
@@ -132,12 +131,12 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 serialLog((char*) "And distance back encoder was behind is: ", 2);
                 serialLogln(backEncoderDist, 2);
 
-                backEncoderDist = -1;
+                backEncoderDist = 0;
                 leadingEncoder = 0;
                 return 2;    
             }
             //otherwise, want to see which one crossed. This is cond1 XOR cond2 btw.
-            else if(backEncoderDist == -1)
+            else if(backEncoderDist == 0)
             {
                 //if the left one has crossed but the right hasn't, then just label that's the one crossing now.
                 if(leftEncoderChange)
@@ -148,7 +147,7 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 {
                     leadingEncoder = 2;
                 }
-                backEncoderDist = 0;
+                backEncoderDist++;
             }
             //otherwise, continue moving the back encoder and just make sure we update its dist until it stops moving
             else
@@ -179,32 +178,28 @@ void beginXTicksDrive(uint8_t max_ticks, bool inReverse)
 {
     maxTicks = max_ticks;
     movingXTicks = true;
-    reversing = inReverse;
+    if(inReverse)
+    {
+        //for some reason, positive drive values move it backward? Or maybe I don't understand the direction of the robot.
+        drive(0.5f, 0.5f, "NULL");
+    }
+    else
+    {
+        drive(-0.5f, -0.5f, "NULL");
+    }
 }
 
 void moveRobotXTicks()
 {
     if(movingXTicks)
     {
-        if(iteration == 0)
-        {
-            if(reversing)
-            {
-                //for some reason, positive drive values move it backward? Or maybe I don't understand the direction of the robot.
-                drive(0.5f, 0.5f, "NULL");
-            }
-            else
-            {
-                drive(-0.5f, -0.5f, "NULL");
-            }
-        }
-        iteration++;
         if(iteration == maxTicks)
         {
-            iteration = 0;
+            iteration = -1;
             movingXTicks = false;
             stop();
         }
+        iteration++;
     }
 }
 
