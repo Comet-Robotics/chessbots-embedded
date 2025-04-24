@@ -22,8 +22,8 @@
 #include <algorithm>
 
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
-PIDController encoderAVelocityController(0.00008, 0.000001, 0, -1, +1); //Blue
-PIDController encoderBVelocityController(0.00008, 0.000001, 0, -1, +1); //Red
+PIDController encoderAVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Blue
+PIDController encoderBVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Red
 
 int encoderATarget = 0;
 int encoderBTarget = 0;
@@ -130,27 +130,27 @@ void controlLoop(int loopDelayMs) {
         if (rightMotorPower > 1) rightMotorPower = 1;
         if (rightMotorPower < -1) rightMotorPower = -1;
 
-        serialLog(currentPositionEncoderA, 3);
-        serialLog((char *)",", 3);
-        serialLog(currentPositionEncoderB, 3);
-        serialLog((char *)",", 3);
-        serialLog((float) desiredVelocityA, 3);
-        serialLog((char *)",", 3);
-        serialLog((float) desiredVelocityB, 3);
-        serialLog((char *)",", 3);
-        serialLog((float) currentVelocityA, 3);
-        serialLog((char *)",", 3);
-        serialLog((float) currentVelocityB, 3);
-        serialLog((char *)",", 3);
-        serialLog((float) leftMotorPower, 3);
-        serialLog((char *)",", 3);
-        serialLog((float) rightMotorPower, 3);
-        serialLog((char *)",", 3);
-        serialLog(encoderATarget, 3);
-        serialLog((char *)",", 3);
-        serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
-        serialLog((char *)",", 3);
-        serialLogln(float(loopDelaySeconds), 3);
+        // serialLog(currentPositionEncoderA, 3);
+        // serialLog((char *)",", 3);
+        // serialLog(currentPositionEncoderB, 3);
+        // serialLog((char *)",", 3);
+        // serialLog((float) desiredVelocityA, 3);
+        // serialLog((char *)",", 3);
+        // serialLog((float) desiredVelocityB, 3);
+        // serialLog((char *)",", 3);
+        // serialLog((float) currentVelocityA, 3);
+        // serialLog((char *)",", 3);
+        // serialLog((float) currentVelocityB, 3);
+        // serialLog((char *)",", 3);
+        // serialLog((float) leftMotorPower, 3);
+        // serialLog((char *)",", 3);
+        // serialLog((float) rightMotorPower, 3);
+        // serialLog((char *)",", 3);
+        // serialLog(encoderATarget, 3);
+        // serialLog((char *)",", 3);
+        // serialLogln(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        // //serialLog((char *)",", 3);
+        // //serialLogln(float(loopDelaySeconds), 3);
 
 
         drive(
