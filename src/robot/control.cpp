@@ -130,27 +130,27 @@ void controlLoop(int loopDelayMs) {
         if (rightMotorPower > 1) rightMotorPower = 1;
         if (rightMotorPower < -1) rightMotorPower = -1;
 
-        // serialLog(currentPositionEncoderA, 3);
-        // serialLog((char *)",", 3);
-        // serialLog(currentPositionEncoderB, 3);
-        // serialLog((char *)",", 3);
-        // serialLog((float) desiredVelocityA, 3);
-        // serialLog((char *)",", 3);
-        // serialLog((float) desiredVelocityB, 3);
-        // serialLog((char *)",", 3);
-        // serialLog((float) currentVelocityA, 3);
-        // serialLog((char *)",", 3);
-        // serialLog((float) currentVelocityB, 3);
-        // serialLog((char *)",", 3);
-        // serialLog((float) leftMotorPower, 3);
-        // serialLog((char *)",", 3);
-        // serialLog((float) rightMotorPower, 3);
-        // serialLog((char *)",", 3);
-        // serialLog(encoderATarget, 3);
-        // serialLog((char *)",", 3);
-        // serialLogln(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
-        // //serialLog((char *)",", 3);
-        // //serialLogln(float(loopDelaySeconds), 3);
+        serialLog(currentPositionEncoderA, 3);
+        serialLog((char *)",", 3);
+        serialLog(currentPositionEncoderB, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) desiredVelocityA, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) desiredVelocityB, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) currentVelocityA, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) currentVelocityB, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) leftMotorPower, 3);
+        serialLog((char *)",", 3);
+        serialLog((float) rightMotorPower, 3);
+        serialLog((char *)",", 3);
+        serialLog(encoderATarget, 3);
+        serialLog((char *)",", 3);
+        serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        serialLog((char *)",", 3);
+        serialLogln(float(loopDelaySeconds), 3);
 
 
         drive(
