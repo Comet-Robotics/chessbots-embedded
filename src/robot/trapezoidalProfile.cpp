@@ -11,7 +11,8 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
     double distanceToGo = profile.targetPosition - profile.currentPosition;
 
     // Formula is v^2 / 2a
-    double stoppingDistance = 1.1 * (profile.currentVelocity * profile.currentVelocity) / (2.0 * profile.maxAcceleration);
+    //double stoppingDistance = 0.5 * (profile.maxVelocity * profile.maxVelocity) / (2.0 * profile.maxAcceleration);
+    double stoppingDistance = (distanceToGo/profile.targetPosition)*profile.currentVelocity*dt;
 
     double changeInVelocity = 0;
     
@@ -20,8 +21,16 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
         changeInVelocity = profile.maxAcceleration * dt * (distanceToGo > 0 ? 1 : -1);
 
     // Deceleration if we’re getting close to target
-    if (abs(distanceToGo) <= stoppingDistance)
+    if (abs(distanceToGo) <= stoppingDistance && profile.targetPosition > 0){
+        //making it dependent on leftover distance/dt instead of maxAcceleration*dt
+        changeInVelocity = -(profile.currentPosition/profile.targetPosition) * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
+    }
+
+    // Deceleration if we’re getting close to target
+    if (abs(distanceToGo) <= stoppingDistance){
+        //making it dependent on leftover distance/dt instead of maxAcceleration*dt
         changeInVelocity = -1 * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
+    }
 
     profile.targetVelocity += changeInVelocity;
 
@@ -31,9 +40,17 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
     if(abs(distanceToGo) < 100)
         profile.targetVelocity = 0;
 
-    // serialLog((char *)"Motion profile is outputting: ", 3);
-    // serialLog(float(profile.currentVelocity), 3);
-    // serialLogln((char *)",", 3);
+    serialLog((char *)"Motion profile is outputting: ", 3);
+    serialLog(float(profile.targetVelocity), 3);
+    serialLog((char *)",", 3);
+
+    serialLog((char *)"Target Position: ", 3);
+    serialLog(float(profile.targetPosition), 3);
+    serialLog((char *)",", 3);
+
+    serialLog((char *)"Stopping position: ", 3);
+    serialLog(float(stoppingDistance), 3);
+    serialLogln((char *)",", 3);
 
     return profile.targetVelocity;
 }
