@@ -12,9 +12,17 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
 
     // Formula is v^2 / 2a
     //double stoppingDistance = 0.5 * (profile.maxVelocity * profile.maxVelocity) / (2.0 * profile.maxAcceleration);
-    double stoppingDistance = (distanceToGo/profile.targetPosition)*profile.currentVelocity*dt;
-
-    double changeInVelocity = 0;
+    double stoppingDistance;
+    double changeInVelocity;
+    if (profile.targetPosition != 0){
+        double decrement_ratio = -(1 - (profile.currentPosition/profile.targetPosition));
+        stoppingDistance  = profile.currentPosition + (decrement_ratio*profile.currentVelocity*dt);
+        changeInVelocity = 0;
+    }
+    else{
+        stoppingDistance = 60000;
+        changeInVelocity = 0;
+    }
     
     // Acceleration phase
     if (abs(profile.currentVelocity) < profile.maxVelocity && abs(distanceToGo) > 0)
