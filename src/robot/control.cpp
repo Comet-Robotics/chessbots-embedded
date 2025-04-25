@@ -37,12 +37,14 @@ void testEncoderPID()
     if (!testEncoderPID_value)
     {
         testEncoderPID_value = true;
-        leftMotorControl = rightMotorControl = { POSITION, (float)TICKS_PER_ROTATION*5 };
+        setLeftMotorControl({POSITION, (float)TICKS_PER_ROTATION * 5});
+        setRightMotorControl({POSITION, (float)TICKS_PER_ROTATION * 5});
     }
     else
     {
         testEncoderPID_value = false;
-        leftMotorControl = rightMotorControl = { POSITION, 0.0f };
+        setLeftMotorControl({POSITION, 0.0f});
+        setRightMotorControl({POSITION, 0.0f});
     }
 }
 
@@ -54,9 +56,9 @@ void testTurn()
     testTurn_angle = (testTurn_angle + 90) % 360;
     turn(M_PI / 2, "NULL");
     serialLog(" (", 2);
-    serialLog(leftMotorControl.value, 2);
+    serialLog(getLeftMotorControl().value, 2);
     serialLog(", ", 2);
-    serialLog(rightMotorControl.value, 2);
+    serialLog(getRightMotorControl().value, 2);
     serialLogln(")", 2);
 }
 
@@ -106,17 +108,17 @@ void controlLoop() {
 
         double desiredVelocityA, desiredVelocityB;
 
-        if (leftMotorControl.mode == POSITION) {
-            profileA.targetPosition = leftMotorControl.value;
+        if (getLeftMotorControl().mode == POSITION) {
+            profileA.targetPosition = getLeftMotorControl().value;
             desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds);
         } else {
-            desiredVelocityA = leftMotorControl.value;
+            desiredVelocityA = getLeftMotorControl().value;
         }
-        if (rightMotorControl.mode == POSITION) {
-            profileB.targetPosition = rightMotorControl.value;
+        if (getRightMotorControl().mode == POSITION) {
+            profileB.targetPosition = getRightMotorControl().value;
             desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds);
         } else {
-            desiredVelocityB = rightMotorControl.value;
+            desiredVelocityB = getRightMotorControl().value;
         }
 
         prevPositionA = currentPositionEncoderA;
@@ -163,6 +165,22 @@ void controlLoop() {
     }
 }
 
+void setLeftMotorControl(ControlSetting control) {
+    leftMotorControl = control;
+}
+
+void setRightMotorControl(ControlSetting control) {
+    rightMotorControl = control;
+}
+
+ControlSetting getLeftMotorControl() {
+    return leftMotorControl;
+}
+
+ControlSetting getRightMotorControl() {
+    return rightMotorControl;
+}
+
 // Drives a specific amount of tiles (WIP)
 void drive(float tiles) {
     if (!getStoppedStatus()) {
@@ -172,8 +190,8 @@ void drive(float tiles) {
 void driveTicks(int tickDistance, std::string id)
 {
     if (!getStoppedStatus()) {
-        leftMotorControl = { POSITION, (float)(readLeftEncoder() + tickDistance) };
-        rightMotorControl = { POSITION, (float)(readRightEncoder() + tickDistance) };
+        setLeftMotorControl({POSITION, (float)(readLeftEncoder() + tickDistance)});
+        setRightMotorControl({POSITION, (float)(readRightEncoder() + tickDistance)});
 
         if (id != "NULL") {
             sendPacketOnPidComplete(id);
@@ -207,15 +225,15 @@ void turn(float angleRadians, std::string id) {
     float offsetInches = TRACK_WIDTH_INCHES * angleRadians / 2;
     int offsetTicks = (int) (offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
 
-    if (leftMotorControl.mode == POSITION) {
-        leftMotorControl.value -= offsetTicks;
+    if (getLeftMotorControl().mode == POSITION) {
+        setLeftMotorControl({POSITION, getLeftMotorControl().value - offsetTicks});
     } else {
-        leftMotorControl = { POSITION, (float)(readLeftEncoder() - offsetTicks) };
+        setLeftMotorControl({POSITION, (float)(readLeftEncoder() - offsetTicks)});
     }
-    if (rightMotorControl.mode == POSITION) {
-        rightMotorControl.value += offsetTicks;
+    if (getRightMotorControl().mode == POSITION) {
+        setRightMotorControl({POSITION, getRightMotorControl().value - offsetTicks});
     } else {
-        rightMotorControl = { POSITION, (float)(readRightEncoder() + offsetTicks) };
+        setRightMotorControl({POSITION, (float)(readRightEncoder() - offsetTicks)});
     }
 
     if (id != "NULL")
@@ -241,23 +259,23 @@ boolean isRobotPidAtTarget() {
 
     boolean leftAtTarget, rightAtTarget;
 
-    if (leftMotorControl.mode == POSITION)
+    if (getLeftMotorControl().mode == POSITION)
     {
-        leftAtTarget = (leftMotorControl.value - POSITION_TOLERANCE) <= profileA.currentPosition && profileA.currentPosition <= (leftMotorControl.value + POSITION_TOLERANCE)
+        leftAtTarget = (getLeftMotorControl().value - POSITION_TOLERANCE) <= profileA.currentPosition && profileA.currentPosition <= (getLeftMotorControl().value + POSITION_TOLERANCE)
                     && (-VELOCITY_TOLERANCE) <= profileA.currentVelocity && profileA.currentVelocity <= VELOCITY_TOLERANCE;
     }
     else
     {
-        leftAtTarget = (leftMotorControl.value - VELOCITY_TOLERANCE) <= profileA.currentVelocity && profileA.currentVelocity <= (leftMotorControl.value + VELOCITY_TOLERANCE);
+        leftAtTarget = (getLeftMotorControl().value - VELOCITY_TOLERANCE) <= profileA.currentVelocity && profileA.currentVelocity <= (getLeftMotorControl().value + VELOCITY_TOLERANCE);
     }
-    if (rightMotorControl.mode == POSITION)
+    if (getRightMotorControl().mode == POSITION)
     {
-        rightAtTarget = (rightMotorControl.value - POSITION_TOLERANCE) <= profileB.currentPosition && profileB.currentPosition <= (rightMotorControl.value + POSITION_TOLERANCE)
+        rightAtTarget = (getRightMotorControl().value - POSITION_TOLERANCE) <= profileB.currentPosition && profileB.currentPosition <= (getRightMotorControl().value + POSITION_TOLERANCE)
                      && (-VELOCITY_TOLERANCE) <= profileB.currentVelocity && profileB.currentVelocity <= VELOCITY_TOLERANCE;
     }
     else
     {
-        rightAtTarget = (rightMotorControl.value - VELOCITY_TOLERANCE) <= profileB.currentVelocity && profileB.currentVelocity <= (rightMotorControl.value + VELOCITY_TOLERANCE);
+        rightAtTarget = (getRightMotorControl().value - VELOCITY_TOLERANCE) <= profileB.currentVelocity && profileB.currentVelocity <= (getRightMotorControl().value + VELOCITY_TOLERANCE);
     }
 
     return leftAtTarget && rightAtTarget;

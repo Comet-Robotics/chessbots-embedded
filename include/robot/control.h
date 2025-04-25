@@ -23,6 +23,11 @@ static ControlSetting rightMotorControl;
 static MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 static MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 
+void setLeftMotorControl(ControlSetting control);
+void setRightMotorControl(ControlSetting control);
+ControlSetting getLeftMotorControl();
+ControlSetting getRightMotorControl();
+
 void setupBot();
 void drive(float tiles);
 void drive(float leftPower, float rightPower, std::string id);
