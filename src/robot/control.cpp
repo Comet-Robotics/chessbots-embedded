@@ -12,6 +12,7 @@
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/config.h"
+#include "utils/status.h"
 #include "robot/motor.h"
 #include "robot/lightSensor.h"
 #include "wifi/connection.h"
@@ -167,41 +168,41 @@ void controlLoop(int loopDelayMs) {
 
 // Drives a specific amount of tiles (WIP)
 void drive(float tiles) {
-
+    if (!getStoppedStatus) {
+    }
 }
 
 void driveTicks(int tickDistance, std::string id)
 {
-    leftMotorControl = { POSITION, (float)(readLeftEncoder() + tickDistance) };
-    rightMotorControl = { POSITION, (float)(readRightEncoder() + tickDistance) };
+    if (!getStoppedStatus) {
+        leftMotorControl = { POSITION, (float)(readLeftEncoder() + tickDistance) };
+        rightMotorControl = { POSITION, (float)(readRightEncoder() + tickDistance) };
 
-    if (id != "NULL")
-    {
-        sendPacketOnPidComplete(id);
+        if (id != "NULL") {
+            sendPacketOnPidComplete(id);
+        }
     }
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
 void drive(float leftPower, float rightPower, std::string id) {
-    // TODO: maybe move to motor.cpp?
-    float minPower = 0.16;
-    if (leftPower < minPower && leftPower > -minPower)
-    {
-        leftPower = 0;
-    }
-    if (rightPower < minPower && rightPower > -minPower)
-    {
-        rightPower = 0;
-    }
+    if (!getStoppedStatus) {
+        // TODO: maybe move to motor.cpp?
+        float minPower = 0.16;
+        if (leftPower < minPower && leftPower > -minPower) {
+            leftPower = 0;
+        } if (rightPower < minPower && rightPower > -minPower) {
+            rightPower = 0;
+        }
 
-    setLeftPower(leftPower);
-    setRightPower(rightPower);
+        setLeftPower(leftPower);
+        setRightPower(rightPower);
 
-    //we only send null as id during our test drive. The only other time this drive method is called will be
-    //when the server sends it, meaning it will have an id to send back.
-    if(id != "NULL")
-    {
-        createAndSendPacket(2, "success", id);   
+        //we only send null as id during our test drive. The only other time this drive method is called will be
+        //when the server sends it, meaning it will have an id to send back.
+        if(id != "NULL") {
+            createAndSendPacket(2, "success", id);   
+        }
     }
 }
 

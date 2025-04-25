@@ -48,6 +48,8 @@ void handlePacket(JsonDocument packet) {
         drive(packet["left"], packet["right"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TICKS){
         driveTicks(packet["tickDistance"], packet["packetId"]);
+    } else if (packet["type"] == ESTOP) {
+        setStoppedStatus(true);
     }
 }
 
