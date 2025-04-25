@@ -65,7 +65,7 @@ void handlePacket(JsonDocument packet) {
         Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
         Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
         Point controlPosition = {(float)packet["controlPosition"]["x"]*TILES_TO_TICKS, (float)packet["controlPosition"]["y"]*TILES_TO_TICKS};
-        danceMonkeyQaudratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
+        danceMonkeyQuadratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
     }
 }
 

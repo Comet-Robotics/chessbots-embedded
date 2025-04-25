@@ -116,11 +116,11 @@ void danceMonkeyCubic(std::string id, Point start, Point control1, Point control
     velocityUpdateTimerFunction(id);
 }
 
-void danceMonkeyQaudratic(std::string id, Point start, Point control, Point end, float totalTimeMs) {
+void danceMonkeyQuadratic(std::string id, Point start, Point control, Point end, float totalTimeMs) {
     serialLogln("Quadratic Dancer was called", 3);
     float trackWidth = TRACK_WIDTH_INCHES;
-    int steps = (int)(totalTimeMs / loopDelayMilliseconds); // 10ms steps
-    float dt = totalTimeMs / steps;
+    int steps = (int)(totalTimeMs / loopDelayMilliseconds); // 20ms steps
+    float dt = totalTimeMs / 1000 / steps;
 
     for (int i = 0; i < steps; i++) {
         float t = (float)i / steps;
