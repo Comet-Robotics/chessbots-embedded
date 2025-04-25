@@ -165,13 +165,13 @@ void controlLoop() {
 
 // Drives a specific amount of tiles (WIP)
 void drive(float tiles) {
-    if (!getStoppedStatus) {
+    if (!getStoppedStatus()) {
     }
 }
 
 void driveTicks(int tickDistance, std::string id)
 {
-    if (!getStoppedStatus) {
+    if (!getStoppedStatus()) {
         leftMotorControl = { POSITION, (float)(readLeftEncoder() + tickDistance) };
         rightMotorControl = { POSITION, (float)(readRightEncoder() + tickDistance) };
 
@@ -183,7 +183,7 @@ void driveTicks(int tickDistance, std::string id)
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
 void drive(float leftPower, float rightPower, std::string id) {
-    if (!getStoppedStatus) {
+    if (!getStoppedStatus()) {
         // TODO: maybe move to motor.cpp?
         float minPower = 0.16;
         if (leftPower < minPower && leftPower > -minPower) {
