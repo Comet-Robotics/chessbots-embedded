@@ -49,17 +49,17 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
     if(abs(distanceToGo) < 100)
         profile.targetVelocity = 0;
 
-    // serialLog((char *)"Motion profile is outputting: ", 3);
+    // serialLog("Motion profile is outputting: ", 3);
     // serialLog(float(profile.targetVelocity), 3);
-    // serialLog((char *)",", 3);
+    // serialLog(",", 3);
 
-    // serialLog((char *)"Target Position: ", 3);
+    // serialLog("Target Position: ", 3);
     // serialLog(float(profile.targetPosition), 3);
-    // serialLog((char *)",", 3);
+    // serialLog(",", 3);
 
-    // serialLog((char *)"Stopping position: ", 3);
+    // serialLog("Stopping position: ", 3);
     // serialLog(float(stoppingDistance), 3);
-    // serialLogln((char *)",", 3);
+    // serialLogln(",", 3);
 
     return profile.targetVelocity;
 }
