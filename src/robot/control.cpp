@@ -30,9 +30,6 @@ PIDController encoderBVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); 
 int prevPositionA = 0;
 int prevPositionB = 0;
 
-MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
-MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
-
 boolean testEncoderPID_value = false;
 void testEncoderPID()
 {
@@ -87,7 +84,7 @@ void setupBot() {
 
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
-void controlLoop(int loopDelayMs) {
+void controlLoop() {
     if (DO_LIGHT_SENSOR_TEST)
         readLight();
 
@@ -95,8 +92,7 @@ void controlLoop(int loopDelayMs) {
         encoderLoop();
 
     if (DO_PID) {
-        //delay(5000); // Delay to prevent CPU overload
-        double loopDelaySeconds = ((double) loopDelayMs) / 1000;
+        double loopDelaySeconds = ((double) loopDelayMilliseconds) / 1000;
 
         int currentPositionEncoderA = readLeftEncoder();
         int currentPositionEncoderB = readRightEncoder();
@@ -236,26 +232,42 @@ void stop() {
     serialLogln("Bot Stopped!", 2);
 }
 
-void sendPacketOnPidComplete(std::string id) {
-    if (!DO_PID) createAndSendPacket(2, "fail", id);
+boolean isRobotPidAtTarget() {
+    if (!DO_PID)
+        return true;
 
     float POSITION_TOLERANCE = 100;
     float VELOCITY_TOLERANCE = 200;
 
     boolean leftAtTarget, rightAtTarget;
 
-    if (leftMotorControl.mode == POSITION) {
-        leftAtTarget = (leftMotorControl.value - POSITION_TOLERANCE) <= profileA.currentPosition && profileA.currentPosition <= (leftMotorControl.value + POSITION_TOLERANCE);
-    } else {
+    if (leftMotorControl.mode == POSITION)
+    {
+        leftAtTarget = (leftMotorControl.value - POSITION_TOLERANCE) <= profileA.currentPosition && profileA.currentPosition <= (leftMotorControl.value + POSITION_TOLERANCE)
+                    && (-VELOCITY_TOLERANCE) <= profileA.currentVelocity && profileA.currentVelocity <= VELOCITY_TOLERANCE;
+    }
+    else
+    {
         leftAtTarget = (leftMotorControl.value - VELOCITY_TOLERANCE) <= profileA.currentVelocity && profileA.currentVelocity <= (leftMotorControl.value + VELOCITY_TOLERANCE);
     }
-    if (rightMotorControl.mode == POSITION) {
-        rightAtTarget = (rightMotorControl.value - POSITION_TOLERANCE) <= profileB.currentPosition && profileB.currentPosition <= (rightMotorControl.value + POSITION_TOLERANCE);
-    } else {
+    if (rightMotorControl.mode == POSITION)
+    {
+        rightAtTarget = (rightMotorControl.value - POSITION_TOLERANCE) <= profileB.currentPosition && profileB.currentPosition <= (rightMotorControl.value + POSITION_TOLERANCE)
+                     && (-VELOCITY_TOLERANCE) <= profileB.currentVelocity && profileB.currentVelocity <= VELOCITY_TOLERANCE;
+    }
+    else
+    {
         rightAtTarget = (rightMotorControl.value - VELOCITY_TOLERANCE) <= profileB.currentVelocity && profileB.currentVelocity <= (rightMotorControl.value + VELOCITY_TOLERANCE);
     }
 
-    if (leftAtTarget && rightAtTarget) {
+    return leftAtTarget && rightAtTarget;
+}
+
+void sendPacketOnPidComplete(std::string id) {
+    if (!DO_PID)
+        createAndSendPacket(2, "fail", id);
+
+    if (isRobotPidAtTarget()) {
         createAndSendPacket(2, "success", id);
     } else {
         // Run on next loop

@@ -6,6 +6,7 @@
 #include <Arduino.h>
 
 // Custom Libraries
+#include "utils/config.h"
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"
@@ -15,8 +16,6 @@
 #include "robot/encoder.h"
 #include "../env.h"
 #include "robot/pidController.h"
-
-int delayMilliseconds = 20;
 
 // Setup gets run at startup
 void setup() {
@@ -56,11 +55,11 @@ void loop() {
     }
 
     // Run control loop
-    controlLoop(delayMilliseconds);
+    controlLoop();
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
-  	delay(delayMilliseconds);
+  	delay(loopDelayMilliseconds);
 }
 
 // This is used at the end of each file due to the name definition at the beginning
