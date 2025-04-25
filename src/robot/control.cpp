@@ -30,6 +30,9 @@ int encoderBTarget = 0;
 int prevPositionA = 0;
 int prevPositionB = 0;
 
+double desiredVelocityA;
+double desiredVelocityB;
+
 MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 
@@ -158,6 +161,14 @@ void controlLoop(int loopDelayMs) {
             "NULL"
         );
     }
+}
+
+void danceMonkeyCubic(){
+    
+}
+
+void danceMonkeyQaudratic(){
+
 }
 
 // Drives a specific amount of tiles (WIP)
