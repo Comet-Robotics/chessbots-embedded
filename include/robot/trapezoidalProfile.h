@@ -1,3 +1,6 @@
+#ifndef CHESSBOT_TRAPEZOIDAL_PROFILE_H
+#define CHESSBOT_TRAPEZOIDAL_PROFILE_H
+
 struct MotionProfile {
     double maxVelocity;
     double maxAcceleration;
@@ -13,3 +16,5 @@ template <typename T>
 T clamp(T value, T minValue, T maxValue) {
     return (value < minValue) ? minValue : (value > maxValue) ? maxValue : value;
 }
+
+#endif

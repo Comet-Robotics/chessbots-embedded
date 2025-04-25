@@ -1,3 +1,6 @@
+#ifndef CHESSBOT_TRAPEZOIDAL_PROFILE_CPP
+#define CHESSBOT_TRAPEZOIDAL_PROFILE_CPP
+
 #include "robot/trapezoidalProfile.h"
 #include "utils/logging.h"
 #include <iostream>
@@ -63,3 +66,5 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
 
     return profile.targetVelocity;
 }
+
+#endif
