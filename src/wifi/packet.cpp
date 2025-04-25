@@ -55,16 +55,16 @@ void handlePacket(JsonDocument packet) {
         setStoppedStatus(true);
         stop();
     } else if(packet["type"] == CUBIC){
-        Point startPosition = {packet["startPosition"]["x"], packet["startPosition"]["y"]};
-        Point endPosition = {packet["endPosition"]["x"], packet["endPosition"]["y"]};
-        Point controlPositionA = {packet["controlPositionA"]["x"], packet["controlPositionA"]["y"]};
-        Point controlPositionB = {packet["controlPositionB"]["x"], packet["controlPositionB"]["y"]};
+        Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
+        Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
+        Point controlPositionA = {(float)packet["controlPositionA"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionA"]["y"]*TILES_TO_TICKS};
+        Point controlPositionB = {(float)packet["controlPositionB"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionB"]["y"]*TILES_TO_TICKS};
         danceMonkeyCubic(packet["packetId"], startPosition, controlPositionA, controlPositionB, endPosition, packet["timeDeltaMs"]);
     } else if(packet["type"] == QUADRATIC){
         serialLog("I have arrived!! at Quadratic", 3);
-        Point startPosition = {packet["startPosition"]["x"], packet["startPosition"]["y"]};
-        Point endPosition = {packet["endPosition"]["x"], packet["endPosition"]["y"]};
-        Point controlPosition = {packet["controlPosition"]["x"], packet["controlPosition"]["y"]};
+        Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
+        Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
+        Point controlPosition = {(float)packet["controlPosition"]["x"]*TILES_TO_TICKS, (float)packet["controlPosition"]["y"]*TILES_TO_TICKS};
         danceMonkeyQaudratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
     }
 }

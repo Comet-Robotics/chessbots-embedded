@@ -18,7 +18,7 @@
 
 void velocityUpdateTimerFunction(std::string id)
 {
-    serialLogln("Update Timer was called", 3);
+    // serialLogln("Update Timer was called", 3);
     if (timeSlicesToExecute.size() == 0) {
         if (id != "NULL")
         {
@@ -38,11 +38,11 @@ void velocityUpdateTimerFunction(std::string id)
 }
 
 
-void danceMonkeyCubic(std::string id, Point start, Point control1, Point control2, Point end, float totalTime){
+void danceMonkeyCubic(std::string id, Point start, Point control1, Point control2, Point end, float totalTimeMs){
     float trackWidth = TRACK_WIDTH_INCHES;
 
-    int steps = (int)(totalTime / 0.01); // 10ms steps
-    float dt = totalTime / steps;
+    int steps = (int)(totalTimeMs / 0.01); // 10ms steps
+    float dt = totalTimeMs / steps;
 
     for (int i = 0; i < steps; i++) {
         float t = (float)i / steps;
@@ -105,20 +105,22 @@ void danceMonkeyCubic(std::string id, Point start, Point control1, Point control
         while (angularVelocity > M_PI) angularVelocity -= 2 * M_PI;
         while (angularVelocity < -M_PI) angularVelocity += 2 * M_PI;
 
+        float trackWidthTicks = trackWidth * TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+
         // Compute wheel velocities using differential drive model
-        float vLeft = linearVelocity - (angularVelocity * trackWidth / 2);
-        float vRight = linearVelocity + (angularVelocity * trackWidth / 2);
+        float vLeft = linearVelocity - (angularVelocity * trackWidthTicks / 2);
+        float vRight = linearVelocity + (angularVelocity * trackWidthTicks / 2);
 
         timeSlicesToExecute.push({vLeft, vRight});
     }
     velocityUpdateTimerFunction(id);
 }
 
-void danceMonkeyQaudratic(std::string id, Point start, Point control, Point end, float totalTime) {
+void danceMonkeyQaudratic(std::string id, Point start, Point control, Point end, float totalTimeMs) {
     serialLogln("Quadratic Dancer was called", 3);
     float trackWidth = TRACK_WIDTH_INCHES;
-    int steps = (int)(totalTime / 0.01); // 10ms steps
-    float dt = totalTime / steps;
+    int steps = (int)(totalTimeMs / loopDelayMilliseconds); // 10ms steps
+    float dt = totalTimeMs / steps;
 
     for (int i = 0; i < steps; i++) {
         float t = (float)i / steps;
@@ -139,6 +141,8 @@ void danceMonkeyQaudratic(std::string id, Point start, Point control, Point end,
         // Velocity approximation
         float dx = pNext.x - p.x;
         float dy = pNext.y - p.y;
+        // dx *= 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+        // dy *= 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
         float linearVelocity = sqrt(dx * dx + dy * dy) / dt;
 
         // Angular velocity approximation
@@ -155,13 +159,16 @@ void danceMonkeyQaudratic(std::string id, Point start, Point control, Point end,
         while (angularVelocity > M_PI) angularVelocity -= 2 * M_PI;
         while (angularVelocity < -M_PI) angularVelocity += 2 * M_PI;
 
+        float trackWidthTicks = trackWidth * TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+
         // Differential drive kinematics
-        float vLeft = linearVelocity - (angularVelocity * trackWidth / 2);
-        float vRight = linearVelocity + (angularVelocity * trackWidth / 2);
+        float vLeft = linearVelocity - (angularVelocity * trackWidthTicks / 2);
+        float vRight = linearVelocity + (angularVelocity * trackWidthTicks / 2);
 
 
         timeSlicesToExecute.push({vLeft, vRight});
-        serialLogln(vLeft, 3);
+        serialLog(vLeft, 3);
+        serialLog(", ", 3);
         serialLogln(vRight, 3);
     }
     velocityUpdateTimerFunction(id);

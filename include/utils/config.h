@@ -32,6 +32,7 @@ extern float TRACK_WIDTH_INCHES;
 extern float WHEEL_DIAMETER_INCHES;
 extern float MAX_VELOCITY_TPS;
 extern float MAX_ACCELERATION_TPSPS;
+extern float TILES_TO_TICKS;
 
 void setConfig(JsonObject config);
 

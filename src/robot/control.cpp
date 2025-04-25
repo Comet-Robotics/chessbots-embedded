@@ -149,10 +149,10 @@ void controlLoop() {
         serialLog(",", 3);
         serialLog((float) rightMotorPower, 3);
         serialLog(",", 3);
-        serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 3);
-        serialLog(",", 3);
-        serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
-        serialLog(",", 3);
+        // serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 3);
+        // serialLog(",", 3);
+        // serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        // serialLog(",", 3);
         serialLogln((float) loopDelaySeconds, 3);
 
         drive(
