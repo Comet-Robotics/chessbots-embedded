@@ -3,6 +3,21 @@
 
 #include "Arduino.h"
 
+enum OperatingMode
+{
+    POSITION,
+    VELOCITY
+};
+
+struct ControlSetting
+{
+    OperatingMode mode;
+    float value;
+};
+
+static ControlSetting leftMotorControl;
+static ControlSetting rightMotorControl;
+
 void setupBot();
 void drive(float tiles);
 void drive(float leftPower, float rightPower, std::string id);

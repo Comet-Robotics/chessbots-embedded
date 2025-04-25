@@ -25,8 +25,6 @@
 PIDController encoderAVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Blue
 PIDController encoderBVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Red
 
-int encoderATarget = 0;
-int encoderBTarget = 0;
 int prevPositionA = 0;
 int prevPositionB = 0;
 
@@ -40,12 +38,12 @@ void testEncoderPID()
     if (!testEncoderPID_value)
     {
         testEncoderPID_value = true;
-        encoderATarget = encoderBTarget = TICKS_PER_ROTATION*5;
+        leftMotorControl = rightMotorControl = { POSITION, (float)TICKS_PER_ROTATION*5 };
     }
     else
     {
         testEncoderPID_value = false;
-        encoderATarget = encoderBTarget = 0;
+        leftMotorControl = rightMotorControl = { POSITION, 0.0f };
     }
 }
 
@@ -57,9 +55,9 @@ void testTurn()
     testTurn_angle = (testTurn_angle + 90) % 360;
     turn(M_PI / 2, "NULL");
     serialLog(" (", 2);
-    serialLog(encoderATarget, 2);
+    serialLog(leftMotorControl.value, 2);
     serialLog(", ", 2);
-    serialLog(encoderBTarget, 2);
+    serialLog(rightMotorControl.value, 2);
     serialLogln(")", 2);
 }
 
@@ -100,23 +98,31 @@ void controlLoop(int loopDelayMs) {
 
         int currentPositionEncoderA = readLeftEncoder();
         int currentPositionEncoderB = readRightEncoder();
-
-        profileA.targetPosition = encoderATarget;
-        profileA.currentPosition = currentPositionEncoderA;
-
-        profileB.targetPosition = encoderBTarget;
-        profileB.currentPosition = currentPositionEncoderB;
-        
         double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
-        profileA.currentVelocity = currentVelocityA;
-        
         double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
-        profileB.currentVelocity = currentVelocityB;
-        
-        double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds);
-        double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds);
-        
-        prevPositionA = currentPositionEncoderA;        
+
+        double desiredVelocityA, desiredVelocityB;
+
+        if (leftMotorControl.mode == POSITION) {
+            profileA.targetPosition = leftMotorControl.value;
+            profileA.currentPosition = currentPositionEncoderA;
+            profileA.currentVelocity = currentVelocityA;
+            desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds);
+        }
+        else {
+            desiredVelocityA = leftMotorControl.value;
+        }
+        if (rightMotorControl.mode == POSITION) {
+            profileB.targetPosition = rightMotorControl.value;
+            profileB.currentPosition = currentPositionEncoderB;
+            profileB.currentVelocity = currentVelocityB;
+            desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds);
+        }
+        else {
+            desiredVelocityB = rightMotorControl.value;
+        }
+
+        prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
         double leftFeedForward = desiredVelocityA / MAX_VELOCITY_TPS;
@@ -146,9 +152,9 @@ void controlLoop(int loopDelayMs) {
         serialLog(",", 3);
         serialLog((float) rightMotorPower, 3);
         serialLog(",", 3);
-        serialLog(encoderATarget, 3);
+        serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 3);
         serialLog(",", 3);
-        serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
         serialLog(",", 3);
         serialLogln((float) loopDelaySeconds, 3);
 
@@ -167,9 +173,8 @@ void drive(float tiles) {
 
 void driveTicks(int tickDistance, std::string id)
 {
-    encoderATarget = readLeftEncoder() + tickDistance;
-    encoderBTarget = readRightEncoder() - tickDistance;
-
+    leftMotorControl = { POSITION, (float)(readLeftEncoder() + tickDistance) };
+    rightMotorControl = { POSITION, (float)(readRightEncoder() - tickDistance) };
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
@@ -200,8 +205,16 @@ void turn(float angleRadians, std::string id) {
     float offsetInches = TRACK_WIDTH_INCHES * angleRadians / 2;
     int offsetTicks = (int) (offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
 
-    encoderATarget -= offsetTicks;
-    encoderBTarget += offsetTicks;
+    if (leftMotorControl.mode == POSITION) {
+        leftMotorControl.value -= offsetTicks;
+    } else {
+        leftMotorControl = { POSITION, (float)(readLeftEncoder() - offsetTicks) };
+    }
+    if (rightMotorControl.mode == POSITION) {
+        rightMotorControl.value += offsetTicks;
+    } else {
+        rightMotorControl = { POSITION, (float)(readRightEncoder() + offsetTicks) };
+    }
 
     // TODO wait for pid to reach target
     if (id != "NULL")
