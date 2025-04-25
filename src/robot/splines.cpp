@@ -4,11 +4,15 @@
 #include "robot/splines.h"
 #include "utils/logging.h"
 #include "robot/control.h"
+#include "robot/trapezoidalProfile.h"
 #include "utils/timer.h"
 #include "wifi/connection.h"
 #include "utils/config.h"
 #include <tuple>
 #include <queue>
+#include "robot/encoder.h"
+#include <tuple>
+#include <cmath>
 
 
 
@@ -164,5 +168,63 @@ void danceMonkeyQaudratic(std::string id, Point start, Point control, Point end,
 }
 
 
+
+int customPrevPositionA = 0, customPrevPositionB = 0;
+
+void startCustomMotionProfileTimer(int leftPositionTarget, int rightPositionTarget, double profileDuration, std::string id)
+{
+    double maxAcceleration = 6000;
+
+    double maxPositionTarget = std::max(leftPositionTarget, rightPositionTarget);
+    double leftAcceleration = maxAcceleration * leftPositionTarget / maxPositionTarget;
+    double rightAcceleration = maxAcceleration * rightPositionTarget / maxPositionTarget;
+
+    double leftSqrtValue = profileDuration*profileDuration - 4*leftPositionTarget/leftAcceleration;
+    double rightSqrtValue = profileDuration*profileDuration - 4*rightPositionTarget/rightAcceleration;
+
+    if (leftSqrtValue < 0 || rightSqrtValue < 0)
+    {
+        createAndSendPacket(2, "fail", id);
+        return;
+    }
+
+    double maxVelocityLeft = (profileDuration - sqrt(leftSqrtValue))*leftAcceleration/2;
+    double maxVelocityRight = (profileDuration - sqrt(rightSqrtValue))*rightAcceleration/2;
+
+    customPrevPositionA = readLeftEncoder();
+    customPrevPositionB = readRightEncoder();
+
+    MotionProfile customProfileA = { maxVelocityLeft, leftAcceleration, 0, 0, (double)leftPositionTarget, 0 };
+    MotionProfile customProfileB = { maxVelocityRight, rightAcceleration, 0, 0, (double)rightPositionTarget, 0 };
+    customMotionProfileTimerFunction(customProfileA, customProfileB, loopDelayMilliseconds / 1000.0, id);
+}
+
+void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfile &customProfileB, double dt, std::string id)
+{
+    if (isRobotPidAtTarget()) {
+        if (id != "NULL")
+        {
+            createAndSendPacket(2, "success", id);
+        }
+        return;
+    }
+
+    int currentPositionEncoderA = readLeftEncoder();
+    int currentPositionEncoderB = readRightEncoder();
+    double currentVelocityA = (currentPositionEncoderA - customPrevPositionA) / dt;
+    double currentVelocityB = (currentPositionEncoderB - customPrevPositionB) / dt;
+
+    customProfileA.currentPosition = currentPositionEncoderA;
+    customProfileA.currentVelocity = currentVelocityA;
+    customProfileB.currentPosition = currentPositionEncoderB;
+    customProfileB.currentVelocity = currentVelocityB;
+
+    float desiredVelocityLeft = updateTrapezoidalProfile(customProfileA, dt);
+    float desiredVelocityRight = updateTrapezoidalProfile(customProfileB, dt);
+    leftMotorControl = { VELOCITY, desiredVelocityLeft };
+    rightMotorControl = { VELOCITY, desiredVelocityRight };
+
+    timerDelay(1, [&customProfileA, &customProfileB, dt, id](){ customMotionProfileTimerFunction(customProfileA, customProfileB, dt, id); });
+}
 
 #endif
