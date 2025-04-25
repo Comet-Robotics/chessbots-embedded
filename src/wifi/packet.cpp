@@ -17,6 +17,7 @@
 #include "utils/functions.h"
 #include "utils/config.h"
 #include "robot/control.h"
+#include "robot/splines.h"
 #include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
@@ -34,6 +35,8 @@ const char* ACTION_SUCCESS = "ACTION_SUCCESS";
 const char* ACTION_FAIL = "ACTION_FAIL";
 const char* DRIVE_TANK = "DRIVE_TANK";
 const char* ESTOP = "ESTOP";
+const char* CUBIC = "DRIVE_CUBIC_SPLINE";
+const char* QUADRATIC = "DRIVE_QUADRATIC_SPLINE";
 
 // Takes a packet a does specific things based on the type
 void handlePacket(JsonDocument packet) {
@@ -50,6 +53,10 @@ void handlePacket(JsonDocument packet) {
         driveTicks(packet["tickDistance"], packet["packetId"]);
     } else if (packet["type"] == ESTOP) {
         setStoppedStatus(true);
+    } else if(packet["type"] == CUBIC){
+        danceMonkeyCubic(packet["packetId"], packet["startPosition"], packet["controlPositionA"], packet["controlPositionB"], packet["endPosition"], packet["timeDeltaMs"]);
+    } else if(packet["type"] == QUADRATIC){
+        danceMonkeyQaudratic(packet["packetId"], packet["startPosition"], packet["controlPosition"], packet["endPosition"], packet["timeDeltaMs"]);
     }
 }
 

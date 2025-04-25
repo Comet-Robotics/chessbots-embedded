@@ -7,6 +7,7 @@
 
 // Built-In Libraries
 #include "Arduino.h"
+#include <queue>
 
 // Custom Libraries
 #include "utils/logging.h"
