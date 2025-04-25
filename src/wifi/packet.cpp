@@ -53,6 +53,7 @@ void handlePacket(JsonDocument packet) {
         driveTicks(packet["tickDistance"], packet["packetId"]);
     } else if (packet["type"] == ESTOP) {
         setStoppedStatus(true);
+        stop();
     } else if(packet["type"] == CUBIC){
         Point startPosition = {packet["startPosition"]["x"], packet["startPosition"]["y"]};
         Point endPosition = {packet["endPosition"]["x"], packet["endPosition"]["y"]};
