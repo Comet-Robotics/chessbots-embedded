@@ -101,24 +101,23 @@ void controlLoop(int loopDelayMs) {
         double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
         double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
 
+        profileA.currentPosition = currentPositionEncoderA;
+        profileA.currentVelocity = currentVelocityA;
+        profileB.currentPosition = currentPositionEncoderB;
+        profileB.currentVelocity = currentVelocityB;
+
         double desiredVelocityA, desiredVelocityB;
 
         if (leftMotorControl.mode == POSITION) {
             profileA.targetPosition = leftMotorControl.value;
-            profileA.currentPosition = currentPositionEncoderA;
-            profileA.currentVelocity = currentVelocityA;
             desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds);
-        }
-        else {
+        } else {
             desiredVelocityA = leftMotorControl.value;
         }
         if (rightMotorControl.mode == POSITION) {
             profileB.targetPosition = rightMotorControl.value;
-            profileB.currentPosition = currentPositionEncoderB;
-            profileB.currentVelocity = currentVelocityB;
             desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds);
-        }
-        else {
+        } else {
             desiredVelocityB = rightMotorControl.value;
         }
 
@@ -174,7 +173,12 @@ void drive(float tiles) {
 void driveTicks(int tickDistance, std::string id)
 {
     leftMotorControl = { POSITION, (float)(readLeftEncoder() + tickDistance) };
-    rightMotorControl = { POSITION, (float)(readRightEncoder() - tickDistance) };
+    rightMotorControl = { POSITION, (float)(readRightEncoder() + tickDistance) };
+
+    if (id != "NULL")
+    {
+        sendPacketOnPidComplete(id);
+    }
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
@@ -216,10 +220,9 @@ void turn(float angleRadians, std::string id) {
         rightMotorControl = { POSITION, (float)(readRightEncoder() + offsetTicks) };
     }
 
-    // TODO wait for pid to reach target
     if (id != "NULL")
     {
-        createAndSendPacket(2, "success", id);
+        sendPacketOnPidComplete(id);
     }
 }
 
@@ -229,6 +232,33 @@ void stop() {
     setRightPower(0);
 
     serialLogln("Bot Stopped!", 2);
+}
+
+void sendPacketOnPidComplete(std::string id) {
+    if (!DO_PID) createAndSendPacket(2, "fail", id);
+
+    float POSITION_TOLERANCE = 100;
+    float VELOCITY_TOLERANCE = 200;
+
+    boolean leftAtTarget, rightAtTarget;
+
+    if (leftMotorControl.mode == POSITION) {
+        leftAtTarget = (leftMotorControl.value - POSITION_TOLERANCE) <= profileA.currentPosition && profileA.currentPosition <= (leftMotorControl.value + POSITION_TOLERANCE);
+    } else {
+        leftAtTarget = (leftMotorControl.value - VELOCITY_TOLERANCE) <= profileA.currentVelocity && profileA.currentVelocity <= (leftMotorControl.value + VELOCITY_TOLERANCE);
+    }
+    if (rightMotorControl.mode == POSITION) {
+        rightAtTarget = (rightMotorControl.value - POSITION_TOLERANCE) <= profileB.currentPosition && profileB.currentPosition <= (rightMotorControl.value + POSITION_TOLERANCE);
+    } else {
+        rightAtTarget = (rightMotorControl.value - VELOCITY_TOLERANCE) <= profileB.currentVelocity && profileB.currentVelocity <= (rightMotorControl.value + VELOCITY_TOLERANCE);
+    }
+
+    if (leftAtTarget && rightAtTarget) {
+        createAndSendPacket(2, "success", id);
+    } else {
+        // Run on next loop
+        timerDelay(1, [id](){ sendPacketOnPidComplete(id); });
+    }
 }
 
 // Reads in the light value of all light sensors
