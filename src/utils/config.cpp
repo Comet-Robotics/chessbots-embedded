@@ -11,6 +11,8 @@
 // External Libraries
 #include <ArduinoJson.h>
 
+int loopDelayMilliseconds = 20;
+
 gpio_num_t MOTOR_A_PIN1 = GPIO_NUM_33;
 gpio_num_t MOTOR_A_PIN2 = GPIO_NUM_38;
 gpio_num_t MOTOR_B_PIN1 = GPIO_NUM_39;
