@@ -34,7 +34,7 @@ float MAX_VELOCITY_TPS = 39000;
 float MAX_ACCELERATION_TPSPS = 3500;
 
 void setConfig(JsonObject config) {
-    serialLogln((char*)"Setting Config...", 2);
+    serialLogln("Setting Config...", 2);
 
     // The is<x>() method checks the type of the variable. If the type isn't none, then
     // we know this variable exists in the config and has a value
@@ -60,7 +60,7 @@ void setConfig(JsonObject config) {
     if (config["MAX_VELOCITY_TPS"].is<float>()) MAX_VELOCITY_TPS = config["MAX_VELOCITY_TPS"];
     if (config["MAX_ACCELERATION_TPSPS"].is<float>()) MAX_ACCELERATION_TPSPS = config["MAX_ACCELERATION_TPSPS"];
 
-    serialLogln((char*)"Config Set!", 2);
+    serialLogln("Config Set!", 2);
 }
 
 #endif

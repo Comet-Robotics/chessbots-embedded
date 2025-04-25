@@ -24,7 +24,7 @@ void setup() {
     if (LOGGING_LEVEL > 0) Serial.begin(115200);
 
     delay(STARTUP_DELAY);
-    serialLogln((char*)"Finished Delay!", 2);
+    serialLogln("Finished Delay!", 2);
 
 
     // Any setup needed to get bot ready

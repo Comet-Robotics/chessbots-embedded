@@ -36,7 +36,7 @@ MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0};
 boolean testEncoderPID_value = false;
 void testEncoderPID()
 {
-    serialLogln((char *)"Changing encoder PID setpoint!", 2);
+    serialLogln("Changing encoder PID setpoint!", 2);
     if (!testEncoderPID_value)
     {
         testEncoderPID_value = true;
@@ -52,24 +52,24 @@ void testEncoderPID()
 int testTurn_angle = 0;
 void testTurn()
 {
-    serialLog((char *)"Changing destination angle to ", 2);
+    serialLog("Changing destination angle to ", 2);
     serialLog(testTurn_angle, 2);
     testTurn_angle = (testTurn_angle + 90) % 360;
     turn(M_PI / 2, "NULL");
-    serialLog((char *)" (", 2);
+    serialLog(" (", 2);
     serialLog(encoderATarget, 2);
-    serialLog((char *)", ", 2);
+    serialLog(", ", 2);
     serialLog(encoderBTarget, 2);
-    serialLogln((char *)")", 2);
+    serialLogln(")", 2);
 }
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
-    serialLogln((char*)"Setting Up Bot...", 2);
+    serialLogln("Setting Up Bot...", 2);
     setupMotors();
     setupIR();
     setupEncodersNew();
-    serialLogln((char*)"Bot Set Up!", 2);
+    serialLogln("Bot Set Up!", 2);
 
     encoderAVelocityController.Reset();
     encoderBVelocityController.Reset();
@@ -131,27 +131,26 @@ void controlLoop(int loopDelayMs) {
         if (rightMotorPower < -1) rightMotorPower = -1;
 
         serialLog(currentPositionEncoderA, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog(currentPositionEncoderB, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog((float) desiredVelocityA, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog((float) desiredVelocityB, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog((float) currentVelocityA, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog((float) currentVelocityB, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog((float) leftMotorPower, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog((float) rightMotorPower, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog(encoderATarget, 3);
-        serialLog((char *)",", 3);
+        serialLog(",", 3);
         serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
-        serialLog((char *)",", 3);
-        serialLogln(float(loopDelaySeconds), 3);
-
+        serialLog(",", 3);
+        serialLogln((float) loopDelaySeconds, 3);
 
         drive(
             leftMotorPower, // leftMotorPower,
@@ -216,7 +215,7 @@ void stop() {
     setLeftPower(0);
     setRightPower(0);
 
-    serialLogln((char*)"Bot Stopped!", 2);
+    serialLogln("Bot Stopped!", 2);
 }
 
 // Reads in the light value of all light sensors

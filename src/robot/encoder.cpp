@@ -13,7 +13,7 @@ int oldPositionB = -999;
 
 
 void setupEncodersNew() {
-    serialLogln((char *)"Setting up encoder", 3);
+    serialLogln("Setting up encoder", 3);
 }
 
 void resetEncoders() {
@@ -27,13 +27,13 @@ void encoderLoop() {
 
     if(oldPositionA != newPosition_EncA){
         oldPositionA = newPosition_EncA;
-        serialLog((char *)"Encoder A: ", 2);
+        serialLog("Encoder A: ", 2);
         serialLogln(newPosition_EncA, 2);
     }
 
     if(oldPositionB != newPosition_EncB){
         oldPositionB = newPosition_EncB;
-        serialLog((char *)"Encoder B: ", 2);
+        serialLog("Encoder B: ", 2);
         serialLogln(newPosition_EncB, 2);
     }
 }
