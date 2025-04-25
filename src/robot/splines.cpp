@@ -4,12 +4,18 @@
 #include "robot/splines.h"
 #include "robot/control.h"
 #include "utils/timer.h"
+#include "wifi/connection.h"
 #include <tuple>
 
-void velocityUpdateTimerFunction()
+void velocityUpdateTimerFunction(std::string id)
 {
-    if (timeSlicesToExecute.size() == 0)
+    if (timeSlicesToExecute.size() == 0) {
+        if (id != "NULL")
+        {
+            createAndSendPacket(2, "success", id);
+        }
         return;
+    }
 
     float desiredVelocityLeft, desiredVelocityRight;
     std::tie(desiredVelocityLeft, desiredVelocityRight) = timeSlicesToExecute.front();
@@ -18,7 +24,7 @@ void velocityUpdateTimerFunction()
     timeSlicesToExecute.pop();
 
     // 1ms delay ensures the function will run in the next loop
-    timerDelay(1, &velocityUpdateTimerFunction);
+    timerDelay(1, [id](){ velocityUpdateTimerFunction(id); });
 }
 
 #endif
