@@ -28,6 +28,8 @@ extern gpio_num_t PHOTODIODE_D_PIN;
 extern int TICKS_PER_ROTATION;
 extern float TRACK_WIDTH_INCHES;
 extern float WHEEL_DIAMETER_INCHES;
+extern float MAX_VELOCITY_TPS;
+extern float MAX_ACCELERATION_TPSPS;
 
 void setConfig(JsonObject config);
 

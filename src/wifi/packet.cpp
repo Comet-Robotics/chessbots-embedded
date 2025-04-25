@@ -29,6 +29,7 @@ const char* QUERY_RESPONSE = "QUERY_RESPONSE";
 const char* SET_VAR = "SET_VAR";
 const char* TURN_BY_ANGLE = "TURN_BY_ANGLE";
 const char* DRIVE_TILES = "DRIVE_TILES";
+const char* DRIVE_TICKS = "DRIVE_TICKS";
 const char* ACTION_SUCCESS = "ACTION_SUCCESS";
 const char* ACTION_FAIL = "ACTION_FAIL";
 const char* DRIVE_TANK = "DRIVE_TANK";
@@ -45,6 +46,8 @@ void handlePacket(JsonDocument packet) {
     } else if (packet["type"] == DRIVE_TANK) {
         // This is received when the bot is being manually controlled via the debug page
         drive(packet["left"], packet["right"], packet["packetId"]);
+    } else if (packet["type"] == DRIVE_TICKS){
+        driveTicks(packet["tickDistance"], packet["packetId"]);
     }
 }
 

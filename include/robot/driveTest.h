@@ -10,6 +10,13 @@ private:
     int startEncoderA;
     int _startEncoderB;
     int startEncoderB;
+    int prevEncA;
+    int prevEncB;
+    float maxEncoderVelocity = 0;
+    float prevEncVelA;
+    float prevEncVelB;
+    float maxEncoderAccel = 0;
+    int encoderCheckTimerId;
     bool testSuccessful;
     const int ENCODER_TOLERANCE = 100;
 
@@ -18,6 +25,7 @@ private:
     void testWait();
     void testRightMotor();
     void testDriveForward();
+    void checkEncoderVelocity();
     void testDriveDone();
 };
 

@@ -16,7 +16,7 @@
 #include "../env.h"
 #include "robot/pidController.h"
 
-int delayMilliseconds = 10;
+int delayMilliseconds = 20;
 
 // Setup gets run at startup
 void setup() {
@@ -34,6 +34,8 @@ void setup() {
     if (!RUN_OFFLINE) connectWiFI();
 
     if (DO_DRIVE_TEST) startDriveTest();
+
+    if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
 
     if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
 }
