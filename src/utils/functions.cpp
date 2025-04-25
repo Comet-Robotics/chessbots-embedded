@@ -9,11 +9,19 @@
 
 // Custom Libraries
 #include "utils/logging.h"
+#include "utils/config.h"
 
 // This custom map function takes a number, and scales it from one range to another.
 // We use this to change a number between 0-1 to a number between 0-255
 float fmap(float x, float in_min, float in_max, float out_min, float out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+int radiansToTicks(double angle) {
+    double offsetInches = TRACK_WIDTH_INCHES * angle / 2;
+    int offsetTicks = (int)(offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
+    // left subtracts this value, right adds this value
+    return offsetTicks;
 }
 
 // When we get the mac address from the esp, it gives it as an array of unsigned

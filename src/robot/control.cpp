@@ -22,6 +22,7 @@
 #include "robot/driveTest.h"
 #include "../../env.h"
 #include <algorithm>
+#include "utils/functions.h"
 
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
 PIDController encoderAVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Blue
@@ -222,8 +223,7 @@ void drive(float leftPower, float rightPower, std::string id) {
 }
 
 void turn(float angleRadians, std::string id) {
-    float offsetInches = TRACK_WIDTH_INCHES * angleRadians / 2;
-    int offsetTicks = (int) (offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
+    int offsetTicks = radiansToTicks(angleRadians);
 
     if (getLeftMotorControl().mode == POSITION) {
         setLeftMotorControl({POSITION, getLeftMotorControl().value - offsetTicks});
@@ -231,9 +231,9 @@ void turn(float angleRadians, std::string id) {
         setLeftMotorControl({POSITION, (float)(readLeftEncoder() - offsetTicks)});
     }
     if (getRightMotorControl().mode == POSITION) {
-        setRightMotorControl({POSITION, getRightMotorControl().value - offsetTicks});
+        setRightMotorControl({POSITION, getRightMotorControl().value + offsetTicks});
     } else {
-        setRightMotorControl({POSITION, (float)(readRightEncoder() - offsetTicks)});
+        setRightMotorControl({POSITION, (float)(readRightEncoder() + offsetTicks)});
     }
 
     if (id != "NULL")
