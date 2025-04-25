@@ -2,6 +2,7 @@
 #define CHESSBOT_SPLINES_CPP
 
 #include "robot/splines.h"
+#include "utils/logging.h"
 #include "robot/control.h"
 #include "utils/timer.h"
 #include "wifi/connection.h"
@@ -9,14 +10,11 @@
 #include <tuple>
 #include <queue>
 
-struct Position {
-    float x;
-    float y;
-};
 
 
 void velocityUpdateTimerFunction(std::string id)
 {
+    serialLogln("Update Timer was called", 3);
     if (timeSlicesToExecute.size() == 0) {
         if (id != "NULL")
         {
@@ -36,7 +34,7 @@ void velocityUpdateTimerFunction(std::string id)
 }
 
 
-void danceMonkeyCubic(std::string id, Position start, Position control1, Position control2, Position end, float totalTime){
+void danceMonkeyCubic(std::string id, Point start, Point control1, Point control2, Point end, float totalTime){
     float trackWidth = TRACK_WIDTH_INCHES;
 
     int steps = (int)(totalTime / 0.01); // 10ms steps
@@ -47,29 +45,27 @@ void danceMonkeyCubic(std::string id, Position start, Position control1, Positio
         float tNext = (float)(i + 1) / steps;
 
         // Cubic Bezier Point at t
-        Position p = {
-            .x = pow(1 - t, 3) * start.x +
-                 3 * pow(1 - t, 2) * t * control1.x +
-                 3 * (1 - t) * pow(t, 2) * control2.x +
-                 pow(t, 3) * end.x,
-
-            .y = pow(1 - t, 3) * start.y +
-                 3 * pow(1 - t, 2) * t * control1.y +
-                 3 * (1 - t) * pow(t, 2) * control2.y +
-                 pow(t, 3) * end.y
+        Point p = {
+            (float)(pow(1 - t, 3) * start.x +
+                    3 * pow(1 - t, 2) * t * control1.x +
+                    3 * (1 - t) * pow(t, 2) * control2.x +
+                    pow(t, 3) * end.x),
+            (float)(pow(1 - t, 3) * start.y +
+                    3 * pow(1 - t, 2) * t * control1.y +
+                    3 * (1 - t) * pow(t, 2) * control2.y +
+                    pow(t, 3) * end.y)
         };
 
         // Cubic Bezier Point at tNext
-        Position pNext = {
-            .x = pow(1 - tNext, 3) * start.x +
-                 3 * pow(1 - tNext, 2) * tNext * control1.x +
-                 3 * (1 - tNext) * pow(tNext, 2) * control2.x +
-                 pow(tNext, 3) * end.x,
-
-            .y = pow(1 - tNext, 3) * start.y +
-                 3 * pow(1 - tNext, 2) * tNext * control1.y +
-                 3 * (1 - tNext) * pow(tNext, 2) * control2.y +
-                 pow(tNext, 3) * end.y
+        Point pNext = {
+            (float)(pow(1 - tNext, 3) * start.x +
+                    3 * pow(1 - tNext, 2) * tNext * control1.x +
+                    3 * (1 - tNext) * pow(tNext, 2) * control2.x +
+                    pow(tNext, 3) * end.x),
+            (float)(pow(1 - tNext, 3) * start.y +
+                    3 * pow(1 - tNext, 2) * tNext * control1.y +
+                    3 * (1 - tNext) * pow(tNext, 2) * control2.y +
+                    pow(tNext, 3) * end.y)
         };
 
         // Estimate linear velocity
@@ -83,16 +79,15 @@ void danceMonkeyCubic(std::string id, Position start, Position control1, Positio
 
         if (i > 0) {
             float tPrev = (float)(i - 1) / steps;
-            Position pPrev = {
-                .x = pow(1 - tPrev, 3) * start.x +
-                     3 * pow(1 - tPrev, 2) * tPrev * control1.x +
-                     3 * (1 - tPrev) * pow(tPrev, 2) * control2.x +
-                     pow(tPrev, 3) * end.x,
-
-                .y = pow(1 - tPrev, 3) * start.y +
-                     3 * pow(1 - tPrev, 2) * tPrev * control1.y +
-                     3 * (1 - tPrev) * pow(tPrev, 2) * control2.y +
-                     pow(tPrev, 3) * end.y
+        Point pPrev = {
+                (float)(pow(1 - tPrev, 3) * start.x +
+                        3 * pow(1 - tPrev, 2) * tPrev * control1.x +
+                        3 * (1 - tPrev) * pow(tPrev, 2) * control2.x +
+                        pow(tPrev, 3) * end.x),
+                (float)(pow(1 - tPrev, 3) * start.y +
+                        3 * pow(1 - tPrev, 2) * tPrev * control1.y +
+                        3 * (1 - tPrev) * pow(tPrev, 2) * control2.y +
+                        pow(tPrev, 3) * end.y)
             };
 
             theta0 = atan2(p.y - pPrev.y, p.x - pPrev.x);
@@ -115,7 +110,8 @@ void danceMonkeyCubic(std::string id, Position start, Position control1, Positio
     velocityUpdateTimerFunction(id);
 }
 
-void danceMonkeyQaudratic(std::string id, Position start, Position control, Position end, float totalTime) {
+void danceMonkeyQaudratic(std::string id, Point start, Point control, Point end, float totalTime) {
+    serialLogln("Quadratic Dancer was called", 3);
     float trackWidth = TRACK_WIDTH_INCHES;
     int steps = (int)(totalTime / 0.01); // 10ms steps
     float dt = totalTime / steps;
@@ -125,15 +121,15 @@ void danceMonkeyQaudratic(std::string id, Position start, Position control, Posi
         float tNext = (float)(i + 1) / steps;
 
         // Bezier point at t
-        Position p = {
-            .x = (1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * control.x + t * t * end.x,
-            .y = (1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * control.y + t * t * end.y
+        Point p = {
+                (float)((1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * control.x + t * t * end.x),
+                (float)((1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * control.y + t * t * end.y)
         };
 
         // Bezier point at t + dt
-        Position pNext = {
-            .x = (1 - tNext) * (1 - tNext) * start.x + 2 * (1 - tNext) * tNext * control.x + tNext * tNext * end.x,
-            .y = (1 - tNext) * (1 - tNext) * start.y + 2 * (1 - tNext) * tNext * control.y + tNext * tNext * end.y
+        Point pNext = {
+            (float)((1 - tNext) * (1 - tNext) * start.x + 2 * (1 - tNext) * tNext * control.x + tNext * tNext * end.x),
+            (float)((1 - tNext) * (1 - tNext) * start.y + 2 * (1 - tNext) * tNext * control.y + tNext * tNext * end.y)
         };
 
         // Velocity approximation
@@ -161,6 +157,8 @@ void danceMonkeyQaudratic(std::string id, Position start, Position control, Posi
 
 
         timeSlicesToExecute.push({vLeft, vRight});
+        serialLogln(vLeft, 3);
+        serialLogln(vRight, 3);
     }
     velocityUpdateTimerFunction(id);
 }

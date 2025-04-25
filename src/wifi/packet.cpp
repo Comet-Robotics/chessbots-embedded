@@ -54,9 +54,17 @@ void handlePacket(JsonDocument packet) {
     } else if (packet["type"] == ESTOP) {
         setStoppedStatus(true);
     } else if(packet["type"] == CUBIC){
-        danceMonkeyCubic(packet["packetId"], packet["startPosition"], packet["controlPositionA"], packet["controlPositionB"], packet["endPosition"], packet["timeDeltaMs"]);
+        Point startPosition = {packet["startPosition"]["x"], packet["startPosition"]["y"]};
+        Point endPosition = {packet["endPosition"]["x"], packet["endPosition"]["y"]};
+        Point controlPositionA = {packet["controlPositionA"]["x"], packet["controlPositionA"]["y"]};
+        Point controlPositionB = {packet["controlPositionB"]["x"], packet["controlPositionB"]["y"]};
+        danceMonkeyCubic(packet["packetId"], startPosition, controlPositionA, controlPositionB, endPosition, packet["timeDeltaMs"]);
     } else if(packet["type"] == QUADRATIC){
-        danceMonkeyQaudratic(packet["packetId"], packet["startPosition"], packet["controlPosition"], packet["endPosition"], packet["timeDeltaMs"]);
+        serialLog("I have arrived!! at Quadratic", 3);
+        Point startPosition = {packet["startPosition"]["x"], packet["startPosition"]["y"]};
+        Point endPosition = {packet["endPosition"]["x"], packet["endPosition"]["y"]};
+        Point controlPosition = {packet["controlPosition"]["x"], packet["controlPosition"]["y"]};
+        danceMonkeyQaudratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
     }
 }
 
