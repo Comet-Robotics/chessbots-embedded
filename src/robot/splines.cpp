@@ -41,8 +41,8 @@ void velocityUpdateTimerFunction(std::string id)
 void danceMonkeyCubic(std::string id, Point start, Point control1, Point control2, Point end, float totalTimeMs){
     float trackWidth = TRACK_WIDTH_INCHES;
 
-    int steps = (int)(totalTimeMs / 0.01); // 10ms steps
-    float dt = totalTimeMs / steps;
+    int steps = (int)(totalTimeMs / loopDelayMilliseconds); // 20ms steps
+    float dt = totalTimeMs / 1000 / steps;
 
     for (int i = 0; i < steps; i++) {
         float t = (float)i / steps;
@@ -167,9 +167,9 @@ void danceMonkeyQuadratic(std::string id, Point start, Point control, Point end,
 
 
         timeSlicesToExecute.push({vLeft, vRight});
-        serialLog(vLeft, 3);
-        serialLog(", ", 3);
-        serialLogln(vRight, 3);
+        // serialLog(vLeft, 3);
+        // serialLog(", ", 3);
+        // serialLogln(vRight, 3);
     }
     velocityUpdateTimerFunction(id);
 }
