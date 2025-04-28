@@ -24,13 +24,13 @@ const short LIMIT_TO_CHANGE = 500;
 
 // Sets the IR (Infrared) Blaster to be able to output
 void setupIR() {
-    serialLogln((char*)"Setting Up Light Sensors...", 2);
+    serialLogln("Setting Up Light Sensors...", 2);
     pinMode(RELAY_IR_LED_PIN, OUTPUT);
     for(uint8_t i = 0; i < 20; i++)
     {
         readGarbageVals();
     }
-    serialLogln((char*)"Light Sensors Setup!", 2);
+    serialLogln("Light Sensors Setup!", 2);
 }
 
 void readGarbageVals() {
@@ -139,13 +139,13 @@ void readLightLevels() {
     deactivateIR();
 
     // Logs the values for debugging purposes
-    serialLog((char*)"Light Levels: ", 4);
+    serialLog("Light Levels: ", 4);
     serialLog(lightArray[0], 4);
-    serialLog((char*)" ", 4);
+    serialLog(" ", 4);
     serialLog(lightArray[1], 4);
-    serialLog((char*)" ", 4);
+    serialLog(" ", 4);
     serialLog(lightArray[2], 4);
-    serialLog((char*)" ", 4);
+    serialLog(" ", 4);
     serialLogln(lightArray[3], 4);
 }
 

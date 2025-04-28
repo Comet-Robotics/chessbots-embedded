@@ -27,15 +27,14 @@ gpio_num_t PHOTODIODE_B_PIN = GPIO_NUM_2;
 gpio_num_t PHOTODIODE_C_PIN = GPIO_NUM_4;
 gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 
-float WHEEL_DIAMETER_INCHES = 4.375;
-
-float MOTOR_A_DRIVE_MULTIPLIER = 1.0;
-float MOTOR_B_DRIVE_MULTIPLIER = 1.0;
-
-float ENCODER_MULTIPLIER = 1.0;
+int TICKS_PER_ROTATION = 12000;
+float TRACK_WIDTH_INCHES = 8.29;
+float WHEEL_DIAMETER_INCHES = 4.75;
+float MAX_VELOCITY_TPS = 39000;
+float MAX_ACCELERATION_TPSPS = 3500;
 
 void setConfig(JsonObject config) {
-    serialLogln((char*)"Setting Config...", 2);
+    serialLogln("Setting Config...", 2);
 
     // The is<x>() method checks the type of the variable. If the type isn't none, then
     // we know this variable exists in the config and has a value
@@ -55,14 +54,13 @@ void setConfig(JsonObject config) {
     if (config["PHOTODIODE_D_PIN"].is<gpio_num_t>()) PHOTODIODE_D_PIN = config["PHOTODIODE_D_PIN"];
     if (config["PHOTODIODE_A_PIN"].is<gpio_num_t>()) PHOTODIODE_A_PIN = config["PHOTODIODE_A_PIN"];
 
+    if (config["TICKS_PER_ROTATION"].is<int>()) TICKS_PER_ROTATION = config["TICKS_PER_ROTATION"];
+    if (config["TRACK_WIDTH_INCHES"].is<float>()) TRACK_WIDTH_INCHES = config["TRACK_WIDTH_INCHES"];
     if (config["WHEEL_DIAMETER_INCHES"].is<float>()) WHEEL_DIAMETER_INCHES = config["WHEEL_DIAMETER_INCHES"];
+    if (config["MAX_VELOCITY_TPS"].is<float>()) MAX_VELOCITY_TPS = config["MAX_VELOCITY_TPS"];
+    if (config["MAX_ACCELERATION_TPSPS"].is<float>()) MAX_ACCELERATION_TPSPS = config["MAX_ACCELERATION_TPSPS"];
 
-    if (config["MOTOR_A_DRIVE_MULTIPLIER"].is<float>()) MOTOR_A_DRIVE_MULTIPLIER = config["MOTOR_A_DRIVE_MULTIPLIER"];
-    if (config["MOTOR_B_DRIVE_MULTIPLIER"].is<float>()) MOTOR_B_DRIVE_MULTIPLIER = config["MOTOR_B_DRIVE_MULTIPLIER"];
-
-    if (config["ENCODER_MULTIPLIER"].is<float>()) ENCODER_MULTIPLIER = config["ENCODER_MULTIPLIER"];
-
-    serialLogln((char*)"Config Set!", 2);
+    serialLogln("Config Set!", 2);
 }
 
 #endif

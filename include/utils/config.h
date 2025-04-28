@@ -25,12 +25,11 @@ extern gpio_num_t PHOTODIODE_B_PIN;
 extern gpio_num_t PHOTODIODE_C_PIN;
 extern gpio_num_t PHOTODIODE_D_PIN;
 
+extern int TICKS_PER_ROTATION;
+extern float TRACK_WIDTH_INCHES;
 extern float WHEEL_DIAMETER_INCHES;
-
-extern float MOTOR_A_DRIVE_MULTIPLIER;
-extern float MOTOR_B_DRIVE_MULTIPLIER;
-
-extern float ENCODER_MULTIPLIER;
+extern float MAX_VELOCITY_TPS;
+extern float MAX_ACCELERATION_TPSPS;
 
 void setConfig(JsonObject config);
 

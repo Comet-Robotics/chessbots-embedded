@@ -26,10 +26,10 @@ void writePWM(int pin, int dutyCycle) {
 }
 
 // Takes in a power between [0, 1]
-// We use this to change a float power between 0-1 to an int duty cycle between 0-255
+// We use this to change a float power between 0-1 to an int duty cycle between 0-4096
 int mapPowerToDuty(float power) {
-    int value = fmap(power, 0.0, 1.0, 0.0, 255);
-    serialLog((char*)"Mapped Duty: ", 4);
+    int value = fmap(power, 0.0, 1.0, 0.0, 4096);
+    serialLog("Mapped Duty: ", 4);
     serialLogln(value, 4);
     return value;
 }

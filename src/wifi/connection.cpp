@@ -25,12 +25,12 @@ WiFiClient client;
 
 // Called to connect to the server whose info is stored in env.h
 void connectServer() {
-    serialLogln((char*)"Connecting to Server...", 2);
+    serialLogln("Connecting to Server...", 2);
     if (client.connect(SERVER_IP, SERVER_PORT)) {
         // If successful, sets the connection status and stops trying to connect to the server
         setServerConnectionStatus(true);
         serverConnecting = false;
-        serialLogln((char*)"Connected to Server!", 2);
+        serialLogln("Connected to Server!", 2);
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
         if (DO_HANDSHAKE) {
@@ -41,7 +41,7 @@ void connectServer() {
     {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
-        serialLogln((char*)"Connection To Server Failed! Retrying...", 2);
+        serialLogln("Connection To Server Failed! Retrying...", 2);
 
         timerDelay(5000, &connectServer);
     }
@@ -51,14 +51,14 @@ void connectServer() {
 void disconnectServer() {
     setServerConnectionStatus(false);
     client.stop();
-    serialLogln((char*)"Disconnected From Server!", 2);
+    serialLogln("Disconnected From Server!", 2);
 }
 
 // If not connected to the server (whether by disconnect or by lost connection), reconnects
 void reconnectServer() {
     if (!serverConnecting) {
         setServerConnectionStatus(false);
-        serialLogln((char*)"Disconnected From Server! Reconnecting...", 2);
+        serialLogln("Disconnected From Server! Reconnecting...", 2);
         connectServer();
     }
 }
@@ -93,10 +93,10 @@ void acceptData() {
         JsonDocument packet;
         // This turns the character buffer into a fully formed JSON object
         deserializeJson(packet, rawPacket);
-        serialLog((char*)"Received Packet: ", 2);
+        serialLog("Received Packet: ", 2);
         // This takes that JSON object and prints it to Serial (the console) for debugging purposes
         if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-        serialLog((char*)"\n", 2);
+        serialLog("\n", 2);
 
         // Actually does something with the received packet
         handlePacket(packet);
@@ -109,10 +109,10 @@ void sendPacket(JsonDocument& packet) {
     serializeJson(packet, client);
     // Sends a delimiter character to mark the end of the packet
     client.write(';');
-    serialLogln((char*)"Sent Packet: ", 2);
+    serialLogln("Sent Packet: ", 2);
     // This takes that JSON object and prints it to Serial (the console) for debugging purposes
     if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-    serialLog((char*)"\n", 2);
+    serialLog("\n", 2);
 }
 
 //Additional method created to call the construction of the packet and then to send it.
@@ -123,17 +123,17 @@ void createAndSendPacket(uint8_t priority, std::string message, std::string mess
     //be inefficient and require changing.
     if(message == "hello")
     {
-        serialLogln((char*)"Sending handshake...", priority);
+        serialLogln("Sending handshake...", priority);
         constructHelloPacket(packet);
     }
     else if(message == "success")
     {
-        serialLogln((char*)"Action succeeded!", priority);
+        serialLogln("Action succeeded!", priority);
         constructSuccessPacket(packet, messageId);
     }
     else if(message == "fail")
     {
-        serialLogln((char*)"Action failed!", priority);
+        serialLogln("Action failed!", priority);
         constructFailPacket(packet, messageId);
     }
     sendPacket(packet);
