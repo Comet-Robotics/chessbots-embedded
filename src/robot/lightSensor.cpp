@@ -109,7 +109,7 @@ void startLightReading(bool* onFirstTile) {
             {
                 serialLogln((char*) "Checking tick values!", 4);
             }
-            //call the function, and if true then reset cooldown
+
             if(checkForLightChange(i))
             {
                 //invert value

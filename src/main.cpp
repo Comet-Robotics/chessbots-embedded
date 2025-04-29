@@ -16,7 +16,7 @@
 #include "../env.h"
 #include "robot/pidController.h"
 
-int delayMilliseconds = 100;
+int delayMilliseconds = 50;
 
 // int currentTick = 0;
 // const int MAX_TICK = 20;
@@ -67,13 +67,12 @@ void loop() {
 
         // If the bot is connected to the server, check for received data, and accept it if available
         if (getServerConnectionStatus()) acceptData();
+        // Checks whether bot is still connected to the server. Reconnect if not
+        if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
+
+        // If the bot is connected to the server, check for received data, and accept it if available
+        if (getServerConnectionStatus()) acceptData();
     }
-
-    // Checks whether bot is still connected to the server. Reconnect if not
-    if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
-
-    // If the bot is connected to the server, check for received data, and accept it if available
-    if (getServerConnectionStatus()) acceptData();
 
     uint8_t status = driveUntilNewTile(onFirstTile);
 
