@@ -16,7 +16,7 @@
 #include "../env.h"
 #include "robot/pidController.h"
 
-int delayMilliseconds = 20;
+int delayMilliseconds = 100;
 
 // int currentTick = 0;
 // const int MAX_TICK = 20;
@@ -46,6 +46,7 @@ void setup() {
     delay(2000);
 
     createDriveUntilNewTile(onFirstTile);
+
     //start reading the light
     if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
 
@@ -57,7 +58,8 @@ void loop() {
     // Checks if any timers have expired
     timerStep();
 
-    if (!RUN_OFFLINE) {
+    if (!RUN_OFFLINE) 
+    {
         // Checks whether bot is still connected to WiFi. Reconnect if not
         if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
         // Checks whether bot is still connected to the server. Reconnect if not
@@ -70,13 +72,13 @@ void loop() {
     // Checks whether bot is still connected to the server. Reconnect if not
     if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
 
-        // If the bot is connected to the server, check for received data, and accept it if available
-        if (getServerConnectionStatus()) acceptData();
-    }
-
+    // If the bot is connected to the server, check for received data, and accept it if available
+    if (getServerConnectionStatus()) acceptData();
 
     uint8_t status = driveUntilNewTile(onFirstTile);
+
     readLight(onFirstTile);
+
 #if DO_LIGHT_SENSOR_TEST
     //know our char will be 4 bits
     char vals[5];
@@ -112,17 +114,12 @@ void loop() {
     encoderLoop();
 #endif
 
-    // This delay determines how often the code in loop is run
-    // (Forcefully pauses the thread for about the amount of milliseconds passed in) 
-  	delay(50);
     // Run control loop
     controlLoop(delayMilliseconds);
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
   	delay(delayMilliseconds);
-    // (Forcefully pauses the thread for about the amount of milliseconds passed in) 
-  	delay(50);
 }
 
 // This is used at the end of each file due to the name definition at the beginning

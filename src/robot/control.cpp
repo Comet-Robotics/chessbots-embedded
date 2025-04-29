@@ -81,10 +81,10 @@ uint8_t backEncoderDist = 0;
 bool leftEncoderChange = false;
 bool rightEncoderChange = false;
 
-const uint8_t Top_Left_Encoder_Index = 1;
-const uint8_t Top_Right_Encoder_Index = 2;
-const uint8_t Bottom_Left_Encoder_Index = 3;
-const uint8_t Bottom_Right_Encoder_Index = 0;
+const uint8_t Top_Left_Encoder_Index = 0;
+const uint8_t Top_Right_Encoder_Index = 1;
+const uint8_t Bottom_Left_Encoder_Index = 2;
+const uint8_t Bottom_Right_Encoder_Index = 3;
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders.
 const float encoderDist = 0.07;
@@ -92,6 +92,10 @@ const float encoderDist = 0.07;
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
     serialLogln("Setting Up Bot...", 2);
+
+    pinMode(ONBOARD_LED_PIN, OUTPUT);
+    digitalWrite(ONBOARD_LED_PIN, HIGH);
+
     setupMotors();
     setupIR();
     setupEncodersNew();
@@ -115,7 +119,7 @@ void setupBot() {
 // Manages control loop (loopDelayMs is for reference)
 void controlLoop(int loopDelayMs) {
     if (DO_LIGHT_SENSOR_TEST)
-        readLight();
+        // readLight();
 
     if (DO_ENCODER_TEST)
         encoderLoop();
@@ -259,13 +263,13 @@ void startMotorAndEncoderTest() {
 
 // Tests the motors. This turns the motors on.
 void startDriveTest() {
-    drive(-0.5f, -0.5f, "NULL");
+    drive(0.5f, 0.5f, "NULL");
     timerDelay(2000, &driveTestOff);
 }
 
 void createDriveUntilNewTile(bool* onFirstTile)
 {
-    drive(-0.5f, -0.5f, "NULL");
+    drive(0.5f, 0.5f, "NULL");
     //assign values here, will detect when they change
     firstEncoderVal = onFirstTile[Top_Left_Encoder_Index];
     secondEncoderVal = onFirstTile[Top_Right_Encoder_Index];
@@ -352,9 +356,9 @@ void beginXTicksDrive(uint8_t leadingEncoderLabel, uint8_t max_ticks, bool inRev
     //for some reason, positive drive values move it backward? Or maybe I don't understand the direction of the robot.
     maxTicks = max_ticks;
     movingXTicks = true;
-    //so this is actually 1 if going in reverse, if going forward it will be -1. Which is what we kinda want.
+    //so this is actually -1 if going in reverse, if going forward it will be 1.
     //We want to use arithmetic instead to make it faster than say if we did conditionals
-    int8_t negativeMultiplier = inReverse * 2 - 1;
+    int8_t negativeMultiplier = inReverse * -2 + 1;
     //so when the label is 2, 2 - 2 = 0, good. When label is 1, 2 - 1 is 1, good.
     uint8_t leftEncoderMultiplier = 2 - leadingEncoderLabel;
     //when label is 2, 2 - 1 is 1, good. When label is 1, 1 - 1 is 0, good.
