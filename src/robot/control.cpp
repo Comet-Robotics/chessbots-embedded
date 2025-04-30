@@ -248,12 +248,18 @@ void stop() {
     serialLogln("Bot Stopped!", 2);
 }
 
+bool waitingForLight = false;
+
 // Reads in the light value of all light sensors
 void readLight(bool* onFirstTile) {
-    // The Infrared Blaster must be activated first to get a clear reading
-    activateIR();
-    //this way, we can pass in a parameter to timerDelay as well, but we don't have to
-    timerDelay(50, std::bind(startLightReading, onFirstTile));
+    if(!waitingForLight)
+    {
+        // The Infrared Blaster must be activated first to get a clear reading
+        activateIR();
+        waitingForLight = true;
+        //this way, we can pass in a parameter to timerDelay as well, but we don't have to
+        timerDelay(20, std::bind(startLightReading, onFirstTile, &waitingForLight));
+    }
 }
 
 // Test motor and encoder synchronization

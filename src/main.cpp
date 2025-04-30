@@ -118,7 +118,7 @@ void loop() {
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
-  	delay(delayMilliseconds);
+  	// delay(delayMilliseconds);
 }
 
 // This is used at the end of each file due to the name definition at the beginning

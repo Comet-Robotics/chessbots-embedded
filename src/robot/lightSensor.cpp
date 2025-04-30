@@ -90,8 +90,9 @@ void updateCounter() {
     }
 }
 
-void startLightReading(bool* onFirstTile) {
+void startLightReading(bool* onFirstTile, bool* waitingForLight) {
     //for each tick, check if its previous value is too far from what it was before. If it is, consider that the encoder has changed color.
+    *waitingForLight = false;
     readLightLevels();
 
     for(uint8_t i = 0; i < 4; i++)
@@ -139,14 +140,14 @@ void readLightLevels() {
     deactivateIR();
 
     // Logs the values for debugging purposes
-    serialLog("Light Levels: ", 4);
-    serialLog(lightArray[0], 4);
-    serialLog(" ", 4);
-    serialLog(lightArray[1], 4);
-    serialLog(" ", 4);
-    serialLog(lightArray[2], 4);
-    serialLog(" ", 4);
-    serialLogln(lightArray[3], 4);
+    serialLog("Light Levels: ", 2);
+    serialLog(lightArray[0], 2);
+    serialLog(" ", 2);
+    serialLog(lightArray[1], 2);
+    serialLog(" ", 2);
+    serialLog(lightArray[2], 2);
+    serialLog(" ", 2);
+    serialLogln(lightArray[3], 2);
 }
 
 #endif
