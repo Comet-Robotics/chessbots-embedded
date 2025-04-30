@@ -14,7 +14,7 @@ void startMotorAndEncoderTest();
 void startDriveTest();
 void createDriveUntilNewTile(bool* onFirstTile);
 uint8_t driveUntilNewTile(bool* onFirstTile);
-void beginXTicksDrive(uint8_t leadingEncoderLabel, uint8_t max_ticks, bool inReverse);
+void beginXTicksDrive(uint8_t leadingEncoderLabel, int max_ticks, bool inReverse);
 void moveRobotXTicks();
 void driveTestOff();
 void controlLoop(int loopDelayMs);

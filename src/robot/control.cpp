@@ -67,8 +67,8 @@ bool firstEncoderVal = false;
 bool secondEncoderVal = false;
 
 bool driveUntilChange = false;
-uint8_t iteration = 0;
-uint8_t maxTicks = 0;
+int iteration = 0;
+int maxTicks = 0;
 bool movingXTicks = false;
 
 //Here are the possible values:
@@ -77,7 +77,7 @@ bool movingXTicks = false;
     //2 = right encoder leading
 uint8_t leadingEncoder = 0;
 //Ticks it tackes for back encoder to reach tile change after the front tile does.
-uint8_t backEncoderDist = 0;
+int backEncoderDist = 0;
 bool leftEncoderChange = false;
 bool rightEncoderChange = false;
 
@@ -305,7 +305,8 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 driveUntilChange = false;
                 if(leadingEncoder != 0)
                 {
-                    beginXTicksDrive(leadingEncoder, backEncoderDist, true);
+                    float multiplier = 0.5;
+                    beginXTicksDrive(leadingEncoder, backEncoderDist * multiplier, true);
                 }
 
                 serialLog((char*) " Encoder in front is gonna be: ", 2);
@@ -357,7 +358,7 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
     return 0;
 }
 
-void beginXTicksDrive(uint8_t leadingEncoderLabel, uint8_t max_ticks, bool inReverse)
+void beginXTicksDrive(uint8_t leadingEncoderLabel, int max_ticks, bool inReverse)
 {
     //for some reason, positive drive values move it backward? Or maybe I don't understand the direction of the robot.
     maxTicks = max_ticks;
