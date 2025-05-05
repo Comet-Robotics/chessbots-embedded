@@ -87,7 +87,7 @@ const uint8_t Bottom_Left_Encoder_Index = 2;
 const uint8_t Bottom_Right_Encoder_Index = 3;
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders.
-const float encoderDist = 0.07;
+const float lightDist = 0.07;
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -313,6 +313,16 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 serialLogln(leadingEncoder, 2);
                 serialLog((char*) "And distance back encoder was behind is: ", 2);
                 serialLogln(backEncoderDist, 2);
+
+                float tickCountToDistMultiplier = 0.000001335;
+                //remidner: angle = arctan(x/y), where x = backEncoderDist * tickCounToDistMultiplier (like distance to our edge), and y = distance between two light sensors (put in manually)
+                float angle = atan(backEncoderDist * tickCountToDistMultiplier / lightDist);
+                //as a reminder, corresponding degrees = (pi/180) * x radians
+                angle = 180 / M_PI * angle;
+                
+                serialLog((char*) "Angle is going to be: ", 2);
+                serialLog(angle, 2);
+                serialLogln((char*) " degrees.", 2);
 
                 backEncoderDist = 0;
                 leadingEncoder = 0;
