@@ -306,7 +306,7 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 if(leadingEncoder != 0)
                 {
                     float multiplier = 0.5;
-                    beginXTicksDrive(leadingEncoder, backEncoderDist * multiplier, true);
+                    // beginXTicksDrive(leadingEncoder, backEncoderDist * multiplier, true);
                 }
 
                 serialLog((char*) " Encoder in front is gonna be: ", 2);
