@@ -77,7 +77,7 @@ bool movingXTicks = false;
     //2 = right encoder leading
 uint8_t leadingEncoder = 0;
 //Ticks it tackes for back encoder to reach tile change after the front tile does.
-int backEncoderDist = 0;
+unsigned long backEncoderDist = 0;
 bool leftEncoderChange = false;
 bool rightEncoderChange = false;
 
@@ -86,8 +86,10 @@ const uint8_t Top_Right_Encoder_Index = 1;
 const uint8_t Bottom_Left_Encoder_Index = 2;
 const uint8_t Bottom_Right_Encoder_Index = 3;
 
-//put this in manually for each bot. Dist between the two front encoders, or the two back encoders.
+//put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
+
+hw_timer_t *timer = NULL;
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -112,6 +114,12 @@ void setupBot() {
     if (DO_TURN_TEST) {
         testTurn();
         timerInterval(5000, &testTurn);
+    }
+
+    if(DO_LIGHT_SENSOR_TEST)
+    {
+        //with preset 80, incremeent every microsecond
+        timer = timerBegin(0, 80, true);
     }
 }
 
@@ -301,6 +309,9 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
             //when both cross, we done.
             if(leftEncoderChange && rightEncoderChange)
             {
+                //subtract end time by start time, backEncoderDist stores start time.
+                backEncoderDist = (leadingEncoder != 0) ? millis() - backEncoderDist : 0;
+
                 stop();
                 driveUntilChange = false;
                 if(leadingEncoder != 0)
@@ -312,9 +323,9 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 serialLog((char*) " Encoder in front is gonna be: ", 2);
                 serialLogln(leadingEncoder, 2);
                 serialLog((char*) "And distance back encoder was behind is: ", 2);
-                serialLogln(backEncoderDist, 2);
+                serialLogln((int) backEncoderDist, 2);
 
-                float tickCountToDistMultiplier = 0.000001335;
+                float tickCountToDistMultiplier = 0.000222;
                 //remidner: angle = arctan(x/y), where x = backEncoderDist * tickCounToDistMultiplier (like distance to our edge), and y = distance between two light sensors (put in manually)
                 float angle = atan(backEncoderDist * tickCountToDistMultiplier / lightDist);
                 //as a reminder, corresponding degrees = (pi/180) * x radians
@@ -341,12 +352,8 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 {
                     leadingEncoder = 2;
                 }
-                backEncoderDist++;
-            }
-            //otherwise, continue moving the back encoder and just make sure we update its dist until it stops moving
-            else
-            {
-                backEncoderDist++;
+                //set it to the current ms time, we weill subtract it by the ms time when we end to get the duration it takes.
+                backEncoderDist = millis();
             }
         }
         return 1;
