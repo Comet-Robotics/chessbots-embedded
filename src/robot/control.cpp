@@ -49,12 +49,12 @@ void testEncoderPID()
     }
 }
 
-int testTurn_angle = 0;
+int angle = 0;
+
 void testTurn()
 {
     serialLog("Changing destination angle to ", 2);
-    serialLog(testTurn_angle, 2);
-    testTurn_angle = (testTurn_angle + 90) % 360;
+    serialLog(angle, 2);
     turn(M_PI / 2, "NULL");
     serialLog(" (", 2);
     serialLog(encoderATarget, 2);
@@ -89,8 +89,6 @@ const uint8_t Bottom_Right_Encoder_Index = 3;
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
 
-hw_timer_t *timer = NULL;
-
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
     serialLogln("Setting Up Bot...", 2);
@@ -112,14 +110,9 @@ void setupBot() {
     }
     
     if (DO_TURN_TEST) {
+        angle = 250;
         testTurn();
-        timerInterval(5000, &testTurn);
-    }
-
-    if(DO_LIGHT_SENSOR_TEST)
-    {
-        //with preset 80, incremeent every microsecond
-        timer = timerBegin(0, 80, true);
+        timerInterval(5000, testTurn);
     }
 }
 
@@ -133,7 +126,7 @@ void controlLoop(int loopDelayMs) {
         encoderLoop();
 
     if (DO_PID) {
-        //delay(5000); // Delay to prevent CPU overload
+        // delay(50); // Delay to prevent CPU overload
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
         int currentPositionEncoderA = readLeftEncoder();
@@ -164,30 +157,40 @@ void controlLoop(int loopDelayMs) {
         double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds) + rightFeedForward;
 
         if (leftMotorPower > 1) leftMotorPower = 1;
-        if (leftMotorPower < -1) leftMotorPower = -1;
+        if (leftMotorPower < -1) leftMotorPower = 1;
         if (rightMotorPower > 1) rightMotorPower = 1;
-        if (rightMotorPower < -1) rightMotorPower = -1;
+        if (rightMotorPower < -1) rightMotorPower = 1;
 
+        serialLog((char*) "Current encoder A pos: ", 3);
         serialLog(currentPositionEncoderA, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "Current encoder B pos: ", 3);
         serialLog(currentPositionEncoderB, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "Desired encoder A speed: ", 3);
         serialLog((float) desiredVelocityA, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "Desired encoder B speed: ", 3);
         serialLog((float) desiredVelocityB, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "current encoder a speed: ", 3);
         serialLog((float) currentVelocityA, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "current encoder b speed: ", 3);
         serialLog((float) currentVelocityB, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "current left motor power: ", 3);
         serialLog((float) leftMotorPower, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "current right motor power: ", 3);
         serialLog((float) rightMotorPower, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "current encoder a target: ", 3);
         serialLog(encoderATarget, 3);
-        serialLog(",", 3);
+        serialLog(", ", 3);
+        serialLog((char*) "current encoder b target: ", 3);
         serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
-        serialLog(",", 3);
+        serialLog(", ", 3);
         serialLogln((float) loopDelaySeconds, 3);
 
         drive(
@@ -314,11 +317,6 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
 
                 stop();
                 driveUntilChange = false;
-                if(leadingEncoder != 0)
-                {
-                    float multiplier = 0.5;
-                    // beginXTicksDrive(leadingEncoder, backEncoderDist * multiplier, true);
-                }
 
                 serialLog((char*) " Encoder in front is gonna be: ", 2);
                 serialLogln(leadingEncoder, 2);
@@ -329,11 +327,18 @@ uint8_t driveUntilNewTile(bool* onFirstTile)
                 //remidner: angle = arctan(x/y), where x = backEncoderDist * tickCounToDistMultiplier (like distance to our edge), and y = distance between two light sensors (put in manually)
                 float angle = atan(backEncoderDist * tickCountToDistMultiplier / lightDist);
                 //as a reminder, corresponding degrees = (pi/180) * x radians
-                angle = 180 / M_PI * angle;
+                float degreesAngle = 180 / M_PI * angle;
                 
                 serialLog((char*) "Angle is going to be: ", 2);
-                serialLog(angle, 2);
+                serialLog(degreesAngle, 2);
                 serialLogln((char*) " degrees.", 2);
+
+                if(leadingEncoder != 0)
+                {
+                    float multiplier = 0.5;
+                    // beginXTicksDrive(leadingEncoder, backEncoderDist * multiplier, true);
+                    // turn(angle, "NULL");
+                }
 
                 backEncoderDist = 0;
                 leadingEncoder = 0;
