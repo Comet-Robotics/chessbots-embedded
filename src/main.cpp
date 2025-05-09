@@ -18,14 +18,6 @@
 
 int delayMilliseconds = 50;
 
-// int currentTick = 0;
-// const int MAX_TICK = 20;
-// int lightSum[4] = {0, 0, 0, 0};
-// int prevSum[4] = {0, 0, 0, 0};
-
-//may want to make this value accessible from other files? Because we are going to be passing it around a lot
-bool onFirstTile[4] = {false, false, false, false};
-
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
@@ -44,8 +36,6 @@ void setup() {
     if (DO_DRIVE_TEST) startDriveTest();
 
     delay(2000);
-
-    createDriveUntilNewTile(onFirstTile);
 
     //start reading the light
     if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
@@ -73,41 +63,6 @@ void loop() {
         // If the bot is connected to the server, check for received data, and accept it if available
         if (getServerConnectionStatus()) acceptData();
     }
-
-    uint8_t status = driveUntilNewTile(onFirstTile);
-
-    readLight(onFirstTile);
-
-#if DO_LIGHT_SENSOR_TEST
-    //know our char will be 4 bits
-    char vals[5];
-    //read the booleans as char
-    for(uint8_t i = 0; i < 4; i++)
-    {
-        vals[i] = onFirstTile[i] ? '1' : '0';
-    }
-    //must null terminate
-    vals[4] = '\0';
-    serialLog((char*) "Light statuses: ", 4);
-    serialLogln((char*) vals, 4);
-    switch(status)
-    {
-        case 0:
-            serialLogln((char*) "Driving not active!", 4);    
-            break;
-        case 1:
-            serialLogln((char*) "Driving to tile!", 4);  
-            break;
-        case 2:
-            serialLogln((char*) "We've reached the place!", 4); 
-            break;
-        case 3:
-            serialLogln((char*) "Reversing backward!", 4); 
-            break;
-        case 4:
-            serialLogln((char*) "Finished reversing back!", 4); 
-    }
-#endif
 
 #if DO_ENCODER_TEST
     encoderLoop();

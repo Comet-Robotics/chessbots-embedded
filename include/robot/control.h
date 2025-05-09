@@ -9,14 +9,13 @@ void drive(float leftPower, float rightPower, std::string id);
 void driveTicks(int tickDistance, std::string id);
 void turn(float angleRadians, std::string id);
 void stop();
-void readLight(bool* onFirstTile);
+void readLight();
 void startMotorAndEncoderTest();
 void startDriveTest();
-void createDriveUntilNewTile(bool* onFirstTile);
-uint8_t driveUntilNewTile(bool* onFirstTile);
-void beginXTicksDrive(uint8_t leadingEncoderLabel, int max_ticks, bool inReverse);
-void moveRobotXTicks();
+void createDriveUntilNewTile();
+uint8_t driveUntilNewTile();
 void driveTestOff();
 void controlLoop(int loopDelayMs);
+void updateCentering();
 
 #endif
