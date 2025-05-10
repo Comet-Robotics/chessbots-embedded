@@ -29,6 +29,8 @@ int encoderATarget = 0;
 int encoderBTarget = 0;
 int prevPositionA = 0;
 int prevPositionB = 0;
+int currentEncoderA = -1;
+int currentEncoderB = -1;
 
 MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
@@ -49,7 +51,7 @@ void testEncoderPID()
     }
 }
 
-int angle = 0;
+float angle = 0;
 
 void testTurn()
 {
@@ -93,7 +95,7 @@ bool onFirstTile[4] = {false, false, false, false};
 const float lightDist = 0.07;
 
 bool isCentering = true;
-char centeringStatus = 'Z';
+char centeringStatus = 'S';
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -125,6 +127,8 @@ void setupBot() {
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
 void controlLoop(int loopDelayMs) {
+    currentEncoderA = readLeftEncoder();
+    currentEncoderB = readRightEncoder();
     if (DO_LIGHT_SENSOR_TEST)
     {
         readLight(loopDelayMs);
@@ -147,23 +151,23 @@ void controlLoop(int loopDelayMs) {
             vals[4] = '\0';
             serialLog((char*) "Light statuses: ", 4);
             serialLogln((char*) vals, 4);
-            switch(status)
-            {
-                case 0:
-                    serialLogln((char*) "Driving not active!", 4);    
-                    break;
-                case 1:
-                    serialLogln((char*) "Driving to tile!", 4);  
-                    break;
-                case 2:
-                    serialLogln((char*) "We've reached the place!", 4); 
-                    break;
-                case 3:
-                    serialLogln((char*) "Reversing backward!", 4); 
-                    break;
-                case 4:
-                    serialLogln((char*) "Finished reversing back!", 4); 
-            }
+            // switch(status)
+            // {
+            //     case 0:
+            //         serialLogln((char*) "Driving not active!", 4);    
+            //         break;
+            //     case 1:
+            //         serialLogln((char*) "Driving to tile!", 4);  
+            //         break;
+            //     case 2:
+            //         serialLogln((char*) "We've reached the place!", 4); 
+            //         break;
+            //     case 3:
+            //         serialLogln((char*) "Reversing backward!", 4); 
+            //         break;
+            //     case 4:
+            //         serialLogln((char*) "Finished reversing back!", 4); 
+            // }
         #endif
     }
     if (DO_ENCODER_TEST)
@@ -173,26 +177,23 @@ void controlLoop(int loopDelayMs) {
         // delay(50); // Delay to prevent CPU overload
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-        int currentPositionEncoderA = readLeftEncoder();
-        int currentPositionEncoderB = readRightEncoder();
-
         profileA.targetPosition = encoderATarget;
-        profileA.currentPosition = currentPositionEncoderA;
+        profileA.currentPosition = currentEncoderA;
 
         profileB.targetPosition = encoderBTarget;
-        profileB.currentPosition = currentPositionEncoderB;
+        profileB.currentPosition = currentEncoderB;
         
-        double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
+        double currentVelocityA = (currentEncoderA - prevPositionA) / loopDelaySeconds;
         profileA.currentVelocity = currentVelocityA;
         
-        double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
+        double currentVelocityB = (currentEncoderB - prevPositionB) / loopDelaySeconds;
         profileB.currentVelocity = currentVelocityB;
         
         double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds);
         double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds);
         
-        prevPositionA = currentPositionEncoderA;        
-        prevPositionB = currentPositionEncoderB;
+        prevPositionA = currentEncoderA;        
+        prevPositionB = currentEncoderB;
 
         double leftFeedForward = desiredVelocityA / MAX_VELOCITY_TPS;
         double rightFeedForward = desiredVelocityB / MAX_VELOCITY_TPS;
@@ -205,37 +206,37 @@ void controlLoop(int loopDelayMs) {
         if (rightMotorPower > 1) rightMotorPower = 1;
         if (rightMotorPower < -1) rightMotorPower = 1;
 
-        serialLog((char*) "Current encoder A pos: ", 3);
-        serialLog(currentPositionEncoderA, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "Current encoder B pos: ", 3);
-        serialLog(currentPositionEncoderB, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "Desired encoder A speed: ", 3);
-        serialLog((float) desiredVelocityA, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "Desired encoder B speed: ", 3);
-        serialLog((float) desiredVelocityB, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "current encoder a speed: ", 3);
-        serialLog((float) currentVelocityA, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "current encoder b speed: ", 3);
-        serialLog((float) currentVelocityB, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "current left motor power: ", 3);
-        serialLog((float) leftMotorPower, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "current right motor power: ", 3);
-        serialLog((float) rightMotorPower, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "current encoder a target: ", 3);
-        serialLog(encoderATarget, 3);
-        serialLog(", ", 3);
-        serialLog((char*) "current encoder b target: ", 3);
-        serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
-        serialLog(", ", 3);
-        serialLogln((float) loopDelaySeconds, 3);
+        serialLog((char*) "Current encoder A pos: ", 4);
+        serialLog(currentEncoderA, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "Current encoder B pos: ", 4);
+        serialLog(currentEncoderB, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "Desired encoder A speed: ", 4);
+        serialLog((float) desiredVelocityA, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "Desired encoder B speed: ", 4);
+        serialLog((float) desiredVelocityB, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "current encoder a speed: ", 4);
+        serialLog((float) currentVelocityA, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "current encoder b speed: ", 4);
+        serialLog((float) currentVelocityB, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "current left motor power: ", 4);
+        serialLog((float) leftMotorPower, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "current right motor power: ", 4);
+        serialLog((float) rightMotorPower, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "current encoder a target: ", 4);
+        serialLog(encoderATarget, 4);
+        serialLog(", ", 4);
+        serialLog((char*) "current encoder b target: ", 4);
+        serialLog(encoderBTarget, 4); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        serialLog(", ", 4);
+        serialLogln((float) loopDelaySeconds, 4);
 
         drive(
             leftMotorPower, // leftMotorPower,
@@ -259,6 +260,7 @@ void updateCentering()
         //F means we are driving forward
         case 'F':
         {
+            serialLogln((char*) "BRUHHH", 3);
             //continue driving forward
             uint8_t driveStatus = driveUntilNewTile();
             if(driveStatus == 3)
@@ -274,6 +276,8 @@ void updateCentering()
             break;
         }
         case 'C':
+            break;
+        case 'R':
             break;
     }
 }
@@ -363,7 +367,8 @@ void startDriveTest() {
 
 void createDriveUntilNewTile()
 {
-    drive(0.5f, 0.5f, "NULL");
+    // drive(0.5f, 0.5f, "NULL");
+
     //assign values here, will detect when they change
     firstEncoderVal = onFirstTile[Top_Left_Encoder_Index];
     secondEncoderVal = onFirstTile[Top_Right_Encoder_Index];
@@ -376,6 +381,10 @@ void createDriveUntilNewTile()
     // 3 - just at this moment, we've reached our destination, but DON'T need to reverse.
 uint8_t driveUntilNewTile() 
 {
+    //going to keep doing this until we get to a new change
+    encoderATarget = currentEncoderA + 20000;
+    encoderBTarget = currentEncoderB + 20000;
+
     //if we already changed it, don't change it back again
     leftEncoderChange = leftEncoderChange || (onFirstTile[Top_Left_Encoder_Index] != firstEncoderVal);
     rightEncoderChange = rightEncoderChange || (onFirstTile[Top_Right_Encoder_Index] != secondEncoderVal);
@@ -387,7 +396,10 @@ uint8_t driveUntilNewTile()
             //subtract end time by start time, backEncoderDist stores start time.
             backEncoderDist = (leadingEncoder != 0) ? millis() - backEncoderDist : 0;
 
-            stop();
+            // stop();
+            encoderATarget = currentEncoderA;
+            encoderBTarget = currentEncoderB;
+
             serialLog((char*) " Encoder in front is gonna be: ", 2);
             serialLogln(leadingEncoder, 2);
             serialLog((char*) "And distance back encoder was behind is: ", 2);
@@ -395,9 +407,9 @@ uint8_t driveUntilNewTile()
 
             float tickCountToDistMultiplier = 0.000222;
             //remidner: angle = arctan(x/y), where x = backEncoderDist * tickCounToDistMultiplier (like distance to our edge), and y = distance between two light sensors (put in manually)
-            float angle = atan(backEncoderDist * tickCountToDistMultiplier / lightDist);
+            float radAngle = atan(backEncoderDist * tickCountToDistMultiplier / lightDist);
             //as a reminder, corresponding degrees = (pi/180) * x radians
-            float degreesAngle = 180 / M_PI * angle;
+            float degreesAngle = 180 / M_PI * radAngle;
             
             serialLog((char*) "Angle is going to be: ", 2);
             serialLog(degreesAngle, 2);
@@ -405,7 +417,20 @@ uint8_t driveUntilNewTile()
 
             if(leadingEncoder != 0)
             {
-                turn(angle, "NULL");
+                //we know postiive angle = turn left, negative angle means turn right.
+                //encoder 1 forward means turn left, encoder 2 forward means turn right.
+                //so 2 = -1, 1 = 1. If you plug those numbers in, that's what you get.
+
+                //or at least it should be working that way, but for some reason it's not?
+                //its going the exact opposite direction
+
+                // int8_t degreesDirection = 3 - 2 * leadingEncoder;
+
+                int8_t degreesDirection = 2 * leadingEncoder - 3;
+                serialLog((char*) "Sign is going to be: ", 2);
+                serialLogln(degreesDirection, 2);
+                angle = degreesAngle * degreesDirection;
+                testTurn();
             }
 
             backEncoderDist = 0;
