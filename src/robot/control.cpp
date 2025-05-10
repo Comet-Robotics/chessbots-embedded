@@ -382,8 +382,8 @@ void createDriveUntilNewTile()
 uint8_t driveUntilNewTile() 
 {
     //going to keep doing this until we get to a new change
-    encoderATarget = currentEncoderA + 20000;
-    encoderBTarget = currentEncoderB + 20000;
+    encoderATarget = currentEncoderA + 50000;
+    encoderBTarget = currentEncoderB + 50000;
 
     //if we already changed it, don't change it back again
     leftEncoderChange = leftEncoderChange || (onFirstTile[Top_Left_Encoder_Index] != firstEncoderVal);
@@ -426,7 +426,7 @@ uint8_t driveUntilNewTile()
 
                 // int8_t degreesDirection = 3 - 2 * leadingEncoder;
 
-                int8_t degreesDirection = 2 * leadingEncoder - 3;
+                int8_t degreesDirection = 3 - 2 * leadingEncoder;
                 serialLog((char*) "Sign is going to be: ", 2);
                 serialLogln(degreesDirection, 2);
                 angle = degreesAngle * degreesDirection;
