@@ -31,6 +31,8 @@ int prevPositionA = 0;
 int prevPositionB = 0;
 int currentEncoderA = -1;
 int currentEncoderB = -1;
+int startEncoderAPos = -1;
+int startEncoderBPos = -1;
 
 MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
@@ -206,6 +208,8 @@ void controlLoop(int loopDelayMs) {
         if (rightMotorPower > 1) rightMotorPower = 1;
         if (rightMotorPower < -1) rightMotorPower = 1;
 
+        #if LOGGING_LEVEL >= 3
+
         serialLog((char*) "Current encoder A pos: ", 4);
         serialLog(currentEncoderA, 4);
         serialLog(", ", 4);
@@ -238,6 +242,8 @@ void controlLoop(int loopDelayMs) {
         serialLog(", ", 4);
         serialLogln((float) loopDelaySeconds, 4);
 
+        #endif
+
         drive(
             leftMotorPower, // leftMotorPower,
             rightMotorPower, // rightMotorPower,
@@ -260,7 +266,6 @@ void updateCentering()
         //F means we are driving forward
         case 'F':
         {
-            serialLogln((char*) "BRUHHH", 3);
             //continue driving forward
             uint8_t driveStatus = driveUntilNewTile();
             if(driveStatus == 3)
@@ -365,10 +370,30 @@ void startDriveTest() {
     timerDelay(2000, &driveTestOff);
 }
 
+void updateToNextDistance()
+{
+    serialLogln((char*) "changing direction!", 2);
+    startEncoderAPos = currentEncoderA;
+    startEncoderBPos = currentEncoderB;
+    if (!testEncoderPID_value)
+    {
+        testEncoderPID_value = true;
+        encoderATarget = currentEncoderA + 5000;
+        encoderBTarget = currentEncoderB + 5000;
+    }
+    else
+    {
+        testEncoderPID_value = false;
+        encoderATarget = 0;
+        encoderBTarget = 0;
+    }
+}
+
 void createDriveUntilNewTile()
 {
     // drive(0.5f, 0.5f, "NULL");
-
+    updateToNextDistance();
+    
     //assign values here, will detect when they change
     firstEncoderVal = onFirstTile[Top_Left_Encoder_Index];
     secondEncoderVal = onFirstTile[Top_Right_Encoder_Index];
@@ -381,10 +406,13 @@ void createDriveUntilNewTile()
     // 3 - just at this moment, we've reached our destination, but DON'T need to reverse.
 uint8_t driveUntilNewTile() 
 {
-    //going to keep doing this until we get to a new change
-    encoderATarget = currentEncoderA + 50000;
-    encoderBTarget = currentEncoderB + 50000;
-
+    int criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
+    int criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
+    if((fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(prevPositionA - currentEncoderA) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(prevPositionB - currentEncoderB) < 2))
+    {
+        updateToNextDistance();
+    }
+    
     //if we already changed it, don't change it back again
     leftEncoderChange = leftEncoderChange || (onFirstTile[Top_Left_Encoder_Index] != firstEncoderVal);
     rightEncoderChange = rightEncoderChange || (onFirstTile[Top_Right_Encoder_Index] != secondEncoderVal);
@@ -397,8 +425,6 @@ uint8_t driveUntilNewTile()
             backEncoderDist = (leadingEncoder != 0) ? millis() - backEncoderDist : 0;
 
             // stop();
-            encoderATarget = currentEncoderA;
-            encoderBTarget = currentEncoderB;
 
             serialLog((char*) " Encoder in front is gonna be: ", 2);
             serialLogln(leadingEncoder, 2);
