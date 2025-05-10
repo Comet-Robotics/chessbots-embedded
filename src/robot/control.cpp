@@ -55,7 +55,7 @@ void testTurn()
 {
     serialLog("Changing destination angle to ", 2);
     serialLog(angle, 2);
-    turn(M_PI / 2, "NULL");
+    turn(M_PI / 180 * angle, "NULL");
     serialLog(" (", 2);
     serialLog(encoderATarget, 2);
     serialLog(", ", 2);
@@ -116,7 +116,7 @@ void setupBot() {
     }
     
     if (DO_TURN_TEST) {
-        angle = 250;
+        angle = 30;
         testTurn();
         timerInterval(5000, testTurn);
     }
@@ -127,7 +127,7 @@ void setupBot() {
 void controlLoop(int loopDelayMs) {
     if (DO_LIGHT_SENSOR_TEST)
     {
-        readLight();
+        readLight(loopDelayMs);
         if(isCentering)
         {
             updateCentering();
@@ -339,14 +339,14 @@ void stop() {
 bool waitingForLight = false;
 
 // Reads in the light value of all light sensors
-void readLight() {
+void readLight(int loopDelayMs) {
     if(!waitingForLight)
     {
         // The Infrared Blaster must be activated first to get a clear reading
         activateIR();
         waitingForLight = true;
         //this way, we can pass in a parameter to timerDelay as well, but we don't have to
-        timerDelay(20, std::bind(startLightReading, onFirstTile, &waitingForLight));
+        timerDelay(loopDelayMs, std::bind(startLightReading, onFirstTile, &waitingForLight));
     }
 }
 
