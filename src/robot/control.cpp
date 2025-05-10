@@ -377,19 +377,22 @@ void updateToNextDistance()
 {
     serialLogln((char*) "changing direction!", 2);
     startEncoderAPos = currentEncoderA;
-    startEncoderBPos = currentEncoderB;
-    if (!testEncoderPID_value)
-    {
-        testEncoderPID_value = true;
-        encoderATarget = currentEncoderA + 5000;
-        encoderBTarget = currentEncoderB + 5000;
-    }
-    else
-    {
-        testEncoderPID_value = false;
-        encoderATarget = 350;
-        encoderBTarget = 350;
-    }
+    startEncoderBPos = currentEncoderB ;
+    encoderATarget = currentEncoderA + 5000;
+    encoderBTarget = currentEncoderB + 5000;
+    
+    // if (!testEncoderPID_value)
+    // {
+    //     testEncoderPID_value = true;
+    //     encoderATarget = currentEncoderA + 5000;
+    //     encoderBTarget = currentEncoderB + 5000;
+    // }
+    // else
+    // {
+    //     testEncoderPID_value = false;
+    //     encoderATarget = 350;
+    //     encoderBTarget = 350;
+    // }
     serialLogln(encoderATarget, 2);
     serialLogln(encoderBTarget, 2);
 }
