@@ -3,16 +3,19 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <cstdint>
 
 using namespace std;
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
-    // distanceToGo = positive, you're still behind the target. || distanceToGo = negative, you've overshot.
+double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint) {
+    // distanceToGo = positive, you're still behind the target. || distanceToGo = negative, you're ahead.
     double distanceToGo = profile.targetPosition - profile.currentPosition;
+    
     double changeInVelocity = 0, stoppingDistance;
 
+    //kickstart and begin velocity
     if (profile.currentVelocity == 0) {
-        profile.currentVelocity = 0.15 * profile.maxVelocity * (profile.targetPosition > 0 ? 1 : -1);
+        profile.currentVelocity = 0.15 * profile.maxVelocity * (distanceToGo > 0 ? 1 : -1);
     }
 
     // Formula is v^2 / 2a
@@ -43,23 +46,27 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
 
     profile.targetVelocity += changeInVelocity;
 
+    //clip off velocity if it's too high
     if (abs(profile.currentVelocity) > profile.maxVelocity)
         profile.currentVelocity = profile.maxVelocity * (profile.currentVelocity > 0 ? 1 : -1);
 
-    if(abs(distanceToGo) < 100)
+    if(abs(distanceToGo) < 50)
         profile.targetVelocity = 0;
 
-    // serialLog("Motion profile is outputting: ", 3);
-    // serialLog(float(profile.targetVelocity), 3);
-    // serialLog(",", 3);
+    if(framesUntilprint == 0)
+    {
+        serialLog("Motion profile is outputting: ", 3);
+        serialLog(float(profile.targetVelocity), 3);
+        serialLog(",", 3);
 
-    // serialLog("Target Position: ", 3);
-    // serialLog(float(profile.targetPosition), 3);
-    // serialLog(",", 3);
+        serialLog("Target Position: ", 3);
+        serialLog(float(profile.targetPosition), 3);
+        serialLog(",", 3);
 
-    // serialLog("Stopping position: ", 3);
-    // serialLog(float(stoppingDistance), 3);
-    // serialLogln(",", 3);
+        serialLog("Stopping position: ", 3);
+        serialLog(float(stoppingDistance), 3);
+        serialLogln(",", 3);
+    }
 
     return profile.targetVelocity;
 }

@@ -15,7 +15,7 @@ void startDriveTest();
 void createDriveUntilNewTile();
 uint8_t driveUntilNewTile();
 void driveTestOff();
-void controlLoop(int loopDelayMs);
+void controlLoop(int loopDelayMs, int8_t framesUntilPrint);
 void updateCentering();
 
 #endif

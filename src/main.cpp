@@ -18,6 +18,10 @@
 
 int delayMilliseconds = 20;
 
+//alright SCREW YOU serial monitor i won't print every frame then if you wanna play that game
+const int8_t PRINT_INTERVAL = 60;
+int8_t framesUntilPrint = 60;
+
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
@@ -65,11 +69,16 @@ void loop() {
     }
 
     // Run control loop
-    controlLoop(delayMilliseconds);
+    controlLoop(delayMilliseconds, framesUntilPrint);
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
   	delay(delayMilliseconds);
+    framesUntilPrint--;
+    if(framesUntilPrint < 0)
+    {
+        framesUntilPrint = PRINT_INTERVAL;
+    }
 }
 
 // This is used at the end of each file due to the name definition at the beginning

@@ -1,3 +1,5 @@
+#include <cstdint>
+
 struct MotionProfile {
     double maxVelocity;
     double maxAcceleration;
@@ -7,7 +9,7 @@ struct MotionProfile {
     double targetVelocity;
 };
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt);
+double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint);
 
 template <typename T>
 T clamp(T value, T minValue, T maxValue) {
