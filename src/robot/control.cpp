@@ -387,8 +387,8 @@ void updateToNextDistance()
     else
     {
         testEncoderPID_value = false;
-        encoderATarget = -50;
-        encoderBTarget = -50;
+        encoderATarget = 350;
+        encoderBTarget = 350;
     }
     serialLogln(encoderATarget, 2);
     serialLogln(encoderBTarget, 2);

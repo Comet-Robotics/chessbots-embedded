@@ -15,7 +15,7 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
 
     //kickstart and begin velocity
     if (profile.currentVelocity == 0) {
-        profile.currentVelocity = 0.15 * profile.maxVelocity * (distanceToGo > 0 ? 1 : -1);
+        profile.targetVelocity = 0.15 * profile.maxVelocity * (distanceToGo > 0 ? 1 : -1);
     }
 
     // Formula is v^2 / 2a
@@ -47,8 +47,8 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     profile.targetVelocity += changeInVelocity;
 
     //clip off velocity if it's too high
-    if (abs(profile.currentVelocity) > profile.maxVelocity)
-        profile.currentVelocity = profile.maxVelocity * (profile.currentVelocity > 0 ? 1 : -1);
+    if (abs(profile.targetVelocity) > profile.maxVelocity)
+        profile.targetVelocity = profile.maxVelocity * (profile.targetVelocity > 0 ? 1 : -1);
 
     if(abs(distanceToGo) < 50)
         profile.targetVelocity = 0;
