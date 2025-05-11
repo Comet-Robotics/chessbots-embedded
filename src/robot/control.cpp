@@ -216,41 +216,41 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         if (rightMotorPower > 1) rightMotorPower = 1;
         if (rightMotorPower < -1) rightMotorPower = -1;
 
-        #if LOGGING_LEVEL >= 3
+        #if LOGGING_LEVEL >= 4
         
         if(framesUntilPrint == 0)
         {
-            serialLog((char*) "Current encoder A pos: ", 3);
-            serialLog(currentEncoderA, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "Current encoder B pos: ", 3);
-            serialLog(currentEncoderB, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "Desired encoder A speed: ", 3);
-            serialLog((float) desiredVelocityA, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "Desired encoder B speed: ", 3);
-            serialLog((float) desiredVelocityB, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "current encoder a speed: ", 3);
-            serialLog((float) currentVelocityA, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "current encoder b speed: ", 3);
-            serialLog((float) currentVelocityB, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "current left motor power: ", 3);
-            serialLog((float) leftMotorPower, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "current right motor power: ", 3);
-            serialLog((float) rightMotorPower, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "current encoder a target: ", 3);
-            serialLog(encoderATarget, 3);
-            serialLog(", ", 3);
-            serialLog((char*) "current encoder b target: ", 3);
-            serialLog(encoderBTarget, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
-            serialLog(", ", 3);
-            serialLogln((float) loopDelaySeconds, 3);
+            serialLog((char*) "Current encoder A pos: ", 4);
+            serialLog(currentEncoderA, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "Current encoder B pos: ", 4);
+            serialLog(currentEncoderB, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "Desired encoder A speed: ", 4);
+            serialLog((float) desiredVelocityA, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "Desired encoder B speed: ", 4);
+            serialLog((float) desiredVelocityB, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "current encoder a speed: ", 4);
+            serialLog((float) currentVelocityA, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "current encoder b speed: ", 4);
+            serialLog((float) currentVelocityB, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "current left motor power: ", 4);
+            serialLog((float) leftMotorPower, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "current right motor power: ", 4);
+            serialLog((float) rightMotorPower, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "current encoder a target: ", 4);
+            serialLog(encoderATarget, 4);
+            serialLog(", ", 4);
+            serialLog((char*) "current encoder b target: ", 4);
+            serialLog(encoderBTarget, 4); // TODO log results of trapezoidal profile into csv (on motor value graph)
+            serialLog(", ", 4);
+            serialLogln((float) loopDelaySeconds, 4);
         }
         
         #endif
