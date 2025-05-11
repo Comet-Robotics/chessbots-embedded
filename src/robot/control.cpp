@@ -362,9 +362,9 @@ bool waitingForLight = false;
 void readLight(int loopDelayMs) {
     if(!waitingForLight)
     {
+        waitingForLight = true;
         // The Infrared Blaster must be activated first to get a clear reading
         activateIR();
-        waitingForLight = true;
         //this way, we can pass in a parameter to timerDelay as well, but we don't have to
         timerDelay(loopDelayMs, std::bind(startLightReading, onFirstTile, &waitingForLight));
     }
@@ -422,8 +422,8 @@ void createDriveUntilNewTile()
     // 3 - just at this moment, we've reached our destination, but DON'T need to reverse.
 uint8_t driveUntilNewTile() 
 {
-    int criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
-    int criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
+    float criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
+    float criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
     //first check if we're past the encoder range, then see if our speed is low. Have to have the first critical range check as we don't want to count for
     //when we're first speeding up.
     if((fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 2))

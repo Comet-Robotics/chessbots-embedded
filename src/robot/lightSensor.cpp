@@ -140,14 +140,16 @@ void readLightLevels() {
     deactivateIR();
 
     // Logs the values for debugging purposes
-    serialLog("Light Levels: ", 4);
-    serialLog(lightArray[0], 4);
-    serialLog(" ", 4);
-    serialLog(lightArray[1], 4);
-    serialLog(" ", 4);
-    serialLog(lightArray[2], 4);
-    serialLog(" ", 4);
-    serialLogln(lightArray[3], 4);
+#if LOGGING_LEVEL >= 3
+    serialLog("Light Levels: ", 3);
+    serialLog(lightArray[0], 3);
+    serialLog(" ", 3);
+    serialLog(lightArray[1], 3);
+    serialLog(" ", 3);
+    serialLog(lightArray[2], 3);
+    serialLog(" ", 3);
+    serialLogln(lightArray[3], 3);
+#endif
 }
 
 #endif
