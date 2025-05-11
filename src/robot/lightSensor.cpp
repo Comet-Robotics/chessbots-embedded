@@ -70,10 +70,10 @@ bool updateCooldown(uint8_t i)
 bool checkForLightChange(uint8_t i)
 {
     //if difference to great and we're not at the start where prevTick is -1, declare that the encoder has changed color, and assign cooldown.
-    if(fabs(prevTickVals[i] - lightArray[i]) >= LIMIT_TO_CHANGE || (short) prevTickVals[i] == -1)
+    if(fabs(prevTickVals[i] - lightArray[i]) >= LIMIT_TO_CHANGE && (short) prevTickVals[i] != -1)
     {
-        serialLog(prevTickVals[i], 4);
-        serialLogln((char*) "", 4);
+        serialLog(prevTickVals[i], 3);
+        serialLogln((char*) "", 3);
         serialLogln((char*) "THE DIFFERENCE IS BIG SO WE HAVE CHANGED COLOR GRAHH", 3);
         cooldown[i] = 1;
         return true;
@@ -92,8 +92,8 @@ void updateCounter() {
 
 void startLightReading(bool* onFirstTile, bool* waitingForLight) {
     //for each tick, check if its previous value is too far from what it was before. If it is, consider that the encoder has changed color.
-    *waitingForLight = false;
     readLightLevels();
+    *waitingForLight = false;
 
     for(uint8_t i = 0; i < 4; i++)
     {

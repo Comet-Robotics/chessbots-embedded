@@ -29,17 +29,17 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     // }
     
     // Acceleration phase
-    if (abs(profile.currentVelocity) < profile.maxVelocity && abs(distanceToGo) > 0)
+    if (fabs(profile.currentVelocity) < profile.maxVelocity && fabs(distanceToGo) > 0)
         changeInVelocity = profile.maxAcceleration * dt * (distanceToGo > 0 ? 1 : -1);
 
     // Deceleration if we’re getting close to target
-    if (abs(distanceToGo) <= stoppingDistance && profile.targetPosition > 0){
+    if (fabs(distanceToGo) <= stoppingDistance && profile.targetPosition > 0){
         //making it dependent on leftover distance/dt instead of maxAcceleration*dt
         changeInVelocity = -(profile.currentPosition/profile.targetPosition) * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
     }
 
     // Deceleration if we’re getting close to target
-    if (abs(distanceToGo) <= stoppingDistance){
+    if (fabs(distanceToGo) <= stoppingDistance){
         //making it dependent on leftover distance/dt instead of maxAcceleration*dt
         changeInVelocity = -1 * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
     }
@@ -47,10 +47,10 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     profile.targetVelocity += changeInVelocity;
 
     //clip off velocity if it's too high
-    if (abs(profile.targetVelocity) > profile.maxVelocity)
+    if (fabs(profile.targetVelocity) > profile.maxVelocity)
         profile.targetVelocity = profile.maxVelocity * (profile.targetVelocity > 0 ? 1 : -1);
 
-    if(abs(distanceToGo) < 50)
+    if(fabs(distanceToGo) < 50)
         profile.targetVelocity = 0;
 
     if(framesUntilprint == 0)

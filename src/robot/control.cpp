@@ -34,6 +34,13 @@ int currentEncoderB = -1;
 int startEncoderAPos = -1;
 int startEncoderBPos = -1;
 
+//just measured, its 5.9 centimeters, or .059 meters
+const float TIRE_RADIUS = 0.059;
+//circumference equals pi * diameter. In meters
+const float TIRE_CIRCUMFERENCE = M_PI * 2 * TIRE_RADIUS;
+//multiply any ticks by this ratio to get distance in meters
+const float TICK_TO_METERS = TIRE_CIRCUMFERENCE / TICKS_PER_ROTATION;
+
 MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 
@@ -79,8 +86,9 @@ bool movingXTicks = false;
     //1 = left encoder leading.
     //2 = right encoder leading
 uint8_t leadingEncoder = 0;
-//Ticks it tackes for back encoder to reach tile change after the front tile does.
-unsigned long backEncoderDist = 0;
+//previous encoder distance
+float backPrevDistance = 0;
+
 bool leftEncoderChange = false;
 bool rightEncoderChange = false;
 
@@ -378,9 +386,9 @@ void updateToNextDistance()
     serialLogln((char*) "changing direction!", 2);
     startEncoderAPos = currentEncoderA;
     startEncoderBPos = currentEncoderB ;
-    encoderATarget = currentEncoderA + 5000;
-    encoderBTarget = currentEncoderB + 5000;
-    
+    encoderATarget = currentEncoderA + 1000;
+    encoderBTarget = currentEncoderB + 1000;
+
     // if (!testEncoderPID_value)
     // {
     //     testEncoderPID_value = true;
@@ -416,7 +424,9 @@ uint8_t driveUntilNewTile()
 {
     int criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
     int criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
-    if((fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(prevPositionA - currentEncoderA) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(prevPositionB - currentEncoderB) < 2))
+    //first check if we're past the encoder range, then see if our speed is low. Have to have the first critical range check as we don't want to count for
+    //when we're first speeding up.
+    if((fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 2))
     {
         updateToNextDistance();
     }
@@ -429,19 +439,19 @@ uint8_t driveUntilNewTile()
         //when both cross, we done.
         if(leftEncoderChange && rightEncoderChange)
         {
-            //subtract end time by start time, backEncoderDist stores start time.
-            backEncoderDist = (leadingEncoder != 0) ? millis() - backEncoderDist : 0;
-
-            // stop();
+            //there will probably be a way to map encoder distance to meters
+            double backEncoderDist = (leadingEncoder == 1) ? fabs(currentEncoderA - backPrevDistance) : fabs(currentEncoderB - backPrevDistance);
+            //now convert difference in ticks to meter value
+            backEncoderDist *= TICK_TO_METERS;
+            // (fabs(frontCrossVelocity) + fabs(backCrossVelocity)) / 2 * backEncoderChangeInTime;
 
             serialLog((char*) " Encoder in front is gonna be: ", 2);
             serialLogln(leadingEncoder, 2);
-            serialLog((char*) "And distance back encoder was behind is: ", 2);
-            serialLogln((int) backEncoderDist, 2);
+            serialLog((char*) "Total distance encoder was behind is: ", 2);
+            serialLogln((float) backEncoderDist, 2);
 
-            float tickCountToDistMultiplier = 0.000222;
-            //remidner: angle = arctan(x/y), where x = backEncoderDist * tickCounToDistMultiplier (like distance to our edge), and y = distance between two light sensors (put in manually)
-            float radAngle = atan(backEncoderDist * tickCountToDistMultiplier / lightDist);
+            //remidner: angle = arctan(x/y), where x = backEncoderDist (like distance to our edge), and y = distance between two light sensors (put in manually)
+            float radAngle = atan(backEncoderDist / lightDist);
             //as a reminder, corresponding degrees = (pi/180) * x radians
             float degreesAngle = 180 / M_PI * radAngle;
             
@@ -467,25 +477,27 @@ uint8_t driveUntilNewTile()
                 testTurn();
             }
 
-            backEncoderDist = 0;
             leadingEncoder = 0;
+            backEncoderDist = 0;
+            backPrevDistance = 0;
             //if the encoder returned 0, no need to reverse so skip to status 3.
             return (leadingEncoder == 0) ? 3 : 2;    
         }
         //otherwise, want to see which one crossed. This is cond1 XOR cond2 btw.
-        else if(backEncoderDist == 0)
+        else if(backPrevDistance == 0)
         {
             //if the left one has crossed but the right hasn't, then just label that's the one crossing now.
             if(leftEncoderChange)
             {
                 leadingEncoder = 1;
+                backPrevDistance = currentEncoderA;
             }
             else
             {
                 leadingEncoder = 2;
+                backPrevDistance = currentEncoderB;
             }
-            //set it to the current ms time, we weill subtract it by the ms time when we end to get the duration it takes.
-            backEncoderDist = millis();
+            
         }
     }
     return 1;
