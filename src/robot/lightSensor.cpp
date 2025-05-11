@@ -3,6 +3,7 @@
 
 // Associated Header File
 #include "robot/lightSensor.h"
+#include "../env.h"
 
 // Built-In Libraries
 #include "Arduino.h"
@@ -140,15 +141,15 @@ void readLightLevels() {
     deactivateIR();
 
     // Logs the values for debugging purposes
-#if LOGGING_LEVEL >= 3
-    serialLog("Light Levels: ", 3);
-    serialLog(lightArray[0], 3);
-    serialLog(" ", 3);
-    serialLog(lightArray[1], 3);
-    serialLog(" ", 3);
-    serialLog(lightArray[2], 3);
-    serialLog(" ", 3);
-    serialLogln(lightArray[3], 3);
+#if LOGGING_LEVEL >= 4
+    serialLog("Light Levels: ", 2);
+    serialLog(lightArray[0], 2);
+    serialLog(" ", 2);
+    serialLog(lightArray[1], 2);
+    serialLog(" ", 2);
+    serialLog(lightArray[2], 2);
+    serialLog(" ", 2);
+    serialLogln(lightArray[3], 2);
 #endif
 }
 
