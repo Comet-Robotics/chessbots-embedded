@@ -34,6 +34,8 @@ int currentEncoderB = -1;
 int startEncoderAPos = -1;
 int startEncoderBPos = -1;
 
+bool forwardAligning = true;
+
 //just measured, its 5.9 centimeters, or .059 meters
 const float TIRE_RADIUS = 0.059;
 //circumference equals pi * diameter. In meters
@@ -76,6 +78,8 @@ void testTurn()
 
 bool firstEncoderVal = false;
 bool secondEncoderVal = false;
+uint8_t firstEncoderIndex = 0;
+uint8_t secondEncoderIndex = 0;
 
 unsigned long iteration = 0;
 int maxTicks = 0;
@@ -270,35 +274,41 @@ void updateCentering()
         //S means we just started centering
         case 'S':
             //create the first drive
-            createDriveUntilNewTile();
+            createDriveUntilNewTile(forwardAligning);
             //now change it so we're driving forward
-            centeringStatus = 'F';
+            centeringStatus = 'M';
             break;
-        //F means we are driving forward
-        case 'F':
+        //F means we are moving to an edge
+        case 'M':
         {
             //continue driving forward
             uint8_t driveStatus = driveUntilNewTile();
             if(driveStatus == 3)
             {
-                //meaning we can now go in reverse
-                centeringStatus = 'R';
+                //meaning we can now go in opposite direction.
+                centeringStatus = 'M';
+                //if we were going forward, now reverse. if going reverse, now going forward
+                forwardAligning = !forwardAligning;
+                createDriveUntilNewTile(forwardAligning);
+                serialLogln((char*) "NOW GOING IN OPPOSITE!", 2);
             }
             else if(driveStatus == 2)
             {
                 //mean we now begin correcting
                 centeringStatus = 'C';
+                serialLogln((char*) "NOW CORRECTING!", 2);
                 //we're going to check 
             }
             break;
         }
         case 'C':
-            if(checkMoveFinished)
+            if(checkMoveFinished())
             {
-                centeringStatus = 'R';
+                centeringStatus = 'M';
+                forwardAligning = !forwardAligning;
+                createDriveUntilNewTile(forwardAligning);
+                serialLogln((char*) "NOW GOING IN OPPOSITE!", 2);
             }
-            break;
-        case 'R':
             break;
     }
 }
@@ -395,13 +405,15 @@ void startDriveTest() {
     timerDelay(2000, &driveTestOff);
 }
 
-void updateToNextDistance()
+void updateToNextDistance(bool goingForward)
 {
     serialLogln((char*) "changing direction!", 2);
     startEncoderAPos = currentEncoderA;
-    startEncoderBPos = currentEncoderB ;
-    encoderATarget = currentEncoderA + 1000;
-    encoderBTarget = currentEncoderB + 1000;
+    startEncoderBPos = currentEncoderB;
+    //this way if we're reversing, we're actually subtracting. if going forward was 0, then 0 * 2 - 1 = -1.
+    //if going forward was 1, 1 * 2 - 1 = 1.
+    encoderATarget = currentEncoderA + 1000 * (goingForward * 2 - 1);
+    encoderBTarget = currentEncoderB + 1000 * (goingForward * 2 - 1);
 
     // if (!testEncoderPID_value)
     // {
@@ -419,14 +431,24 @@ void updateToNextDistance()
     serialLogln(encoderBTarget, 2);
 }
 
-void createDriveUntilNewTile()
+void createDriveUntilNewTile(bool goingForward)
 {
     // drive(0.5f, 0.5f, "NULL");
-    updateToNextDistance();
+    updateToNextDistance(goingForward);
     
     //assign values here, will detect when they change
-    firstEncoderVal = onFirstTile[Top_Left_Encoder_Index];
-    secondEncoderVal = onFirstTile[Top_Right_Encoder_Index];
+    if(goingForward)
+    {
+        firstEncoderIndex = Top_Left_Encoder_Index;
+        secondEncoderIndex = Top_Right_Encoder_Index;
+    }
+    else
+    {
+        firstEncoderIndex = Bottom_Left_Encoder_Index;
+        secondEncoderIndex = Bottom_Right_Encoder_Index;
+    }
+    firstEncoderVal = onFirstTile[firstEncoderIndex];
+    secondEncoderVal = onFirstTile[secondEncoderIndex];
 }
 
 //drives until the first two encoders are considered to hit a new value.
@@ -439,12 +461,12 @@ uint8_t driveUntilNewTile()
     //if we do finish moving, update to a new distance
     if(checkMoveFinished())
     {
-        updateToNextDistance();
+        updateToNextDistance(forwardAligning);
     }
     
     //if we already changed it, don't change it back again
-    leftEncoderChange = leftEncoderChange || (onFirstTile[Top_Left_Encoder_Index] != firstEncoderVal);
-    rightEncoderChange = rightEncoderChange || (onFirstTile[Top_Right_Encoder_Index] != secondEncoderVal);
+    leftEncoderChange = leftEncoderChange || (onFirstTile[firstEncoderIndex] != firstEncoderVal);
+    rightEncoderChange = rightEncoderChange || (onFirstTile[secondEncoderIndex] != secondEncoderVal);
     if(leftEncoderChange || rightEncoderChange)
     {
         //when both cross, we done.
@@ -462,12 +484,12 @@ uint8_t driveUntilNewTile()
 
             backEncoderDist *= TICK_TO_METERS;
             // (fabs(frontCrossVelocity) + fabs(backCrossVelocity)) / 2 * backEncoderChangeInTime;
-
+#if LOGGING_LEVEL >= 3
             serialLog((char*) " Encoder in front is gonna be: ", 2);
             serialLogln(leadingEncoder, 2);
             serialLog((char*) "Total distance encoder was behind is: ", 2);
             serialLogln((float) backEncoderDist, 2);
-
+#endif
             //remidner: angle = arctan(x/y), where x = backEncoderDist (like distance to our edge), and y = distance between two light sensors (put in manually)
 
             //idk why, but when dividing by 2 that gets us the true angle. The BackEncoderDist and lightDist seems to be correct vales, but the value we
@@ -496,16 +518,22 @@ uint8_t driveUntilNewTile()
                 serialLog((char*) "Sign is going to be: ", 2);
                 serialLogln(degreesDirection, 2);
                 angle = degreesAngle * degreesDirection;
+
                 startEncoderAPos = currentEncoderA;
                 startEncoderBPos = currentEncoderB;
+
                 testTurn();
             }
+            uint8_t status = (leadingEncoder == 0) ? 3 : 2; 
 
             leadingEncoder = 0;
             backEncoderDist = 0;
             backPrevDistance = 0;
+            leftEncoderChange = false;
+            rightEncoderChange = false;
+
             //if the encoder returned 0, no need to reverse so skip to status 3.
-            return (leadingEncoder == 0) ? 3 : 2;    
+            return status;
         }
         //otherwise, want to see which one crossed. This is cond1 XOR cond2 btw.
         else if(backPrevDistance == 0)

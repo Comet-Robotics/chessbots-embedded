@@ -13,10 +13,11 @@ void readLight(int loopDelayMs);
 void startMotorAndEncoderTest();
 bool checkMoveFinished();
 void startDriveTest();
-void createDriveUntilNewTile();
+void createDriveUntilNewTile(bool goingForward);
 uint8_t driveUntilNewTile();
 void driveTestOff();
 void controlLoop(int loopDelayMs, int8_t framesUntilPrint);
 void updateCentering();
+void updateToNextDistance(bool goingForward);
 
 #endif
