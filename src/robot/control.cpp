@@ -36,6 +36,9 @@ int startEncoderBPos = -1;
 
 int encoderAHalfwayDist = 0;
 int encoderBHalfwayDist = 0;
+bool movingCenter = false;
+bool turningToNextAxis = false;
+uint8_t axisesAligned = 0;
 
 bool forwardAligning = true;
 
@@ -272,23 +275,49 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
 void determineNextAction()
 {
-    if(forwardAligning)
+    if(turningToNextAxis)
+    {
+        turningToNextAxis = false;
+        axisesAligned++;
+        if(axisesAligned == 2)
+        {
+            axisesAligned = 0;
+            isCentering = false;
+            centeringStatus = 'F';
+        }
+        else
+        {
+            centeringStatus = 'S';
+        }
+    }
+    else if(movingCenter)
+    {
+        //now, turn to next direction
+        movingCenter = false;
+        turningToNextAxis = true;
+        centeringStatus = 'M';
+        angle = 90 * (axisesAligned * 2 - 1);
+        testTurn();
+    }
+    else if(forwardAligning)
     {
         //if going forward, store the current encoder value so we can see the full encoder length of the tiles
         encoderAHalfwayDist = currentEncoderA;
         encoderBHalfwayDist = currentEncoderB;
         forwardAligning = !forwardAligning;
         createDriveUntilNewTile(forwardAligning);
-        centeringStatus = 'M';
+        centeringStatus = 'E';
     }
     else
     {
-        //since we always go forward first and then backwards, 
+        //since we always go forward first and then backwards, the current value of encoderHalfwayDist > currentEncoder always
         encoderAHalfwayDist = (encoderAHalfwayDist - currentEncoderA) / 2;
         encoderBHalfwayDist = (encoderBHalfwayDist - currentEncoderB) / 2;
         forwardAligning = !forwardAligning;
         driveTicks(encoderAHalfwayDist, encoderBHalfwayDist, "NULL");
-        centeringStatus = 'H';
+        centeringStatus = 'M';
+
+        movingCenter = true;
     }
 }
 
@@ -301,10 +330,10 @@ void updateCentering()
             //create the first drive
             createDriveUntilNewTile(forwardAligning);
             //now change it so we're driving forward
-            centeringStatus = 'M';
+            centeringStatus = 'E';
             break;
-        //F means we are moving to an edge
-        case 'M':
+        //E means we are moving to an edge
+        case 'E':
         {
             //continue driving forward
             uint8_t driveStatus = driveUntilNewTile();
@@ -317,25 +346,20 @@ void updateCentering()
             else if(driveStatus == 2)
             {
                 //mean we now begin correcting
-                centeringStatus = 'C';
+                centeringStatus = 'M';
                 serialLogln((char*) "NOW CORRECTING!", 2);
                 //we're going to check 
             }
             break;
         }
-        case 'C':
+        //m means the bot is just moving by itself, whether that be to correct for a turn or to just get to the halfway point
+        case 'M':
             if(checkMoveFinished())
             {
                 determineNextAction();
                 serialLogln((char*) "NOW GOING IN OPPOSITE!", 2);
             }
             break;
-        case 'H':
-            if(checkMoveFinished())
-            {
-                serialLogln((char*) "LET'S GO WE DONE WITH THIS AXIS", 2);
-                centeringStatus = 'F';
-            }
     }
 }
 
