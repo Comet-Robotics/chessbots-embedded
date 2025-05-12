@@ -51,7 +51,7 @@ void testEncoderPID()
     if (!testEncoderPID_value)
     {
         testEncoderPID_value = true;
-        encoderATarget = encoderBTarget = TICKS_PER_ROTATION*5;
+        encoderATarget = encoderBTarget = TICKS_PER_ROTATION * 5;
     }
     else
     {
@@ -448,6 +448,7 @@ uint8_t driveUntilNewTile()
             serialLogln(backPrevDistance, 3);
 #endif
             //now convert difference in ticks to meter value
+
             backEncoderDist *= TICK_TO_METERS;
             // (fabs(frontCrossVelocity) + fabs(backCrossVelocity)) / 2 * backEncoderChangeInTime;
 
@@ -457,9 +458,13 @@ uint8_t driveUntilNewTile()
             serialLogln((float) backEncoderDist, 2);
 
             //remidner: angle = arctan(x/y), where x = backEncoderDist (like distance to our edge), and y = distance between two light sensors (put in manually)
-            float radAngle = atan(backEncoderDist / lightDist);
+
+            //idk why, but when dividing by 2 that gets us the true angle. The BackEncoderDist and lightDist seems to be correct vales, but the value we
+            //end up getting from it is double what it should be. Maybe there's an issue with how I did it.
+            float radAngle = atan(backEncoderDist / lightDist) / 2;
             //as a reminder, corresponding degrees = (pi/180) * x radians
-            float degreesAngle = 180 / M_PI * radAngle / 2;
+
+            float degreesAngle = 180 / M_PI * radAngle;
             
             serialLog((char*) "Angle is going to be: ", 2);
             serialLog(degreesAngle, 2);
