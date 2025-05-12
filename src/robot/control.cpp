@@ -439,8 +439,14 @@ uint8_t driveUntilNewTile()
         //when both cross, we done.
         if(leftEncoderChange && rightEncoderChange)
         {
-            //there will probably be a way to map encoder distance to meters
-            double backEncoderDist = (leadingEncoder == 1) ? fabs(currentEncoderA - backPrevDistance) : fabs(currentEncoderB - backPrevDistance);
+            //first get teh difference in encoders. Remember we want it from the encoder at the back.
+            double backEncoderDist = (leadingEncoder == 1) ? fabs(currentEncoderB - backPrevDistance) : fabs(currentEncoderA - backPrevDistance);
+#if LOGGING_LEVEL >= 3
+            serialLog((char*) "End encoder is: ", 3);
+            serialLogln((leadingEncoder == 1) ? currentEncoderA : currentEncoderB, 3);
+            serialLog((char*) "Begin encoder is: ", 3);
+            serialLogln(backPrevDistance, 3);
+#endif
             //now convert difference in ticks to meter value
             backEncoderDist *= TICK_TO_METERS;
             // (fabs(frontCrossVelocity) + fabs(backCrossVelocity)) / 2 * backEncoderChangeInTime;
@@ -453,7 +459,7 @@ uint8_t driveUntilNewTile()
             //remidner: angle = arctan(x/y), where x = backEncoderDist (like distance to our edge), and y = distance between two light sensors (put in manually)
             float radAngle = atan(backEncoderDist / lightDist);
             //as a reminder, corresponding degrees = (pi/180) * x radians
-            float degreesAngle = 180 / M_PI * radAngle;
+            float degreesAngle = 180 / M_PI * radAngle / 2;
             
             serialLog((char*) "Angle is going to be: ", 2);
             serialLog(degreesAngle, 2);
@@ -490,12 +496,12 @@ uint8_t driveUntilNewTile()
             if(leftEncoderChange)
             {
                 leadingEncoder = 1;
-                backPrevDistance = currentEncoderA;
+                backPrevDistance = currentEncoderB;
             }
             else
             {
                 leadingEncoder = 2;
-                backPrevDistance = currentEncoderB;
+                backPrevDistance = currentEncoderA;
             }
             
         }
