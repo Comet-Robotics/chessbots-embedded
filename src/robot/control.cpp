@@ -34,6 +34,9 @@ int currentEncoderB = -1;
 int startEncoderAPos = -1;
 int startEncoderBPos = -1;
 
+int encoderAHalfwayDist = 0;
+int encoderBHalfwayDist = 0;
+
 bool forwardAligning = true;
 
 //just measured, its 5.9 centimeters, or .059 meters
@@ -267,6 +270,28 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
     }
 }
 
+void determineNextAction()
+{
+    if(forwardAligning)
+    {
+        //if going forward, store the current encoder value so we can see the full encoder length of the tiles
+        encoderAHalfwayDist = currentEncoderA;
+        encoderBHalfwayDist = currentEncoderB;
+        forwardAligning = !forwardAligning;
+        createDriveUntilNewTile(forwardAligning);
+        centeringStatus = 'M';
+    }
+    else
+    {
+        //since we always go forward first and then backwards, 
+        encoderAHalfwayDist = (encoderAHalfwayDist - currentEncoderA) / 2;
+        encoderBHalfwayDist = (encoderBHalfwayDist - currentEncoderB) / 2;
+        forwardAligning = !forwardAligning;
+        driveTicks(encoderAHalfwayDist, encoderBHalfwayDist, "NULL");
+        centeringStatus = 'H';
+    }
+}
+
 void updateCentering()
 {
     switch(centeringStatus)
@@ -286,10 +311,7 @@ void updateCentering()
             if(driveStatus == 3)
             {
                 //meaning we can now go in opposite direction.
-                centeringStatus = 'M';
-                //if we were going forward, now reverse. if going reverse, now going forward
-                forwardAligning = !forwardAligning;
-                createDriveUntilNewTile(forwardAligning);
+                determineNextAction();
                 serialLogln((char*) "NOW GOING IN OPPOSITE!", 2);
             }
             else if(driveStatus == 2)
@@ -304,12 +326,16 @@ void updateCentering()
         case 'C':
             if(checkMoveFinished())
             {
-                centeringStatus = 'M';
-                forwardAligning = !forwardAligning;
-                createDriveUntilNewTile(forwardAligning);
+                determineNextAction();
                 serialLogln((char*) "NOW GOING IN OPPOSITE!", 2);
             }
             break;
+        case 'H':
+            if(checkMoveFinished())
+            {
+                serialLogln((char*) "LET'S GO WE DONE WITH THIS AXIS", 2);
+                centeringStatus = 'F';
+            }
     }
 }
 
@@ -327,11 +353,13 @@ void drive(float tiles) {
 
 }
 
-void driveTicks(int tickDistance, std::string id)
+void driveTicks(int tickDistanceLeft, int tickDistanceRight, std::string id)
 {
-    encoderATarget = readLeftEncoder() + tickDistance;
-    encoderBTarget = readRightEncoder() - tickDistance;
-
+    startEncoderAPos = currentEncoderA;
+    startEncoderBPos - currentEncoderB;
+    
+    encoderATarget = currentEncoderA + tickDistanceLeft;
+    encoderBTarget = currentEncoderB + tickDistanceRight;
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
@@ -444,8 +472,10 @@ void createDriveUntilNewTile(bool goingForward)
     }
     else
     {
-        firstEncoderIndex = Bottom_Left_Encoder_Index;
-        secondEncoderIndex = Bottom_Right_Encoder_Index;
+        //from the robots perspective as it's going backwards, the encoder on the left is bottom right, 
+        //while the encoder on the right is bottom left, so we just swap em
+        firstEncoderIndex = Bottom_Right_Encoder_Index;
+        secondEncoderIndex = Bottom_Left_Encoder_Index;
     }
     firstEncoderVal = onFirstTile[firstEncoderIndex];
     secondEncoderVal = onFirstTile[secondEncoderIndex];
