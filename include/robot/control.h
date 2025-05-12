@@ -11,6 +11,7 @@ void turn(float angleRadians, std::string id);
 void stop();
 void readLight(int loopDelayMs);
 void startMotorAndEncoderTest();
+bool checkMoveFinished();
 void startDriveTest();
 void createDriveUntilNewTile();
 uint8_t driveUntilNewTile();

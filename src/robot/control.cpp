@@ -288,14 +288,28 @@ void updateCentering()
             {
                 //mean we now begin correcting
                 centeringStatus = 'C';
+                //we're going to check 
             }
             break;
         }
         case 'C':
+            if(checkMoveFinished)
+            {
+                centeringStatus = 'R';
+            }
             break;
         case 'R':
             break;
     }
+}
+
+bool checkMoveFinished()
+{
+    //first check if we're past the encoder range, then see if our speed is low. Have to have the first critical range check as we don't want to count for
+    //when we're first speeding up.
+    float criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
+    float criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
+    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 2);
 }
 
 // Drives a specific amount of tiles (WIP)
@@ -422,11 +436,8 @@ void createDriveUntilNewTile()
     // 3 - just at this moment, we've reached our destination, but DON'T need to reverse.
 uint8_t driveUntilNewTile() 
 {
-    float criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
-    float criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
-    //first check if we're past the encoder range, then see if our speed is low. Have to have the first critical range check as we don't want to count for
-    //when we're first speeding up.
-    if((fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 2))
+    //if we do finish moving, update to a new distance
+    if(checkMoveFinished())
     {
         updateToNextDistance();
     }
@@ -485,6 +496,8 @@ uint8_t driveUntilNewTile()
                 serialLog((char*) "Sign is going to be: ", 2);
                 serialLogln(degreesDirection, 2);
                 angle = degreesAngle * degreesDirection;
+                startEncoderAPos = currentEncoderA;
+                startEncoderBPos = currentEncoderB;
                 testTurn();
             }
 
