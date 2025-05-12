@@ -15,16 +15,11 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     double changeInVelocity = 0, stoppingDistance;
 
     //kickstart and begin velocity
-    if (profile.currentVelocity == 0) {
-        if(distanceToGo == 0)
-        {
-            profile.targetVelocity = 0;
-        }
-        else
-        {
-            profile.targetVelocity = 0.15 * profile.maxVelocity * (distanceToGo > 0 ? 1 : -1);
-        }
-    }
+    
+    // if (profile.currentVelocity == 0) 
+    // {
+    //     profile.targetVelocity = 0.15 * profile.maxVelocity * (distanceToGo > 0 ? 1 : -1);
+    // }
 
     // Formula is v^2 / 2a
     stoppingDistance = (profile.currentVelocity * profile.currentVelocity) / (2.0 * profile.maxAcceleration);
@@ -65,6 +60,12 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
         }
         //making it dependent on leftover distance/dt instead of maxAcceleration*dt
         changeInVelocity = -(fabs(fraction)) * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
+
+        //want to make sure that we're not going to be decelerating so hard that we just reverse ourselves and don't reach our target
+        if(fabs(changeInVelocity) > fabs(profile.targetVelocity))
+        {
+            changeInVelocity = profile.targetVelocity * -1;
+        }
     }
 
     profile.targetVelocity += changeInVelocity;
@@ -77,7 +78,7 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
         profile.targetVelocity = 0;
 
     #if LOGGING_LEVEL >= 3
-    if(framesUntilprint == 0)
+    if(framesUntilprint % 20 == 0)
     {
         serialLog("Change in velocity was: ", 3);
         serialLog(float(changeInVelocity), 3);
