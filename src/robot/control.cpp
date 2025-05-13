@@ -86,6 +86,7 @@ bool turningToNextAxis = false;
 uint8_t axisesAligned = 0;
 
 float angle = 0;
+unsigned long timeSinceTurn = 0;
 
 //the value of the encoder we're measuring in terms of its light value
 bool firstEncoderVal = false;
@@ -162,6 +163,8 @@ void testTurn()
 
     //compute the new crit range now that target and start encoder have changed
     updateCritRange();
+    //set the time since turn to the current value.
+    timeSinceTurn = millis();
 }
 
 // Sets up all the aspects needed for the bot to work
@@ -428,8 +431,14 @@ bool checkMoveFinished()
     //the reason our speed is slow is specifically because we're slowing down and not because we're
     //beginning to speed up.
     //do this by seeing if the distance remaining is less than the midpoint distance from start to end, as by then we're at our max speed.
+
+    bool encoderAChecks = fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 3;
+    bool encoderBChecks = fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 3;
+
+    //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, annd means we should declare the movement finished.
+    bool timerCheck = millis() - timeSinceTurn > 8000;
     
-    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 3) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 3);
+    return ((encoderAChecks && encoderBChecks) || timerCheck);
 }
 
 //like the one above but just seeing if we can keep moving or not
