@@ -328,7 +328,8 @@ void determineNextAction()
         encoderAHalfwayDist = (encoderAHalfwayDist - currentEncoderA) / 2;
         encoderBHalfwayDist = (encoderBHalfwayDist - currentEncoderB) / 2;
         forwardAligning = !forwardAligning;
-        driveTicks(encoderAHalfwayDist, encoderBHalfwayDist, "NULL");
+        int totalHalfwayDistance = (encoderAHalfwayDist + encoderBHalfwayDist) / 2;
+        driveTicks(totalHalfwayDistance, totalHalfwayDistance, "NULL");
         centeringStatus = 'M';
 
         movingCenter = true;
