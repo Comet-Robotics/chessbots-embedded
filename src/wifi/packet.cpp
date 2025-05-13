@@ -47,7 +47,7 @@ void handlePacket(JsonDocument packet) {
         // This is received when the bot is being manually controlled via the debug page
         drive(packet["left"], packet["right"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TICKS){
-        driveTicks(packet["tickDistance"], packet["tickDistance"], packet["packetId"]);
+        driveTicks(packet["tickDistance"], packet["packetId"]);
     }
 }
 
