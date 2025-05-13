@@ -21,7 +21,7 @@ float prevTickVals[4] = {-1, -1, -1, -1};
 const uint8_t DIFF_TICK = 2;
 uint8_t counter = 1;
 
-const short LIMIT_TO_CHANGE = 750;
+const short LIMIT_TO_CHANGE = 600;
 
 // Sets the IR (Infrared) Blaster to be able to output
 void setupIR() {

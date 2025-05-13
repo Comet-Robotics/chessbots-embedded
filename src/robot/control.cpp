@@ -72,6 +72,9 @@ float angle = 0;
 
 void testTurn()
 {
+    startEncoderAPos = currentEncoderA;
+    startEncoderBPos = currentEncoderB;
+    
     serialLog("Changing destination angle to ", 2);
     serialLog(angle, 2);
     turn(M_PI / 180 * angle, "NULL");
@@ -226,7 +229,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         if (rightMotorPower > 1) rightMotorPower = 1;
         if (rightMotorPower < -1) rightMotorPower = -1;
 
-        #if LOGGING_LEVEL >= 3
+        #if LOGGING_LEVEL >= 4
         
         if(framesUntilPrint == 0)
         {
@@ -297,6 +300,7 @@ void determineNextAction()
         turningToNextAxis = true;
         centeringStatus = 'M';
         angle = 90 * (axisesAligned * 2 - 1);
+
         testTurn();
     }
     else if(forwardAligning)
@@ -331,6 +335,7 @@ void updateCentering()
             createDriveUntilNewTile(forwardAligning);
             //now change it so we're driving forward
             centeringStatus = 'E';
+            // serialLogln((char*) "STARTING", 2);
             break;
         //E means we are moving to an edge
         case 'E':
@@ -341,15 +346,14 @@ void updateCentering()
             {
                 //meaning we can now go in opposite direction.
                 determineNextAction();
-                serialLogln((char*) "NOW GOING IN OPPOSITE!", 2);
             }
             else if(driveStatus == 2)
             {
                 //mean we now begin correcting
                 centeringStatus = 'M';
-                serialLogln((char*) "NOW CORRECTING!", 2);
                 //we're going to check 
             }
+            // serialLogln((char*) "EDGING", 2);
             break;
         }
         //m means the bot is just moving by itself, whether that be to correct for a turn or to just get to the halfway point
@@ -357,8 +361,8 @@ void updateCentering()
             if(checkMoveFinished())
             {
                 determineNextAction();
-                serialLogln((char*) "NOW GOING IN OPPOSITE!", 2);
             }
+            // serialLogln((char*) "TURNING OR MOVING", 2);
             break;
     }
 }
@@ -369,7 +373,7 @@ bool checkMoveFinished()
     //when we're first speeding up.
     float criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
     float criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
-    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 2);
+    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 3) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 3);
 }
 
 // Drives a specific amount of tiles (WIP)
@@ -380,7 +384,7 @@ void drive(float tiles) {
 void driveTicks(int tickDistanceLeft, int tickDistanceRight, std::string id)
 {
     startEncoderAPos = currentEncoderA;
-    startEncoderBPos - currentEncoderB;
+    startEncoderBPos = currentEncoderB;
     
     encoderATarget = currentEncoderA + tickDistanceLeft;
     encoderBTarget = currentEncoderB + tickDistanceRight;
@@ -529,10 +533,10 @@ uint8_t driveUntilNewTile()
             //first get teh difference in encoders. Remember we want it from the encoder at the back.
             double backEncoderDist = (leadingEncoder == 1) ? fabs(currentEncoderB - backPrevDistance) : fabs(currentEncoderA - backPrevDistance);
 #if LOGGING_LEVEL >= 3
-            serialLog((char*) "End encoder is: ", 3);
-            serialLogln((leadingEncoder == 1) ? currentEncoderA : currentEncoderB, 3);
             serialLog((char*) "Begin encoder is: ", 3);
             serialLogln(backPrevDistance, 3);
+            serialLog((char*) "End encoder is: ", 3);
+            serialLogln((leadingEncoder == 1) ? currentEncoderA : currentEncoderB, 3);
 #endif
             //now convert difference in ticks to meter value
 
@@ -548,7 +552,7 @@ uint8_t driveUntilNewTile()
 
             //idk why, but when dividing by 2 that gets us the true angle. The BackEncoderDist and lightDist seems to be correct vales, but the value we
             //end up getting from it is double what it should be. Maybe there's an issue with how I did it.
-            float radAngle = atan(backEncoderDist / lightDist) / 2;
+            float radAngle = atan(backEncoderDist / lightDist) / 2.1;
             //as a reminder, corresponding degrees = (pi/180) * x radians
 
             float degreesAngle = 180 / M_PI * radAngle;
@@ -572,9 +576,6 @@ uint8_t driveUntilNewTile()
                 serialLog((char*) "Sign is going to be: ", 2);
                 serialLogln(degreesDirection, 2);
                 angle = degreesAngle * degreesDirection;
-
-                startEncoderAPos = currentEncoderA;
-                startEncoderBPos = currentEncoderB;
 
                 testTurn();
             }

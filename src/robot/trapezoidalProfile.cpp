@@ -77,7 +77,7 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     if(fabs(distanceToGo) < 50)
         profile.targetVelocity = 0;
 
-    #if LOGGING_LEVEL >= 3
+    #if LOGGING_LEVEL >= 4
     if(framesUntilprint == 0)
     {
         serialLog("Change in velocity was: ", 3);
