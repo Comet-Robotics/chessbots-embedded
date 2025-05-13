@@ -139,15 +139,16 @@ void testEncoderPID()
 //we're at our max speed and are sure we aren't at a low speed just cause we're speeding up
 void updateCritRange()
 {
+    //want to record the values before we move now
+    startEncoderAPos = currentEncoderA;
+    startEncoderBPos = currentEncoderB;
+    
     criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
     criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
 }
 
 void testTurn()
 {
-    //now that we're turning, wnat to record the previous encoder vals
-    startEncoderAPos = currentEncoderA;
-    startEncoderBPos = currentEncoderB;
     
     serialLog("Changing destination angle to ", 2);
     serialLog(angle, 2);
@@ -428,7 +429,13 @@ bool checkMoveFinished()
     //beginning to speed up.
     //do this by seeing if the distance remaining is less than the midpoint distance from start to end, as by then we're at our max speed.
     
-    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 2);
+    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 3) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 3);
+}
+
+//like the one above but just seeing if we can keep moving or not
+bool checkIfCanUpdateMovement()
+{
+    return fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(currentEncoderB - encoderBTarget) < criticalRangeB;
 }
 
 // Drives a specific amount of tiles (WIP)
@@ -438,11 +445,7 @@ void drive(float tiles) {
 
 //drives the given amount of ticks
 void driveTicks(int tickDistance, std::string id)
-{
-    //store current start values and set target
-    startEncoderAPos = currentEncoderA;
-    startEncoderBPos = currentEncoderB;
-    
+{    
     encoderATarget = currentEncoderA + tickDistance;
     encoderBTarget = currentEncoderB + tickDistance;
 
@@ -524,8 +527,6 @@ void startDriveTest() {
 void updateToNextDistance()
 {
     serialLogln((char*) "changing direction!", 2);
-    startEncoderAPos = currentEncoderA;
-    startEncoderBPos = currentEncoderB;
     //this way if we're reversing, we're actually subtracting. if going forward was 0, then 0 * 2 - 1 = -1.
     //if going forward was 1, 1 * 2 - 1 = 1.
     encoderATarget = currentEncoderA + 1000 * (forwardAligning * 2 - 1);
@@ -570,7 +571,7 @@ void createDriveUntilNewTile()
 uint8_t driveUntilNewTile() 
 {
     //if we do finish moving, update to a new distance. I think we have to move at intervals for it to work
-    if(checkMoveFinished())
+    if(checkIfCanUpdateMovement())
     {
         updateToNextDistance();
     }
@@ -589,6 +590,9 @@ uint8_t driveUntilNewTile()
             uint8_t status = 0; 
             if(leadingEncoder != 0)
             {
+                encoderATarget = currentEncoderA;
+                encoderBTarget = currentEncoderB;
+                
                 //first get the encoder that we're comparing to get the distance. If leading encoder is 1 and we were moving forward, or if
                 //leading encoder is 2 but we were moving backward, then the back encoder is b, otherwise it's A
                 double encoderChosen = (leadingEncoder == 1 && forwardAligning || leadingEncoder == 2 && !forwardAligning) ? currentEncoderB : currentEncoderA;
@@ -637,6 +641,10 @@ uint8_t driveUntilNewTile()
             else
             {
                 status = 3;
+
+                //with the other one we set the crit range after calling the turn function.
+                //Here we don't, so we gotta do that
+                updateCritRange();
             }
 
             //reset all of our values
