@@ -8,7 +8,7 @@
 
 using namespace std;
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint) {
+double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint, int critRange) {
     // distanceToGo = positive, you're still behind the target. || distanceToGo = negative, you're ahead.
     double distanceToGo = profile.targetPosition - profile.currentPosition;
     
@@ -74,10 +74,10 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     if (fabs(profile.targetVelocity) > profile.maxVelocity)
         profile.targetVelocity = profile.maxVelocity * (profile.targetVelocity > 0 ? 1 : -1);
 
-    if(fabs(distanceToGo) < 50)
+    if(fabs(distanceToGo) < min(critRange, 75))
         profile.targetVelocity = 0;
 
-    #if LOGGING_LEVEL >= 4
+    #if LOGGING_LEVEL >= 3
     if(framesUntilprint == 0)
     {
         serialLog("Change in velocity was: ", 3);

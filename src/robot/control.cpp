@@ -53,37 +53,8 @@ MotionProfile profileA = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0};
 MotionProfile profileB = {MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS, 0, 0, 0, 0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 
 boolean testEncoderPID_value = false;
-void testEncoderPID()
-{
-    serialLogln("Changing encoder PID setpoint!", 2);
-    if (!testEncoderPID_value)
-    {
-        testEncoderPID_value = true;
-        encoderATarget = encoderBTarget = TICKS_PER_ROTATION * 5;
-    }
-    else
-    {
-        testEncoderPID_value = false;
-        encoderATarget = encoderBTarget = 0;
-    }
-}
 
 float angle = 0;
-
-void testTurn()
-{
-    startEncoderAPos = currentEncoderA;
-    startEncoderBPos = currentEncoderB;
-    
-    serialLog("Changing destination angle to ", 2);
-    serialLog(angle, 2);
-    turn(M_PI / 180 * angle, "NULL");
-    serialLog(" (", 2);
-    serialLog(encoderATarget, 2);
-    serialLog(", ", 2);
-    serialLog(encoderBTarget, 2);
-    serialLogln(")", 2);
-}
 
 bool firstEncoderVal = false;
 bool secondEncoderVal = false;
@@ -110,6 +81,9 @@ const uint8_t Top_Right_Encoder_Index = 1;
 const uint8_t Bottom_Left_Encoder_Index = 2;
 const uint8_t Bottom_Right_Encoder_Index = 3;
 
+float criticalRangeA = 75;
+float criticalRangeB = 75;
+
 //determines basically what tile each encoder is one. false is one tile, true is the opposite tile.
 //it could be false = white and true = black, or false = black and white = true, doesn't really matter
 bool onFirstTile[4] = {false, false, false, false};
@@ -119,6 +93,42 @@ const float lightDist = 0.07;
 
 bool isCentering = true;
 char centeringStatus = 'S';
+
+void testEncoderPID()
+{
+    serialLogln("Changing encoder PID setpoint!", 2);
+    if (!testEncoderPID_value)
+    {
+        testEncoderPID_value = true;
+        encoderATarget = encoderBTarget = TICKS_PER_ROTATION * 5;
+    }
+    else
+    {
+        testEncoderPID_value = false;
+        encoderATarget = encoderBTarget = 0;
+    }
+
+    criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
+    criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
+}
+
+void testTurn()
+{
+    startEncoderAPos = currentEncoderA;
+    startEncoderBPos = currentEncoderB;
+    
+    serialLog("Changing destination angle to ", 2);
+    serialLog(angle, 2);
+    turn(M_PI / 180 * angle, "NULL");
+    serialLog(" (", 2);
+    serialLog(encoderATarget, 2);
+    serialLog(", ", 2);
+    serialLog(encoderBTarget, 2);
+    serialLogln(")", 2);
+
+    criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
+    criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
+}
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
@@ -212,8 +222,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         double currentVelocityB = (currentEncoderB - prevPositionB) / loopDelaySeconds;
         profileB.currentVelocity = currentVelocityB;
         
-        double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint);
-        double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint);
+        double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint, criticalRangeA);
+        double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint, criticalRangeB);
         
         prevPositionA = currentEncoderA;        
         prevPositionB = currentEncoderB;
@@ -371,9 +381,21 @@ bool checkMoveFinished()
 {
     //first check if we're past the encoder range, then see if our speed is low. Have to have the first critical range check as we don't want to count for
     //when we're first speeding up.
-    float criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
-    float criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
-    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 3) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 3);
+    if(fabs(currentEncoderA - encoderATarget) >= criticalRangeA)
+    {
+        serialLog((char*) "First crit range is ", 2);
+        serialLogln(criticalRangeA, 2);
+        serialLog((char*) "Actual remaining range is ", 2);
+        serialLogln((float) fabs(currentEncoderA - encoderATarget), 2);
+    }
+    if(fabs(currentEncoderB - encoderBTarget) >= criticalRangeB)
+    {
+        serialLog((char*) "Second crit range is ", 2);
+        serialLogln(criticalRangeB, 2);
+        serialLog((char*) "Actual remaining range is ", 2);
+        serialLogln((float) fabs(currentEncoderB - encoderBTarget), 2);
+    }
+    return (fabs(currentEncoderA - encoderATarget) < criticalRangeA && fabs(profileA.currentVelocity) < 2) && (fabs(currentEncoderB - encoderBTarget) < criticalRangeB  && fabs(profileB.currentVelocity) < 2);
 }
 
 // Drives a specific amount of tiles (WIP)
@@ -388,6 +410,9 @@ void driveTicks(int tickDistanceLeft, int tickDistanceRight, std::string id)
     
     encoderATarget = currentEncoderA + tickDistanceLeft;
     encoderBTarget = currentEncoderB + tickDistanceRight;
+
+    criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
+    criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
@@ -471,20 +496,11 @@ void updateToNextDistance(bool goingForward)
     encoderATarget = currentEncoderA + 1000 * (goingForward * 2 - 1);
     encoderBTarget = currentEncoderB + 1000 * (goingForward * 2 - 1);
 
-    // if (!testEncoderPID_value)
-    // {
-    //     testEncoderPID_value = true;
-    //     encoderATarget = currentEncoderA + 5000;
-    //     encoderBTarget = currentEncoderB + 5000;
-    // }
-    // else
-    // {
-    //     testEncoderPID_value = false;
-    //     encoderATarget = 350;
-    //     encoderBTarget = 350;
-    // }
     serialLogln(encoderATarget, 2);
     serialLogln(encoderBTarget, 2);
+
+    criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
+    criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
 }
 
 void createDriveUntilNewTile(bool goingForward)
@@ -525,6 +541,7 @@ uint8_t driveUntilNewTile()
     //if we already changed it, don't change it back again
     leftEncoderChange = leftEncoderChange || (onFirstTile[firstEncoderIndex] != firstEncoderVal);
     rightEncoderChange = rightEncoderChange || (onFirstTile[secondEncoderIndex] != secondEncoderVal);
+
     if(leftEncoderChange || rightEncoderChange)
     {
         //when both cross, we done.
@@ -552,7 +569,7 @@ uint8_t driveUntilNewTile()
 
             //idk why, but when dividing by 2 that gets us the true angle. The BackEncoderDist and lightDist seems to be correct vales, but the value we
             //end up getting from it is double what it should be. Maybe there's an issue with how I did it.
-            float radAngle = atan(backEncoderDist / lightDist) / 2.1;
+            float radAngle = atan(backEncoderDist / lightDist) / 2.5;
             //as a reminder, corresponding degrees = (pi/180) * x radians
 
             float degreesAngle = 180 / M_PI * radAngle;

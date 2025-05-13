@@ -9,7 +9,7 @@ struct MotionProfile {
     double targetVelocity;
 };
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint);
+double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint, int critRange);
 
 template <typename T>
 T clamp(T value, T minValue, T maxValue) {
