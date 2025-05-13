@@ -13,7 +13,7 @@ void readLight(int loopDelayMs);
 void startMotorAndEncoderTest();
 bool checkMoveFinished();
 void startDriveTest();
-void createDriveUntilNewTile(bool goingForward);
+void createDriveUntilNewTile();
 void determineNextChoice();
 uint8_t driveUntilNewTile();
 void driveTestOff();

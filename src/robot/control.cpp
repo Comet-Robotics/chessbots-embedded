@@ -100,7 +100,7 @@ void testEncoderPID()
     if (!testEncoderPID_value)
     {
         testEncoderPID_value = true;
-        encoderATarget = encoderBTarget = TICKS_PER_ROTATION * 5;
+        encoderATarget = encoderBTarget = TICKS_PER_ROTATION;
     }
     else
     {
@@ -319,7 +319,7 @@ void determineNextAction()
         encoderAHalfwayDist = currentEncoderA;
         encoderBHalfwayDist = currentEncoderB;
         forwardAligning = !forwardAligning;
-        createDriveUntilNewTile(forwardAligning);
+        createDriveUntilNewTile();
         centeringStatus = 'E';
     }
     else
@@ -342,7 +342,7 @@ void updateCentering()
         //S means we just started centering
         case 'S':
             //create the first drive
-            createDriveUntilNewTile(forwardAligning);
+            createDriveUntilNewTile();
             //now change it so we're driving forward
             centeringStatus = 'E';
             // serialLogln((char*) "STARTING", 2);
@@ -503,13 +503,13 @@ void updateToNextDistance(bool goingForward)
     criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
 }
 
-void createDriveUntilNewTile(bool goingForward)
+void createDriveUntilNewTile()
 {
     // drive(0.5f, 0.5f, "NULL");
-    updateToNextDistance(goingForward);
+    updateToNextDistance(forwardAligning);
     
     //assign values here, will detect when they change
-    if(goingForward)
+    if(forwardAligning)
     {
         firstEncoderIndex = Top_Left_Encoder_Index;
         secondEncoderIndex = Top_Right_Encoder_Index;
@@ -548,7 +548,8 @@ uint8_t driveUntilNewTile()
         if(leftEncoderChange && rightEncoderChange)
         {
             //first get teh difference in encoders. Remember we want it from the encoder at the back.
-            double backEncoderDist = (leadingEncoder == 1) ? fabs(currentEncoderB - backPrevDistance) : fabs(currentEncoderA - backPrevDistance);
+            double encoderChosen = (leadingEncoder == 1 && forwardAligning || leadingEncoder == 2 && !forwardAligning) ? currentEncoderB : currentEncoderA;
+            double backEncoderDist = fabs(encoderChosen - backPrevDistance);
 #if LOGGING_LEVEL >= 3
             serialLog((char*) "Begin encoder is: ", 3);
             serialLogln(backPrevDistance, 3);
@@ -569,7 +570,7 @@ uint8_t driveUntilNewTile()
 
             //idk why, but when dividing by 2 that gets us the true angle. The BackEncoderDist and lightDist seems to be correct vales, but the value we
             //end up getting from it is double what it should be. Maybe there's an issue with how I did it.
-            float radAngle = atan(backEncoderDist / lightDist) / 2.5;
+            float radAngle = atan(backEncoderDist / lightDist) / 2;
             //as a reminder, corresponding degrees = (pi/180) * x radians
 
             float degreesAngle = 180 / M_PI * radAngle;
@@ -610,18 +611,10 @@ uint8_t driveUntilNewTile()
         //otherwise, want to see which one crossed. This is cond1 XOR cond2 btw.
         else if(backPrevDistance == 0)
         {
-            //if the left one has crossed but the right hasn't, then just label that's the one crossing now.
-            if(leftEncoderChange)
-            {
-                leadingEncoder = 1;
-                backPrevDistance = currentEncoderB;
-            }
-            else
-            {
-                leadingEncoder = 2;
-                backPrevDistance = currentEncoderA;
-            }
-            
+            leadingEncoder = leftEncoderChange ? 1 : 2;
+            //this makes sense as if the left encoder first crossed but we're going backwards, that's encoder A that's behind. Meanwhile if the right
+            //encoder crossed first and we're going forwards, its encoder A that's behind too. In all other cases, its encoder B
+            backPrevDistance = (leftEncoderChange && !forwardAligning || rightEncoderChange && forwardAligning) ? currentEncoderA : currentEncoderB;            
         }
     }
     return 1;
