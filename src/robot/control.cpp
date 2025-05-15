@@ -146,6 +146,9 @@ void updateCritRange()
     
     criticalRangeA = fabs(encoderATarget - startEncoderAPos) / 2;
     criticalRangeB = fabs(encoderBTarget - startEncoderBPos) / 2;
+
+    //update it so that time since start is now equal to this. Only really care about this value after turns though
+    timeSinceTurn = millis();
 }
 
 void testTurn()
@@ -163,8 +166,6 @@ void testTurn()
 
     //compute the new crit range now that target and start encoder have changed
     updateCritRange();
-    //set the time since turn to the current value.
-    timeSinceTurn = millis();
 }
 
 // Sets up all the aspects needed for the bot to work
@@ -245,9 +246,25 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         
         double currentVelocityB = (currentEncoderB - prevPositionB) / loopDelaySeconds;
         profileB.currentVelocity = currentVelocityB;
-        
+
+        if(framesUntilPrint % 15 == 0)
+        {
+            serialLog((char*) "Motor A: ", 2);
+        }
+
         double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint, criticalRangeA);
+
+        if(framesUntilPrint % 15 == 0)
+        {
+            serialLog((char*) "Motor B: ", 2);
+        }
+
         double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint, criticalRangeB);
+
+        if(framesUntilPrint % 15 == 0)
+        {
+            serialLogln((char*) " ", 2);
+        }
         
         prevPositionA = currentEncoderA;        
         prevPositionB = currentEncoderB;
@@ -535,14 +552,14 @@ void startDriveTest() {
 //updates us to the next distance we're traveling
 void updateToNextDistance()
 {
-    serialLogln((char*) "changing direction!", 2);
+    serialLogln((char*) "changing direction!", 3);
     //this way if we're reversing, we're actually subtracting. if going forward was 0, then 0 * 2 - 1 = -1.
     //if going forward was 1, 1 * 2 - 1 = 1.
     encoderATarget = currentEncoderA + 1000 * (forwardAligning * 2 - 1);
     encoderBTarget = currentEncoderB + 1000 * (forwardAligning * 2 - 1);
 
-    serialLogln(encoderATarget, 2);
-    serialLogln(encoderBTarget, 2);
+    serialLogln(encoderATarget, 3);
+    serialLogln(encoderBTarget, 3);
 
     //update crit range yessir
     updateCritRange();
