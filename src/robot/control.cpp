@@ -125,7 +125,7 @@ void testEncoderPID()
     if (!testEncoderPID_value)
     {
         testEncoderPID_value = true;
-        encoderATarget = encoderBTarget = TICKS_PER_ROTATION;
+        encoderATarget = encoderBTarget = TICKS_PER_ROTATION*5;
     }
     else
     {
@@ -153,6 +153,7 @@ void updateCritRange()
 
 void testTurn()
 {
+    resetSpeed();
     
     serialLog("Changing destination angle to ", 2);
     serialLog(angle, 2);
@@ -247,15 +248,9 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         double currentVelocityB = (currentEncoderB - prevPositionB) / loopDelaySeconds;
         profileB.currentVelocity = currentVelocityB;
 
-        serialLog((char*) "Motor A: ", 2);
-
         double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint, criticalRangeA);
 
-        serialLog((char*) "Motor B: ", 2);
-
         double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint, criticalRangeB);
-
-        serialLogln((char*) "\n", 2);
         
         prevPositionA = currentEncoderA;        
         prevPositionB = currentEncoderB;
@@ -265,6 +260,10 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
         double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds) + leftFeedForward;
         double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds) + rightFeedForward;
+
+        
+#if LOGGING_LEVEL >= 4
+#endif
 
         if (leftMotorPower > 1) leftMotorPower = 1;
         if (leftMotorPower < -1) leftMotorPower = -1;
@@ -473,6 +472,7 @@ void drive(float tiles) {
 //drives the given amount of ticks
 void driveTicks(int tickDistance, std::string id)
 {    
+    resetSpeed();
     encoderATarget = currentEncoderA + tickDistance;
     encoderBTarget = currentEncoderB + tickDistance;
 
@@ -539,6 +539,12 @@ void readLight(int loopDelayMs) {
     }
 }
 
+void resetSpeed()
+{
+    profileA.targetVelocity = 0;
+    profileB.targetVelocity = 0;
+}
+
 // Test motor and encoder synchronization
 void startMotorAndEncoderTest() {
     (new MotorEncoderTest())->startMotorAndEncoderTest();
@@ -553,14 +559,15 @@ void startDriveTest() {
 //updates us to the next distance we're traveling
 void updateToNextDistance()
 {
-    serialLogln((char*) "changing direction!", 3);
     //this way if we're reversing, we're actually subtracting. if going forward was 0, then 0 * 2 - 1 = -1.
     //if going forward was 1, 1 * 2 - 1 = 1.
-    encoderATarget = currentEncoderA + 300 * (forwardAligning * 2 - 1);
-    encoderBTarget = currentEncoderB + 300 * (forwardAligning * 2 - 1);
-
+    encoderATarget = currentEncoderA + 2500 * (forwardAligning * 2 - 1);
+    encoderBTarget = currentEncoderB + 2500 * (forwardAligning * 2 - 1);
+#if LOGGING_LEVEL >= 3
+    serialLogln((char*) "changing direction!", 3);
     serialLogln(encoderATarget, 3);
     serialLogln(encoderBTarget, 3);
+#endif
 
     //update crit range yessir
     updateCritRange();
@@ -570,6 +577,7 @@ void updateToNextDistance()
 void createDriveUntilNewTile()
 {
     //set the next distance to travel
+    resetSpeed();
     updateToNextDistance();
     
     //assign values here, will detect when they change

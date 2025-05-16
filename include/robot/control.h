@@ -14,6 +14,7 @@ void startMotorAndEncoderTest();
 bool checkMoveFinished();
 void startDriveTest();
 bool checkIfCanUpdateMovement();
+void resetSpeed();
 void createDriveUntilNewTile();
 void determineNextChoice();
 uint8_t driveUntilNewTile();
