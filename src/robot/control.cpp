@@ -247,24 +247,15 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         double currentVelocityB = (currentEncoderB - prevPositionB) / loopDelaySeconds;
         profileB.currentVelocity = currentVelocityB;
 
-        if(framesUntilPrint % 15 == 0)
-        {
-            serialLog((char*) "Motor A: ", 2);
-        }
+        serialLog((char*) "Motor A: ", 2);
 
         double desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint, criticalRangeA);
 
-        if(framesUntilPrint % 15 == 0)
-        {
-            serialLog((char*) "Motor B: ", 2);
-        }
+        serialLog((char*) "Motor B: ", 2);
 
         double desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint, criticalRangeB);
 
-        if(framesUntilPrint % 15 == 0)
-        {
-            serialLogln((char*) " ", 2);
-        }
+        serialLogln((char*) "\n", 2);
         
         prevPositionA = currentEncoderA;        
         prevPositionB = currentEncoderB;
@@ -373,6 +364,16 @@ void determineNextAction()
         //set that new drive
         createDriveUntilNewTile();
         centeringStatus = 'E';
+
+        serialLog((char*)"Current encoder A: ", 2);
+        serialLogln(currentEncoderA, 2);
+        serialLog((char*)"Current encoder B: ", 2);
+        serialLogln(currentEncoderB, 2);
+        serialLog((char*)"Target encoder A: ", 2);
+        serialLogln(encoderATarget, 2);
+        serialLog((char*)"Target encoder B: ", 2);
+        serialLogln(encoderBTarget, 2);
+        
     }
     //if just aligned on a backward edge with the encoders in the back:
     else
@@ -555,8 +556,8 @@ void updateToNextDistance()
     serialLogln((char*) "changing direction!", 3);
     //this way if we're reversing, we're actually subtracting. if going forward was 0, then 0 * 2 - 1 = -1.
     //if going forward was 1, 1 * 2 - 1 = 1.
-    encoderATarget = currentEncoderA + 1000 * (forwardAligning * 2 - 1);
-    encoderBTarget = currentEncoderB + 1000 * (forwardAligning * 2 - 1);
+    encoderATarget = currentEncoderA + 300 * (forwardAligning * 2 - 1);
+    encoderBTarget = currentEncoderB + 300 * (forwardAligning * 2 - 1);
 
     serialLogln(encoderATarget, 3);
     serialLogln(encoderBTarget, 3);

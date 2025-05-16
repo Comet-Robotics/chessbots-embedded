@@ -75,31 +75,30 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     //is because sometimes critRange will be an even smaller number when we're moving very smaller distances (like when
     //we turn for edge alignment)
     if(absDistanceToGo < min(critRange, 75))
+    {
         profile.targetVelocity = 0;
+        serialLogln((char*) "WHYS IT PRINTING", 2);
+    }
 
     //use macros so that if we're not even logging, we won't eeven upload the code
 #if LOGGING_LEVEL >= 3
-    if(framesUntilprint % 15 == 0)
-    {
-        serialLog("Change in velocity was: ", 3);
-        serialLog(float(changeInVelocity), 3);
-        serialLog(", ", 3);
-        
-        serialLog("Motion profile is outputting: ", 3);
-        serialLog(float(profile.targetVelocity), 3);
-        serialLog(", ", 3);
+    serialLog("Change in velocity was: ", 3);
+    serialLog(float(changeInVelocity), 3);
+    serialLog(", ", 3);
+    
+    serialLog("Motion profile is outputting: ", 3);
+    serialLog(float(profile.targetVelocity), 3);
+    serialLog(", ", 3);
 
-        serialLog("Current Position: ", 3);
-        serialLog(float(profile.currentPosition), 3);
-        serialLog(", ", 3);
+    serialLog("Current Position: ", 3);
+    serialLog(float(profile.currentPosition), 3);
+    serialLog(", ", 3);
 
-        serialLog("Target Position: ", 3);
-        serialLog(float(profile.targetPosition), 3);
-        serialLog(", ", 3);
+    serialLog("Target Position: ", 3);
+    serialLogln(float(profile.targetPosition), 3);
 
-        serialLog("Stopping position: ", 3);
-        serialLogln(float(stoppingDistance), 3);
-    }
+    // serialLog("Stopping position: ", 3);
+    // serialLogln(float(stoppingDistance), 3);
 
 #endif
 
