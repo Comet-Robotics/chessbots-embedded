@@ -72,6 +72,18 @@ void handlePacket(JsonDocument packet) {
         int offsetTicks = radiansToTicks((float)packet["radians"]);
         startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
     }
+    else if (packet["type"] == TURN_BY_ANGLE) {
+        turn(packet["angle"], packet["packetId"]);
+    }
+    else if (packet["type"] == DRIVE_TILES) {
+        drive(packet["tiles"], packet["packetId"]);
+    }
+    else if (packet["type"] == TURN_BY_ANGLE) {
+        turn(packet["angle"], packet["packetId"]);
+    }
+    else if (packet["type"] == DRIVE_TILES) {
+        drive(packet["tiles"], packet["packetId"]);
+    }
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it

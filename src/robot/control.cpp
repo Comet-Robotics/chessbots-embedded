@@ -182,10 +182,31 @@ ControlSetting getRightMotorControl() {
     return rightMotorControl;
 }
 
-// Drives a specific amount of tiles (WIP)
+void setLeftMotorControl(ControlSetting control) {
+    leftMotorControl = control;
+}
+
+void setRightMotorControl(ControlSetting control) {
+    rightMotorControl = control;
+}
+
+ControlSetting getLeftMotorControl() {
+    return leftMotorControl;
+}
+
+ControlSetting getRightMotorControl() {
+    return rightMotorControl;
+}
+
 void drive(float tiles) {
     if (!getStoppedStatus()) {
-    }
+        const float TILE_SIZE_INCHES = 24;
+        float distanceInches = tiles * TILE_SIZE_INCHES;
+        float ticksPerInch = TICKS_PER_ROTATION / (WHEEL_DIAMETER_INCHES * M_PI);
+        int tickDistance = (int)(distanceInches * ticksPerInch);
+        driveTicks(tickDistance, "NULL");
+    }    
+    
 }
 
 void driveTicks(int tickDistance, std::string id)
