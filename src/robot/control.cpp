@@ -137,32 +137,40 @@ void controlLoop() {
         if (rightMotorPower < -1) rightMotorPower = -1;
 
         // serialLog(currentPositionEncoderA, 3);
-        // serialLog(",", 3);
-        // serialLog(currentPositionEncoderB, 3);
-        // serialLog(",", 3);
-        // serialLog((float) desiredVelocityA, 3);
-        // serialLog(",", 3);
-        // serialLog((float) desiredVelocityB, 3);
-        // serialLog(",", 3);
-        // serialLog((float) currentVelocityA, 3);
-        // serialLog(",", 3);
+        //  serialLog(",", 3);
+        //  serialLog(currentPositionEncoderB, 3);
+        //  serialLog(",", 3);
+        //  serialLog((float) desiredVelocityA, 3);
+        //  serialLog(",", 3);
+        //  serialLog((float) desiredVelocityB, 3);
+        //  serialLog(",", 3);
+        //  serialLog((float) currentVelocityA, 3);
+        //  serialLog(",", 3);
         // serialLog((float) currentVelocityB, 3);
         // serialLog(",", 3);
-        // serialLog((float) leftMotorPower, 3);
-        // serialLog(",", 3);
-        // serialLog((float) rightMotorPower, 3);
-        // serialLog(",", 3);
-        // // serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 3);
+        // // serialLog((float) leftMotorPower, 3);
         // // serialLog(",", 3);
-        // // serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        // // serialLog((float) rightMotorPower, 3);
         // // serialLog(",", 3);
-        // serialLogln((float) loopDelaySeconds, 3);
+        //  serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 3);
+        //  serialLog(",", 3);
+        //  serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 3); // TODO log results of trapezoidal profile into csv (on motor value graph)
+        //  serialLog(",", 3);
+        //  serialLog(isRobotPidAtTarget(), 3);
+        // // serialLog(",", 3);
+
+        // //  serialLogln((float) loopDelaySeconds, 3);
+         
 
         drive(
             leftMotorPower, // leftMotorPower,
             rightMotorPower, // rightMotorPower,
             "NULL"
         );
+
+        // serialLogln((float) leftMotorPower, 3);
+
+        // turn(M_PI / 2, "NULL");
     }
 }
 
@@ -182,29 +190,13 @@ ControlSetting getRightMotorControl() {
     return rightMotorControl;
 }
 
-void setLeftMotorControl(ControlSetting control) {
-    leftMotorControl = control;
-}
-
-void setRightMotorControl(ControlSetting control) {
-    rightMotorControl = control;
-}
-
-ControlSetting getLeftMotorControl() {
-    return leftMotorControl;
-}
-
-ControlSetting getRightMotorControl() {
-    return rightMotorControl;
-}
-
-void drive(float tiles) {
+void drive(float tiles, std::string id) {
     if (!getStoppedStatus()) {
         const float TILE_SIZE_INCHES = 24;
         float distanceInches = tiles * TILE_SIZE_INCHES;
         float ticksPerInch = TICKS_PER_ROTATION / (WHEEL_DIAMETER_INCHES * M_PI);
         int tickDistance = (int)(distanceInches * ticksPerInch);
-        driveTicks(tickDistance, "NULL");
+        driveTicks(tickDistance, id);
     }    
     
 }
@@ -244,6 +236,9 @@ void drive(float leftPower, float rightPower, std::string id) {
 }
 
 void turn(float angleRadians, std::string id) {
+
+    serialLogln("Turning", 3);
+    serialLogln((float) angleRadians, 3);
     int offsetTicks = radiansToTicks(angleRadians);
 
     if (getLeftMotorControl().mode == POSITION) {
@@ -276,7 +271,7 @@ boolean isRobotPidAtTarget() {
         return true;
 
     float POSITION_TOLERANCE = 100;
-    float VELOCITY_TOLERANCE = 200;
+    float VELOCITY_TOLERANCE = 6000;
 
     boolean leftAtTarget, rightAtTarget;
 
@@ -284,6 +279,15 @@ boolean isRobotPidAtTarget() {
     {
         leftAtTarget = (getLeftMotorControl().value - POSITION_TOLERANCE) <= profileA.currentPosition && profileA.currentPosition <= (getLeftMotorControl().value + POSITION_TOLERANCE)
                     && (-VELOCITY_TOLERANCE) <= profileA.currentVelocity && profileA.currentVelocity <= VELOCITY_TOLERANCE;
+
+                    serialLog("Left Position: ", 3);
+        serialLog((float)profileA.currentPosition, 3);
+        serialLog(", Target: ", 3);
+        serialLog(getLeftMotorControl().value, 3);
+        serialLog(", Velocity: ", 3);
+        serialLog((float)profileA.currentVelocity, 3);
+        serialLog(", At Target: ", 3);
+        serialLogln(leftAtTarget, 3);
     }
     else
     {
@@ -293,6 +297,15 @@ boolean isRobotPidAtTarget() {
     {
         rightAtTarget = (getRightMotorControl().value - POSITION_TOLERANCE) <= profileB.currentPosition && profileB.currentPosition <= (getRightMotorControl().value + POSITION_TOLERANCE)
                      && (-VELOCITY_TOLERANCE) <= profileB.currentVelocity && profileB.currentVelocity <= VELOCITY_TOLERANCE;
+
+                     serialLog("Right Position: ", 3);
+        serialLog((float)profileB.currentPosition, 3);
+        serialLog(", Target: ", 3);
+        serialLog(getRightMotorControl().value, 3);
+        serialLog(", Velocity: ", 3);
+        serialLog((float)profileB.currentVelocity, 3);
+        serialLog(", At Target: ", 3);
+        serialLogln(rightAtTarget, 3);
     }
     else
     {

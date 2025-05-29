@@ -29,7 +29,7 @@ ControlSetting getLeftMotorControl();
 ControlSetting getRightMotorControl();
 
 void setupBot();
-void drive(float tiles);
+void drive(float tiles, std::string id);
 void drive(float leftPower, float rightPower, std::string id);
 void driveTicks(int tickDistance, std::string id);
 void turn(float angleRadians, std::string id);

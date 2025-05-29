@@ -20,7 +20,15 @@ float fmap(float x, float in_min, float in_max, float out_min, float out_max) {
 int radiansToTicks(double angle) {
     double offsetInches = TRACK_WIDTH_INCHES * angle / 2;
     int offsetTicks = (int)(offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
-    // left subtracts this value, right adds this value
+    
+    // Add debug logging
+    serialLog("Turn angle (rad): ", 3);
+    serialLog((float) angle, 3);
+    serialLog(", Offset inches: ", 3);
+    serialLog((float) offsetInches, 3);
+    serialLog(", Offset ticks: ", 3);
+    serialLogln((float) offsetTicks, 3);
+    
     return offsetTicks;
 }
 

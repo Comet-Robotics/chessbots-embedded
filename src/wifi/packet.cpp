@@ -73,14 +73,12 @@ void handlePacket(JsonDocument packet) {
         startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
     }
     else if (packet["type"] == TURN_BY_ANGLE) {
-        turn(packet["angle"], packet["packetId"]);
+        turn(packet["deltaHeadingRadians"], packet["packetId"]);
     }
     else if (packet["type"] == DRIVE_TILES) {
         drive(packet["tiles"], packet["packetId"]);
     }
-    else if (packet["type"] == TURN_BY_ANGLE) {
-        turn(packet["angle"], packet["packetId"]);
-    }
+    
     else if (packet["type"] == DRIVE_TILES) {
         drive(packet["tiles"], packet["packetId"]);
     }
