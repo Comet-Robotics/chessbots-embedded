@@ -8,6 +8,7 @@
 #include "utils/timer.h"
 #include "wifi/connection.h"
 #include "utils/config.h"
+#include "utils/functions.h"
 #include <tuple>
 #include <queue>
 #include "robot/encoder.h"
@@ -182,12 +183,12 @@ void startCustomMotionProfileTimer(int leftPositionTarget, int rightPositionTarg
 {
     double maxAcceleration = 6000;
 
-    double maxPositionTarget = std::max(leftPositionTarget, rightPositionTarget);
-    double leftAcceleration = maxAcceleration * leftPositionTarget / maxPositionTarget;
-    double rightAcceleration = maxAcceleration * rightPositionTarget / maxPositionTarget;
+    double maxPositionTarget = std::max(std::abs(leftPositionTarget), std::abs(rightPositionTarget));
+    double leftAcceleration = maxAcceleration * std::abs(leftPositionTarget) / maxPositionTarget;
+    double rightAcceleration = maxAcceleration * std::abs(rightPositionTarget) / maxPositionTarget;
 
-    double leftSqrtValue = profileDuration*profileDuration - 4*leftPositionTarget/leftAcceleration;
-    double rightSqrtValue = profileDuration*profileDuration - 4*rightPositionTarget/rightAcceleration;
+    double leftSqrtValue = profileDuration*profileDuration - 4*std::abs(leftPositionTarget)/leftAcceleration;
+    double rightSqrtValue = profileDuration*profileDuration - 4*std::abs(rightPositionTarget)/rightAcceleration;
 
     if (leftSqrtValue < 0 || rightSqrtValue < 0)
     {
@@ -203,12 +204,29 @@ void startCustomMotionProfileTimer(int leftPositionTarget, int rightPositionTarg
 
     MotionProfile customProfileA = { maxVelocityLeft, leftAcceleration, 0, 0, (double)leftPositionTarget, 0 };
     MotionProfile customProfileB = { maxVelocityRight, rightAcceleration, 0, 0, (double)rightPositionTarget, 0 };
+    serialLogln("Custom motion profile timer...", 3);
+    serialLog("Left max vel: ", 3);
+    serialLog(maxVelocityLeft, 3);
+    serialLog(" Max accel: ", 3);
+    serialLog(leftAcceleration, 3);
+    serialLog(" Target: ", 3);
+    serialLogln(leftPositionTarget, 3);
+    serialLog("Right max vel: ", 3);
+    serialLog(maxVelocityRight, 3);
+    serialLog(" Max accel: ", 3);
+    serialLog(rightAcceleration, 3);
+    serialLog(" Target: ", 3);
+    serialLogln(rightPositionTarget, 3);
     customMotionProfileTimerFunction(customProfileA, customProfileB, loopDelayMilliseconds / 1000.0, id);
 }
 
 void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfile &customProfileB, double dt, std::string id)
 {
-    if (isRobotPidAtTarget()) {
+    if (approxEquals(customProfileA.targetPosition, customProfileA.currentPosition, PID_POSITION_TOLERANCE)
+     && approxEquals(customProfileA.currentVelocity, 0.0, PID_VELOCITY_TOLERANCE)
+     && approxEquals(customProfileB.targetPosition, customProfileB.currentPosition, PID_POSITION_TOLERANCE)
+     && approxEquals(customProfileB.currentVelocity, 0.0, PID_VELOCITY_TOLERANCE))
+    {
         if (id != "NULL")
         {
             createAndSendPacket(2, "success", id);
@@ -220,6 +238,9 @@ void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfi
     int currentPositionEncoderB = readRightEncoder();
     double currentVelocityA = (currentPositionEncoderA - customPrevPositionA) / dt;
     double currentVelocityB = (currentPositionEncoderB - customPrevPositionB) / dt;
+
+    customPrevPositionA = currentPositionEncoderA;
+    customPrevPositionB = currentPositionEncoderB;
 
     customProfileA.currentPosition = currentPositionEncoderA;
     customProfileA.currentVelocity = currentVelocityA;
