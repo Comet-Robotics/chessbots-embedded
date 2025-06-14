@@ -34,6 +34,9 @@ extern float MAX_VELOCITY_TPS;
 extern float MAX_ACCELERATION_TPSPS;
 extern float TILES_TO_TICKS;
 
+extern float PID_POSITION_TOLERANCE;
+extern float PID_VELOCITY_TOLERANCE;
+
 void setConfig(JsonObject config);
 
 #endif

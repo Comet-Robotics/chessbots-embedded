@@ -36,6 +36,9 @@ float MAX_VELOCITY_TPS = 39000;
 float MAX_ACCELERATION_TPSPS = 5000;
 float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
 
+float PID_POSITION_TOLERANCE = 100;
+float PID_VELOCITY_TOLERANCE = 6000;
+
 void setConfig(JsonObject config) {
     serialLogln("Setting Config...", 2);
 

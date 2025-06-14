@@ -17,17 +17,25 @@ float fmap(float x, float in_min, float in_max, float out_min, float out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+bool approxEquals(int x, int y, int epsilon) {
+    return std::abs(x-y) <= epsilon;
+}
+
+bool approxEquals(double x, double y, double epsilon) {
+    return std::abs(x-y) <= epsilon;
+}
+
 int radiansToTicks(double angle) {
     double offsetInches = TRACK_WIDTH_INCHES * angle / 2;
     int offsetTicks = (int)(offsetInches / (WHEEL_DIAMETER_INCHES * M_PI) * TICKS_PER_ROTATION);
     
     // Add debug logging
     serialLog("Turn angle (rad): ", 3);
-    serialLog((float) angle, 3);
+    serialLog(angle, 3);
     serialLog(", Offset inches: ", 3);
-    serialLog((float) offsetInches, 3);
+    serialLog(offsetInches, 3);
     serialLog(", Offset ticks: ", 3);
-    serialLogln((float) offsetTicks, 3);
+    serialLogln(offsetTicks, 3);
     
     return offsetTicks;
 }
