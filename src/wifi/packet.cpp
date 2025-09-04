@@ -18,6 +18,7 @@
 #include "utils/config.h"
 #include "robot/control.h"
 #include "robot/battery.h"
+#include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
 const char* CLIENT_HELLO = "CLIENT_HELLO";
@@ -29,6 +30,7 @@ const char* QUERY_RESPONSE = "QUERY_RESPONSE";
 const char* SET_VAR = "SET_VAR";
 const char* TURN_BY_ANGLE = "TURN_BY_ANGLE";
 const char* DRIVE_TILES = "DRIVE_TILES";
+const char* DRIVE_TICKS = "DRIVE_TICKS";
 const char* ACTION_SUCCESS = "ACTION_SUCCESS";
 const char* ACTION_FAIL = "ACTION_FAIL";
 const char* DRIVE_TANK = "DRIVE_TANK";
@@ -44,7 +46,9 @@ void handlePacket(JsonDocument packet) {
         setConfig(packet["config"].as<JsonObject>());
     } else if (packet["type"] == DRIVE_TANK) {
         // This is received when the bot is being manually controlled via the debug page
-        drive(packet["left"], packet["right"]);
+        drive(packet["left"], packet["right"], packet["packetId"]);
+    } else if (packet["type"] == DRIVE_TICKS){
+        driveTicks(packet["tickDistance"], packet["packetId"]);
     }
 }
 
@@ -59,9 +63,18 @@ void constructHelloPacket(JsonDocument& packet) {
     packet["macAddress"] = stringMac;
 }
 
-void constructSuccessPacket(JsonDocument& packet) {}
+//Note that the assigning of the messageId to the packetId happens in all the methods. One way to better
+//streamline this might be to make a general method "constructPacket" that just handles that. For now I
+//thought it wouldn't be necessary. As we get more types of messages this may be needed.
+void constructSuccessPacket(JsonDocument& packet, std::string messageId) {
+    packet["type"] = ACTION_SUCCESS;
+    packet["packetId"] = messageId;
+}
 
-void constructFailPacket(JsonDocument& packet) {}
+void constructFailPacket(JsonDocument& packet, std::string messageId) {
+    packet["type"] = ACTION_FAIL;
+    packet["packetId"] = messageId;
+}
 
 void constructPingPacket(JsonDocument& packet) {
     packet["type"] = PING_SEND;

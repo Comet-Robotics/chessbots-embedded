@@ -3,9 +3,10 @@
 
 // Built-In Libraries
 #include <vector>
+#include <functional>
 
 // This callback allows you to just pass in the pointer of a function as a parameter
-using TimerCallback = void (*)();
+using TimerCallback = std::function<void()>;
 struct Timer {
     // Whether the timer is cancelled after it finishes, or set to run again
     bool oneOff;

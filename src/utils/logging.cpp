@@ -14,37 +14,57 @@
 // Prints a value or message through Serial. (The console)
 // ln means it sends a new newline character
 
-void serialLog(char message[], int serialLoggingLevel) {
-    if (serialLoggingLevel <= LOGGING_LEVEL) Serial.print(message);
+void serialLog(const char *message, int serialLoggingLevel)
+{
+    if (serialLoggingLevel <= LOGGING_LEVEL)
+        Serial.print(message);
 }
 
-void serialLog(int value, int serialLoggingLevel) {
-    if (serialLoggingLevel <= LOGGING_LEVEL) Serial.print(value);
+void serialLog(int value, int serialLoggingLevel)
+{
+    if (serialLoggingLevel <= LOGGING_LEVEL)
+        Serial.print(value);
 }
 
-void serialLog(float value, int serialLoggingLevel) {
-    if (serialLoggingLevel <= LOGGING_LEVEL) Serial.print(value);
+void serialLog(float value, int serialLoggingLevel)
+{
+    if (serialLoggingLevel <= LOGGING_LEVEL)
+        Serial.print(value);
 }
 
-void serialLogln(char message[], int serialLoggingLevel) {
-    if (serialLoggingLevel <= LOGGING_LEVEL) Serial.println(message);
+void serialLog(std::string value, int serialLoggingLevel)
+{
+    serialLog(value.c_str(), serialLoggingLevel);
 }
 
-void serialLogln(int value, int serialLoggingLevel) {
-    if (serialLoggingLevel <= LOGGING_LEVEL) Serial.println(value);
+void serialLogln(const char *message, int serialLoggingLevel)
+{
+    if (serialLoggingLevel <= LOGGING_LEVEL)
+        Serial.println(message);
 }
 
-void serialLogln(float value, int serialLoggingLevel) {
-    if (serialLoggingLevel <= LOGGING_LEVEL) Serial.println(value);
+void serialLogln(int value, int serialLoggingLevel)
+{
+    if (serialLoggingLevel <= LOGGING_LEVEL)
+        Serial.println(value);
 }
 
-void serialLogln(std::string value, int serialLoggingLevel) {
-    if (serialLoggingLevel <= LOGGING_LEVEL) Serial.println(value.c_str());
+void serialLogln(float value, int serialLoggingLevel)
+{
+    if (serialLoggingLevel <= LOGGING_LEVEL)
+        Serial.println(value);
+}
+
+void serialLogln(std::string value, int serialLoggingLevel)
+{
+    serialLogln(value.c_str(), serialLoggingLevel);
 }
 
 // This is used for specifically serialLogging errors
-void serialLogError(char message[], int error) {
-    if (LOGGING_LEVEL > 0) Serial.printf(message, error);
+void serialLogError(char message[], int error)
+{
+    if (LOGGING_LEVEL > 0)
+        Serial.printf(message, error);
 }
 
 #endif

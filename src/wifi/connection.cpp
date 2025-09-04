@@ -12,10 +12,11 @@
 #include <ArduinoJson.h>
 
 // Custom Libraries
+#include "wifi/packet.h"
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"
-#include "wifi/packet.h"
+
 #include "../env.h"
 
 bool serverConnecting = false;
@@ -24,20 +25,19 @@ WiFiClient client;
 
 // Called to connect to the server whose info is stored in env.h
 void connectServer() {
-    serialLogln((char*)"Connecting to Server...", 2);
+    serialLogln("Connecting to Server...", 2);
     if (client.connect(SERVER_IP, SERVER_PORT)) {
         // If successful, sets the connection status and stops trying to connect to the server
         setServerConnectionStatus(true);
         serverConnecting = false;
-        serialLogln((char*)"Connected to Server!", 2);
+        serialLogln("Connected to Server!", 2);
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
         if (DO_HANDSHAKE) { initiateHandshake(); }
-        if (DO_PINGING) {}
     } else {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
-        serialLogln((char*)"Connection To Server Failed! Retrying...", 2);
+        serialLogln("Connection To Server Failed! Retrying...", 2);
 
         timerDelay(HANDSHAKE_INTERVAL, &connectServer);
     }
@@ -47,14 +47,14 @@ void connectServer() {
 void disconnectServer() {
     setServerConnectionStatus(false);
     client.stop();
-    serialLogln((char*)"Disconnected From Server!", 2);
+    serialLogln("Disconnected From Server!", 2);
 }
 
 // If not connected to the server (whether by disconnect or by lost connection), reconnects
 void reconnectServer() {
     if (!serverConnecting) {
         setServerConnectionStatus(false);
-        serialLogln((char*)"Disconnected From Server! Reconnecting...", 2);
+        serialLogln("Disconnected From Server! Reconnecting...", 2);
         connectServer();
     }
 }
@@ -70,18 +70,6 @@ void initiateHandshake() {
     constructHelloPacket(packet);
     serialLogln((char*)"Sending Handshake...", 2);
     sendPacket(packet);
-}
-
-void pingServer() {
-    if (getServerConnectionStatus()) {
-        JsonDocument packet;
-        constructPingPacket(packet);
-        serialLogln((char*)"Sending Ping...", 4);
-        sendPacket(packet);
-    }
-
-    // Ping again after set amount of time
-    timerDelay(PING_INTERVAL, &pingServer);
 }
 
 // The buffer size is 500 characters. If there are issues right after
@@ -109,10 +97,10 @@ void acceptData() {
         JsonDocument packet;
         // This turns the character buffer into a fully formed JSON object
         deserializeJson(packet, rawPacket);
-        serialLog((char*)"Received Packet: ", 2);
+        serialLog("Received Packet: ", 2);
         // This takes that JSON object and prints it to Serial (the console) for debugging purposes
         if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-        serialLog((char*)"\n", 2);
+        serialLog("\n", 2);
 
         // Actually does something with the received packet
         handlePacket(packet);
@@ -125,10 +113,10 @@ void sendPacket(JsonDocument& packet) {
     serializeJson(packet, client);
     // Sends a delimiter character to mark the end of the packet
     client.write(';');
-    serialLogln((char*)"Sent Packet: ", 2);
+    serialLogln("Sent Packet: ", 2);
     // This takes that JSON object and prints it to Serial (the console) for debugging purposes
     if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-    serialLog((char*)"\n", 2);
+    serialLog("\n", 2);
 }
 
 #endif

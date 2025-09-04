@@ -13,5 +13,6 @@ void pingServer();
 
 void acceptData();
 void sendPacket(JsonDocument& packet);
+void createAndSendPacket(uint8_t priority, std::string message, std::string messageId);
 
 #endif
