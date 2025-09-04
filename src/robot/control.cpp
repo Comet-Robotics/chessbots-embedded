@@ -209,6 +209,9 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         if(isCentering)
         {
             updateCentering();
+        } else {
+            isCentering = true;
+            serialLogln("Centering again", 1);
         }
         
         // uint8_t status = driveUntilNewTile(onFirstTile);
@@ -331,7 +334,7 @@ void determineNextAction()
         {
             axisesAligned = 0;
             isCentering = false;
-            centeringStatus = 'F';
+            centeringStatus = 'S';
         }
         //otherwise restart the whole process for this next axis
         else
