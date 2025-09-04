@@ -18,7 +18,6 @@
 #include "utils/config.h"
 #include "robot/control.h"
 #include "robot/battery.h"
-#include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
 const char* CLIENT_HELLO = "CLIENT_HELLO";

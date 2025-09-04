@@ -9,10 +9,10 @@ void disconnectServer();
 void reconnectServer();
 bool checkServerConnection();
 void initiateHandshake();
-void pingServer();
 
 void acceptData();
 void sendPacket(JsonDocument& packet);
-void createAndSendPacket(uint8_t priority, std::string message, std::string messageId);
+void sendActionSuccess(std::string messageId);
+void sendActionFail(std::string messageId);
 
 #endif

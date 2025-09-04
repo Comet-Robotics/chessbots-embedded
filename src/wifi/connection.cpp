@@ -119,4 +119,18 @@ void sendPacket(JsonDocument& packet) {
     serialLog("\n", 2);
 }
 
+void sendActionSuccess(std::string messageId) {
+    JsonDocument packet;
+    constructSuccessPacket(packet, messageId);
+    serialLogln((char*)"Sending Action Success...", 2);
+    sendPacket(packet);
+}
+
+void sendActionFail(std::string messageId) {
+    JsonDocument packet;
+    constructFailPacket(packet, messageId);
+    serialLogln((char*)"Sending Action Success...", 2);
+    sendPacket(packet);
+}
+
 #endif

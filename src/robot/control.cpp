@@ -88,11 +88,9 @@ void setupBot() {
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
 void controlLoop(int loopDelayMs) {
-    if (DO_LIGHT_SENSOR_TEST)
-        readLight();
+    if (DO_LIGHT_SENSOR_TEST) readLight();
 
-    if (DO_ENCODER_TEST)
-        encoderLoop();
+    if (DO_ENCODER_TEST) encoderLoop();
 
     if (DO_PID) {
         //delay(5000); // Delay to prevent CPU overload
@@ -165,8 +163,7 @@ void drive(float tiles) {
 
 }
 
-void driveTicks(int tickDistance, std::string id)
-{
+void driveTicks(int tickDistance, std::string id) {
     encoderATarget = readLeftEncoder() + tickDistance;
     encoderBTarget = readRightEncoder() - tickDistance;
 
@@ -176,12 +173,9 @@ void driveTicks(int tickDistance, std::string id)
 void drive(float leftPower, float rightPower, std::string id) {
     // TODO: maybe move to motor.cpp?
     float minPower = 0.16;
-    if (leftPower < minPower && leftPower > -minPower)
-    {
+    if (leftPower < minPower && leftPower > -minPower) {
         leftPower = 0;
-    }
-    if (rightPower < minPower && rightPower > -minPower)
-    {
+    } if (rightPower < minPower && rightPower > -minPower) {
         rightPower = 0;
     }
 
@@ -190,10 +184,7 @@ void drive(float leftPower, float rightPower, std::string id) {
 
     //we only send null as id during our test drive. The only other time this drive method is called will be
     //when the server sends it, meaning it will have an id to send back.
-    if(id != "NULL")
-    {
-        createAndSendPacket(2, "success", id);   
-    }
+    if (id != "NULL") { sendActionSuccess(id); }
 }
 
 void turn(float angleRadians, std::string id) {
@@ -204,10 +195,7 @@ void turn(float angleRadians, std::string id) {
     encoderBTarget += offsetTicks;
 
     // TODO wait for pid to reach target
-    if (id != "NULL")
-    {
-        createAndSendPacket(2, "success", id);
-    }
+    if (id != "NULL") { sendActionSuccess(id); }
 }
 
 // Stops the bot in its tracks
