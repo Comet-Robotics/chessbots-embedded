@@ -6,7 +6,7 @@
 
 // Built-In Libraries
 #include "Arduino.h"
-#include <vector>
+#include <map>
 
 // Custom Libraries
 #include "utils/logging.h"
@@ -14,47 +14,53 @@
 // How to pass function from within a class (Uses a lambda that captures the class' pointer)
 // [this](){ func(); }
 
-std::vector<Timer> timers;
+std::map<unsigned long, Timer> timers;
 
 // Will run the function you provide after 'delay' amount of milliseconds.
 // Accepts a delay in milliseconds, and a function as a pointer
 // Returns the id of the timer
-size_t timerDelay(int delay, TimerCallback func) {
+unsigned long timerDelay(int delay, TimerCallback func) {
     // This uses a custom Timer struct (located in timer.h)
     Timer newTimer;
+    newTimer.id = micros();
     newTimer.oneOff = true;
     newTimer.delay = delay;
-    newTimer.lastMillis = millis();
     newTimer.func = func;
-    timers.push_back(newTimer);
-    // Returns the index of the new timer within the timers vector. This is used as the id
-    return timers.size()-1;
+    newTimer.lastMillis = millis();
+    timers[newTimer.id] = newTimer;
+    // Returns the id for modifying
+    return newTimer.id;
 }
 
-// Last I checked, this one didn't actually work...
-// Just uhh, be careful using it I guess. Probably has a bug
+// Will run the function you provide every 'interval' milliseconds.
 // Accepts an interval in milliseconds, and a function as a pointer
 // Returns the id of the timer
-size_t timerInterval(int interval, TimerCallback func) {
+unsigned long timerInterval(int interval, TimerCallback func) {
     // This uses a custom Timer struct (located in timer.h)
     Timer newTimer;
+    newTimer.id = micros();
     newTimer.oneOff = false;
     newTimer.delay = interval;
-    newTimer.lastMillis = millis();
     newTimer.func = func;
-    timers.push_back(newTimer);
-    // Returns the index of the new timer within the timers vector. This is used as the id
-    return timers.size()-1;
+    newTimer.lastMillis = millis();
+    timers[newTimer.id] = newTimer;
+    // Returns the id for modifying
+    return newTimer.id;
 }
 
-// Deletes the timer from the vector without conserving order
-// (Overwrites the timer at index 'id' with the vector's last item, then pops (deletes) last item)
-// We do it this way to avoid storing expired items that bloat the vector's size
-void timerCancel(size_t id) {
-    if (id <= timers.size()) {
-        timers[id] = timers.back();
-        timers.pop_back();
-    }
+// Returns the Timer struct associated with the id
+Timer getTimer(unsigned long id) {
+    return timers[id];
+}
+
+// Resets the time on an active timer
+void resetTimer(unsigned long id) {
+    timers[id].lastMillis = millis();
+}
+
+// Deletes the timer from the map
+void timerCancel(unsigned long id) {
+    timers.erase(id);
 }
 
 // Cancels all timers
@@ -64,16 +70,17 @@ void timerCancelAll() {
 
 // Checks timers for any expired ones
 void timerStep() {
-    for (size_t index = 0; index < timers.size();) {
-        // Checks if the timer
-        if (millis() - timers[index].lastMillis >= timers[index].delay) {
-            TimerCallback func = timers[index].func;
-            if (timers[index].oneOff) {
+    // Iterates through the timer map key value pairs
+    for (auto index = timers.begin(); index != timers.end();) {
+        unsigned long id = index->first;
+        if (millis() - timers[id].lastMillis >= timers[id].delay) {
+            TimerCallback func = timers[id].func;
+            if (timers[id].oneOff) {
                 // If the timer is one-off, cancel it after it expires
-                timerCancel(index);
+                timerCancel(id);
             } else {
                 // If the timer isn't one-off, refresh it after it expires
-                timers[index].lastMillis = millis();
+                resetTimer(id);
                 index++;
             }
 

@@ -14,14 +14,19 @@ struct Timer {
     int delay;
     // The time that the timer started (or refreshed in the case of non one-off timers)
     unsigned long lastMillis;
+    // The ID of the timer (Timestamp timer was created. Same as lastMillis for oneOffs)
+    unsigned long id;
     // The function to be run after the timer expires
     TimerCallback func;
 };
 
-size_t timerDelay(int delay, TimerCallback func);
-size_t timerInterval(int interval, TimerCallback func);
+unsigned long timerDelay(int delay, TimerCallback func);
+unsigned long timerInterval(int interval, TimerCallback func);
 
-void timerCancel(size_t index);
+Timer getTimer(unsigned long id);
+
+void resetTimer(unsigned long id);
+void timerCancel(unsigned long id);
 void timerCancelAll();
 
 void timerStep();
