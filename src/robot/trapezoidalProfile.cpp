@@ -11,7 +11,7 @@
 
 using namespace std;
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint, int critRange) {
+double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilPrint) {
     // distanceToGo = positive, you're still behind the target. || distanceToGo = negative, you're ahead.
     double distanceToGo = profile.targetPosition - profile.currentPosition;
 
@@ -77,14 +77,14 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
     //if we're getting close to our target, may as well just stop it. Note that the reason we have the min function
     //is because sometimes critRange will be an even smaller number when we're moving very smaller distances (like when
     //we turn for edge alignment)
-    if(absDistanceToGo < min(critRange, 75))
+    if(absDistanceToGo < min(profile.criticalRange, 75.0))
     {
         profile.targetVelocity = 0;
     }
 
-    //use macros so that if we're not even logging, we won't eeven upload the code
+    //use macros so that if we're not even logging, we won't even upload the code
 #if LOGGING_LEVEL >= 3
-    if(framesUntilprint == 0)
+    if(framesUntilPrint == 0)
     {
         serialLog("Change in velocity was: ", 3);
         serialLog(float(changeInVelocity), 3);

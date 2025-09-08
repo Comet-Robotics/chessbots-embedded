@@ -202,8 +202,8 @@ void startCustomMotionProfileTimer(int leftPositionTarget, int rightPositionTarg
     customPrevPositionA = readLeftEncoder();
     customPrevPositionB = readRightEncoder();
 
-    MotionProfile customProfileA = { maxVelocityLeft, leftAcceleration, 0, 0, (double)leftPositionTarget, 0 };
-    MotionProfile customProfileB = { maxVelocityRight, rightAcceleration, 0, 0, (double)rightPositionTarget, 0 };
+    MotionProfile customProfileA = {maxVelocityLeft, leftAcceleration, 0, 0, (double)leftPositionTarget, 0, fabs(leftPositionTarget - customPrevPositionA) / 2};
+    MotionProfile customProfileB = {maxVelocityRight, rightAcceleration, 0, 0, (double)rightPositionTarget, 0, fabs(rightPositionTarget - customPrevPositionB) / 2};
     serialLogln("Custom motion profile timer...", 3);
     serialLog("Left max vel: ", 3);
     serialLog(maxVelocityLeft, 3);
@@ -247,8 +247,8 @@ void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfi
     customProfileB.currentPosition = currentPositionEncoderB;
     customProfileB.currentVelocity = currentVelocityB;
 
-    float desiredVelocityLeft = updateTrapezoidalProfile(customProfileA, dt);
-    float desiredVelocityRight = updateTrapezoidalProfile(customProfileB, dt);
+    float desiredVelocityLeft = updateTrapezoidalProfile(customProfileA, dt, 0);
+    float desiredVelocityRight = updateTrapezoidalProfile(customProfileB, dt, 0);
 
     setLeftMotorControl({VELOCITY, desiredVelocityLeft});
     setRightMotorControl({VELOCITY, desiredVelocityRight});

@@ -101,10 +101,6 @@ float backPrevDistance = 0;
 bool leftEncoderChange = false;
 bool rightEncoderChange = false;
 
-//critical range is explained on a different line
-float criticalRangeA = 75;
-float criticalRangeB = 75;
-
 //determines basically what tile each encoder is one. false is one tile, true is the opposite tile.
 //it could be false = white and true = black, or false = black and white = true, doesn't really matter
 bool onFirstTile[4] = {false, false, false, false};
@@ -138,8 +134,8 @@ void updateCritRange()
     startEncoderAPos = profileA.currentPosition;
     startEncoderBPos = profileB.currentPosition;
     
-    criticalRangeA = fabs(profileA.targetPosition - startEncoderAPos) / 2;
-    criticalRangeB = fabs(profileB.targetPosition - startEncoderBPos) / 2;
+    profileA.criticalRange = fabs(profileA.targetPosition - startEncoderAPos) / 2;
+    profileB.criticalRange = fabs(profileB.targetPosition - startEncoderBPos) / 2;
 
     //update it so that time since start is now equal to this. Only really care about this value after turns though
     timeSinceTurn = millis();
@@ -161,6 +157,12 @@ void testTurn()
 
     //compute the new crit range now that target and start encoder have changed
     updateCritRange();
+}
+
+void testCentering()
+{
+    serialLogln("Running centering routine...", 2);
+    startCentering();
 }
 
 // Sets up all the aspects needed for the bot to work
@@ -187,6 +189,11 @@ void setupBot() {
         angle = 30;
         testTurn();
         timerInterval(5000, testTurn);
+    }
+
+    if (DO_CENTERING_TEST) {
+        testCentering();
+        timerInterval(5000, &testCentering);
     }
 }
 
@@ -241,14 +248,12 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         double desiredVelocityA, desiredVelocityB;
 
         if (getLeftMotorControl().mode == POSITION) {
-            profileA.targetPosition = getLeftMotorControl().value;
-            desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint, criticalRangeA);
+            desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint);
         } else {
             desiredVelocityA = getLeftMotorControl().value;
         }
         if (getRightMotorControl().mode == POSITION) {
-            profileB.targetPosition = getRightMotorControl().value;
-            desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint, criticalRangeB);
+            desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint);
         } else {
             desiredVelocityB = getRightMotorControl().value;
         }
@@ -462,8 +467,8 @@ bool checkMoveFinished()
     //beginning to speed up.
     //do this by seeing if the distance remaining is less than the midpoint distance from start to end, as by then we're at our max speed.
 
-    bool encoderAChecks = fabs(profileA.currentPosition - profileA.targetPosition) < criticalRangeA && fabs(profileA.currentVelocity) < 3;
-    bool encoderBChecks = fabs(profileB.currentPosition - profileB.targetPosition) < criticalRangeB  && fabs(profileB.currentVelocity) < 3;
+    bool encoderAChecks = fabs(profileA.currentPosition - profileA.targetPosition) < profileA.criticalRange && fabs(profileA.currentVelocity) < 3;
+    bool encoderBChecks = fabs(profileB.currentPosition - profileB.targetPosition) < profileB.criticalRange  && fabs(profileB.currentVelocity) < 3;
 
     //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, and means we should declare the movement finished.
     bool timerCheck = millis() - timeSinceTurn > 8000;
@@ -474,15 +479,23 @@ bool checkMoveFinished()
 //like the one above but just seeing if we can keep moving or not
 bool checkIfCanUpdateMovement()
 {
-    return fabs(profileA.currentPosition - profileA.targetPosition) < criticalRangeA && fabs(profileB.currentPosition - profileB.targetPosition) < criticalRangeB;
+    return fabs(profileA.currentPosition - profileA.targetPosition) < profileA.criticalRange && fabs(profileB.currentPosition - profileB.targetPosition) < profileB.criticalRange;
 }
 
 void setLeftMotorControl(ControlSetting control) {
     leftMotorControl = control;
+    if (control.mode == POSITION)
+        profileA.targetPosition = control.value;
+    else
+        profileA.targetVelocity = control.value;
 }
 
 void setRightMotorControl(ControlSetting control) {
     rightMotorControl = control;
+    if (control.mode == POSITION)
+        profileB.targetPosition = control.value;
+    else
+        profileB.targetVelocity = control.value;
 }
 
 ControlSetting getLeftMotorControl() {
