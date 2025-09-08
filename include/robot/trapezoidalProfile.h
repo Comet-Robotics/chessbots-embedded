@@ -1,6 +1,8 @@
 #ifndef CHESSBOT_TRAPEZOIDAL_PROFILE_H
 #define CHESSBOT_TRAPEZOIDAL_PROFILE_H
 
+#include <cstdint>
+
 struct MotionProfile {
     double maxVelocity;
     double maxAcceleration;
@@ -10,7 +12,7 @@ struct MotionProfile {
     double targetVelocity;
 };
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt);
+double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilprint, int critRange);
 
 template <typename T>
 T clamp(T value, T minValue, T maxValue) {

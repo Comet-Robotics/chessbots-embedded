@@ -27,6 +27,8 @@ extern gpio_num_t PHOTODIODE_B_PIN;
 extern gpio_num_t PHOTODIODE_C_PIN;
 extern gpio_num_t PHOTODIODE_D_PIN;
 
+extern gpio_num_t ONBOARD_LED_PIN;
+
 extern int TICKS_PER_ROTATION;
 extern float TRACK_WIDTH_INCHES;
 extern float WHEEL_DIAMETER_INCHES;

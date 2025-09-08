@@ -17,6 +17,10 @@
 #include "../env.h"
 #include "robot/pidController.h"
 
+//alright SCREW YOU serial monitor i won't print every frame then if you wanna play that game
+const int8_t PRINT_INTERVAL = 60;
+int8_t framesUntilPrint = 60;
+
 // Setup gets run at startup
 void setup() {
     // Serial port for debugging purposes
@@ -34,6 +38,9 @@ void setup() {
 
     if (DO_DRIVE_TEST) startDriveTest();
 
+    delay(2000);
+
+    //start reading the light
     if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
 
     if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
@@ -44,9 +51,15 @@ void loop() {
     // Checks if any timers have expired
     timerStep();
 
-    if (!RUN_OFFLINE) {
+    if (!RUN_OFFLINE) 
+    {
         // Checks whether bot is still connected to WiFi. Reconnect if not
         if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
+        // Checks whether bot is still connected to the server. Reconnect if not
+        if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
+
+        // If the bot is connected to the server, check for received data, and accept it if available
+        if (getServerConnectionStatus()) acceptData();
         // Checks whether bot is still connected to the server. Reconnect if not
         if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
 
@@ -55,11 +68,16 @@ void loop() {
     }
 
     // Run control loop
-    controlLoop();
+    controlLoop(loopDelayMilliseconds, framesUntilPrint);
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
   	delay(loopDelayMilliseconds);
+    framesUntilPrint--;
+    if(framesUntilPrint < 0)
+    {
+        framesUntilPrint = PRINT_INTERVAL;
+    }
 }
 
 // This is used at the end of each file due to the name definition at the beginning

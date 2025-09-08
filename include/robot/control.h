@@ -35,12 +35,20 @@ void driveTicks(int tickDistance, std::string id);
 void turn(float angleRadians, std::string id);
 void stop();
 void sendPacketOnPidComplete(std::string id);
-void readLight();
+void readLight(int loopDelayMs);
 void startMotorAndEncoderTest();
+bool checkMoveFinished();
 void startDriveTest();
+bool checkIfCanUpdateMovement();
+void resetSpeed();
+void createDriveUntilNewTile();
+void determineNextChoice();
+uint8_t driveUntilNewTile();
 void driveTestOff();
-void controlLoop();
-
 boolean isRobotPidAtTarget();
+void updateCritRange();
+void controlLoop(int loopDelayMs, int8_t framesUntilPrint);
+void updateCentering();
+void updateToNextDistance();
 
 #endif
