@@ -182,7 +182,7 @@ void setupBot() {
 
     if (DO_PID_TEST) {
         testEncoderPID();
-        timerInterval(8000, &testEncoderPID);
+        timerInterval(12000, &testEncoderPID);
     }
     
     if (DO_TURN_TEST) {
