@@ -39,6 +39,7 @@ void readLight(int loopDelayMs);
 void startMotorAndEncoderTest();
 bool checkMoveFinished();
 void startDriveTest();
+void startCentering();
 bool checkIfCanUpdateMovement();
 void resetSpeed();
 void createDriveUntilNewTile();

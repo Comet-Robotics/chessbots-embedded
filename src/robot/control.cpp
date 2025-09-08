@@ -59,7 +59,7 @@ int encoderBHalfwayDist = 0;
 
 //when we receive a command from the website to center, set this from false to true,
 //then when the code sets it back to false, that's when we know we're done centering
-bool isCentering = true;
+bool isCentering = false;
 
 //holds the current status representing the progress in centering. The different values
 //are defined below
@@ -322,6 +322,16 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
     }
 }
 
+// start centering process
+void startCentering()
+{
+    if (!isCentering)
+    {
+        isCentering = true;
+        centeringStatus = 'S';
+    }
+}
+
 //this determines what our next action will be after an edge alignment, move to center, or axis turn.
 void determineNextAction()
 {
@@ -343,7 +353,7 @@ void determineNextAction()
             centeringStatus = 'S';
         }
     }
-    //if preivously moving to center for an axis, and finished:
+    //if previously moving to center for an axis, and finished:
     else if(movingCenter)
     {
         //now, turn to next direction
@@ -418,7 +428,7 @@ void updateCentering()
         {
             //continue driving forward
             uint8_t driveStatus = driveUntilNewTile();
-            //reminder status 3 = no leading encodere and driving finished
+            //reminder status 3 = no leading encoders and driving finished
             if(driveStatus == 3)
             {
                 //meaning we can now go in opposite direction.
@@ -455,7 +465,7 @@ bool checkMoveFinished()
     bool encoderAChecks = fabs(profileA.currentPosition - profileA.targetPosition) < criticalRangeA && fabs(profileA.currentVelocity) < 3;
     bool encoderBChecks = fabs(profileB.currentPosition - profileB.targetPosition) < criticalRangeB  && fabs(profileB.currentVelocity) < 3;
 
-    //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, annd means we should declare the movement finished.
+    //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, and means we should declare the movement finished.
     bool timerCheck = millis() - timeSinceTurn > 8000;
     
     return ((encoderAChecks && encoderBChecks) || timerCheck);
@@ -744,7 +754,7 @@ uint8_t driveUntilNewTile()
                 serialLog("Total distance encoder was behind is: ", 2);
                 serialLogln(backEncoderDist, 2);
 #endif
-                //remidner: angle = arctan(x/y), where x = backEncoderDist (like distance to our edge), and y = distance between two light sensors (put in manually)
+                //reminder: angle = arctan(x/y), where x = backEncoderDist (like distance to our edge), and y = distance between two light sensors (put in manually)
 
                 //idk why, but when dividing by 2 that gets us the true angle. The BackEncoderDist and lightDist seems to be correct vales, but the value we
                 //end up getting from it is double what it should be. Maybe there's an issue with how I did it.
@@ -757,7 +767,7 @@ uint8_t driveUntilNewTile()
                 serialLog(degreesAngle, 2);
                 serialLogln(" degrees.", 2);
                 
-                //we know postiive angle = turn left, negative angle means turn right.
+                //we know positive angle = turn left, negative angle means turn right.
                 //encoder 1 forward means turn left, encoder 2 forward means turn right.
                 //so 2 = -1, 1 = 1. If you plug those numbers in, that's what you get.
 
