@@ -7,7 +7,6 @@
 // Built-In Libraries
 #include "Arduino.h"
 #include <map>
-#include <vector>
 
 // Custom Libraries
 #include "utils/logging.h"
@@ -15,9 +14,8 @@
 // How to pass function from within a class (Uses a lambda that captures the class' pointer)
 // [this](){ func(); }
 
+// Stores all the timers, indexed by their id
 std::map<unsigned long, Timer> timers;
-// Timers that have expired and need to be deleted are added to this
-std::vector<unsigned long> choppingBlock;
 
 // Will run the function you provide after 'delay' amount of milliseconds.
 // Accepts a delay in milliseconds, and a function as a pointer
@@ -74,27 +72,24 @@ void timerCancelAll() {
 // Checks timers for any expired ones
 void timerStep() {
     // Iterates through the timer map key value pairs
-    for (auto index = timers.begin(); index != timers.end(); index++) {
+    for (auto index = timers.begin(); index != timers.end();) {
         unsigned long id = index->first;
         if (millis() - timers[id].lastMillis >= timers[id].delay) {
             TimerCallback func = timers[id].func;
             if (timers[id].oneOff) {
-                // If the timer is one-off, add it to a list
-                choppingBlock.push_back(id);
+                // If the timer is one-off, cancel it after it expires
+                index = timers.erase(index);
             } else {
                 // If the timer isn't one-off, refresh it after it expires
                 resetTimer(id);
+                index++;
             }
 
             // Calls the linked function
             func();
+        } else {
+            index++;
         }
-    }
-
-    // Cancel all the expired timers in the list
-    for (int i = 0; i < choppingBlock.size(); i++) {
-        timerCancel(choppingBlock.back());
-        choppingBlock.pop_back();
     }
 }
 
