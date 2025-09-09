@@ -16,10 +16,14 @@
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"
+#include "robot/control.h"
 
 #include "../env.h"
 
 bool serverConnecting = false;
+bool pinging = false;
+int missedPings = 0;
+unsigned long pingTimeoutTimer;
 
 WiFiClient client;
 
@@ -131,6 +135,31 @@ void sendActionFail(std::string messageId) {
     constructFailPacket(packet, messageId);
     serialLogln((char*)"Sending Action Success...", 2);
     sendPacket(packet);
+}
+
+void pingTimeout() {
+    missedPings++;
+    serialLog(missedPings, 2);
+    serialLogln((char*)" missed ping!", 2);
+    if (missedPings >= PING_MAX_MISSES) {
+        serialLogln((char*)"SERVER TIMED OUT!", 2);
+        stop();
+    }
+}
+
+void sendPingResponse() {
+    JsonDocument packet;
+    constructPingPacket(packet);
+    serialLogln((char*)"Sending Ping Response...", 2);
+    sendPacket(packet);
+    if (pinging) {
+        timerReset(pingTimeoutTimer);
+        missedPings = 0;
+    } else {
+        pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
+        serialLogln((char*)"Started Ping Timeout Timer", 2);
+        missedPings = 0;
+    }
 }
 
 #endif

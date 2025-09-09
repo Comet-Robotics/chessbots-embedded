@@ -14,5 +14,6 @@ void acceptData();
 void sendPacket(JsonDocument& packet);
 void sendActionSuccess(std::string messageId);
 void sendActionFail(std::string messageId);
+void sendPingResponse();
 
 #endif

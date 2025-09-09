@@ -19,6 +19,7 @@
 #include "robot/control.h"
 #include "robot/splines.h"
 #include "robot/battery.h"
+#include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
 const char* CLIENT_HELLO = "CLIENT_HELLO";
@@ -53,7 +54,6 @@ void handlePacket(JsonDocument packet) {
     } else if (packet["type"] == DRIVE_TICKS){
         driveTicks(packet["tickDistance"], packet["packetId"]);
     } else if (packet["type"] == ESTOP) {
-        setStoppedStatus(true);
         stop();
     } else if (packet["type"] == CUBIC) {
         Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
@@ -71,16 +71,12 @@ void handlePacket(JsonDocument packet) {
         serialLog("Going to spin!", 3);
         int offsetTicks = radiansToTicks((float)packet["radians"]);
         startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
-    }
-    else if (packet["type"] == TURN_BY_ANGLE) {
+    } else if (packet["type"] == TURN_BY_ANGLE) {
         turn(packet["deltaHeadingRadians"], packet["packetId"]);
-    }
-    else if (packet["type"] == DRIVE_TILES) {
+    } else if (packet["type"] == DRIVE_TILES) {
         drive(packet["tiles"], packet["packetId"]);
-    }
-    
-    else if (packet["type"] == DRIVE_TILES) {
-        drive(packet["tiles"], packet["packetId"]);
+    } else if (packet["type"] == PING_SEND) {
+        sendPingResponse();
     }
 }
 

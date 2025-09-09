@@ -577,6 +577,7 @@ void turn(float angleRadians, std::string id) {
 
 // Stops the bot in its tracks
 void stop() {
+    setStoppedStatus(true);
     setLeftPower(0);
     setRightPower(0);
 
