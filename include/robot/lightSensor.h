@@ -5,9 +5,10 @@
 #include "Arduino.h"
 
 void setupIR();
+void readGarbageVals();
 void activateIR();
 void deactivateIR();
-void startLightReading();
+void startLightReading(bool* onFirstTile, bool* waitingForLight);
 void readLightLevels();
 
 #endif

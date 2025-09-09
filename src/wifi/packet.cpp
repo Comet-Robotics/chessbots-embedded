@@ -17,6 +17,7 @@
 #include "utils/functions.h"
 #include "utils/config.h"
 #include "robot/control.h"
+#include "robot/splines.h"
 #include "robot/battery.h"
 
 // These are the various different supported message types that can be sent over TCP
@@ -34,6 +35,9 @@ const char* ACTION_SUCCESS = "ACTION_SUCCESS";
 const char* ACTION_FAIL = "ACTION_FAIL";
 const char* DRIVE_TANK = "DRIVE_TANK";
 const char* ESTOP = "ESTOP";
+const char* CUBIC = "DRIVE_CUBIC_SPLINE";
+const char* QUADRATIC = "DRIVE_QUADRATIC_SPLINE";
+const char* SPIN_RADIANS = "SPIN_RADIANS";
 
 // Takes a packet a does specific things based on the type
 void handlePacket(JsonDocument packet) {
@@ -48,6 +52,35 @@ void handlePacket(JsonDocument packet) {
         drive(packet["left"], packet["right"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TICKS){
         driveTicks(packet["tickDistance"], packet["packetId"]);
+    } else if (packet["type"] == ESTOP) {
+        setStoppedStatus(true);
+        stop();
+    } else if (packet["type"] == CUBIC) {
+        Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
+        Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
+        Point controlPositionA = {(float)packet["controlPositionA"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionA"]["y"]*TILES_TO_TICKS};
+        Point controlPositionB = {(float)packet["controlPositionB"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionB"]["y"]*TILES_TO_TICKS};
+        danceMonkeyCubic(packet["packetId"], startPosition, controlPositionA, controlPositionB, endPosition, packet["timeDeltaMs"]);
+    } else if (packet["type"] == QUADRATIC) {
+        serialLog("I have arrived!! at Quadratic", 3);
+        Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
+        Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
+        Point controlPosition = {(float)packet["controlPosition"]["x"]*TILES_TO_TICKS, (float)packet["controlPosition"]["y"]*TILES_TO_TICKS};
+        danceMonkeyQuadratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
+    } else if (packet["type"] == SPIN_RADIANS) {
+        serialLog("Going to spin!", 3);
+        int offsetTicks = radiansToTicks((float)packet["radians"]);
+        startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
+    }
+    else if (packet["type"] == TURN_BY_ANGLE) {
+        turn(packet["deltaHeadingRadians"], packet["packetId"]);
+    }
+    else if (packet["type"] == DRIVE_TILES) {
+        drive(packet["tiles"], packet["packetId"]);
+    }
+    
+    else if (packet["type"] == DRIVE_TILES) {
+        drive(packet["tiles"], packet["packetId"]);
     }
 }
 
