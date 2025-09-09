@@ -11,6 +11,8 @@
 // External Libraries
 #include <ArduinoJson.h>
 
+int loopDelayMilliseconds = 20;
+
 gpio_num_t MOTOR_A_PIN1 = GPIO_NUM_33;
 gpio_num_t MOTOR_A_PIN2 = GPIO_NUM_38;
 gpio_num_t MOTOR_B_PIN1 = GPIO_NUM_39;
@@ -21,17 +23,23 @@ gpio_num_t ENCODER_A_PIN2 = GPIO_NUM_21;
 gpio_num_t ENCODER_B_PIN1 = GPIO_NUM_16;
 gpio_num_t ENCODER_B_PIN2 = GPIO_NUM_17;
 
-gpio_num_t RELAY_IR_LED_PIN = GPIO_NUM_15;
+gpio_num_t RELAY_IR_LED_PIN = GPIO_NUM_11;
 gpio_num_t PHOTODIODE_A_PIN = GPIO_NUM_1;
 gpio_num_t PHOTODIODE_B_PIN = GPIO_NUM_2;
 gpio_num_t PHOTODIODE_C_PIN = GPIO_NUM_4;
 gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 
+gpio_num_t ONBOARD_LED_PIN = GPIO_NUM_15;
+
 int TICKS_PER_ROTATION = 12000;
 float TRACK_WIDTH_INCHES = 8.29;
 float WHEEL_DIAMETER_INCHES = 4.75;
 float MAX_VELOCITY_TPS = 39000;
-float MAX_ACCELERATION_TPSPS = 3500;
+float MAX_ACCELERATION_TPSPS = 5000;
+float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+
+float PID_POSITION_TOLERANCE = 100;
+float PID_VELOCITY_TOLERANCE = 6000;
 
 void setConfig(JsonObject config) {
     serialLogln("Setting Config...", 2);

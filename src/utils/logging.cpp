@@ -26,7 +26,7 @@ void serialLog(int value, int serialLoggingLevel)
         Serial.print(value);
 }
 
-void serialLog(float value, int serialLoggingLevel)
+void serialLog(double value, int serialLoggingLevel)
 {
     if (serialLoggingLevel <= LOGGING_LEVEL)
         Serial.print(value);
@@ -49,7 +49,7 @@ void serialLogln(int value, int serialLoggingLevel)
         Serial.println(value);
 }
 
-void serialLogln(float value, int serialLoggingLevel)
+void serialLogln(double value, int serialLoggingLevel)
 {
     if (serialLoggingLevel <= LOGGING_LEVEL)
         Serial.println(value);

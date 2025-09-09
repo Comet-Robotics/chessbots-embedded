@@ -27,14 +27,14 @@ void encoderLoop() {
 
     if(oldPositionA != newPosition_EncA){
         oldPositionA = newPosition_EncA;
-        serialLog("Encoder A: ", 2);
-        serialLogln(newPosition_EncA, 2);
+        serialLog("Encoder A: ", 4);
+        serialLogln(newPosition_EncA, 4);
     }
 
     if(oldPositionB != newPosition_EncB){
         oldPositionB = newPosition_EncB;
-        serialLog("Encoder B: ", 2);
-        serialLogln(newPosition_EncB, 2);
+        serialLog("Encoder B: ", 4);
+        serialLogln(newPosition_EncB, 4);
     }
 }
 

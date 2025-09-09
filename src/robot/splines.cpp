@@ -1,0 +1,259 @@
+#ifndef CHESSBOT_SPLINES_CPP
+#define CHESSBOT_SPLINES_CPP
+
+#include "robot/splines.h"
+#include "utils/logging.h"
+#include "robot/control.h"
+#include "robot/trapezoidalProfile.h"
+#include "utils/timer.h"
+#include "wifi/connection.h"
+#include "utils/config.h"
+#include "utils/functions.h"
+#include <tuple>
+#include <queue>
+#include "robot/encoder.h"
+#include <tuple>
+#include <cmath>
+
+
+
+void velocityUpdateTimerFunction(std::string id)
+{
+    // serialLogln("Update Timer was called", 3);
+    if (timeSlicesToExecute.size() == 0) {
+        if (id != "NULL")
+        {
+            createAndSendPacket(2, "success", id);
+        }
+        return;
+    }
+
+    float desiredVelocityLeft, desiredVelocityRight;
+    std::tie(desiredVelocityLeft, desiredVelocityRight) = timeSlicesToExecute.front();
+    setLeftMotorControl({VELOCITY, desiredVelocityLeft});
+    setRightMotorControl({VELOCITY, desiredVelocityRight});
+    timeSlicesToExecute.pop();
+
+    // 1ms delay ensures the function will run in the next loop
+    timerDelay(1, [id](){ velocityUpdateTimerFunction(id); });
+}
+
+
+void danceMonkeyCubic(std::string id, Point start, Point control1, Point control2, Point end, float totalTimeMs){
+    float trackWidth = TRACK_WIDTH_INCHES;
+
+    int steps = (int)(totalTimeMs / loopDelayMilliseconds); // 20ms steps
+    float dt = totalTimeMs / 1000 / steps;
+
+    for (int i = 0; i < steps; i++) {
+        float t = (float)i / steps;
+        float tNext = (float)(i + 1) / steps;
+
+        // Cubic Bezier Point at t
+        Point p = {
+            (float)(pow(1 - t, 3) * start.x +
+                    3 * pow(1 - t, 2) * t * control1.x +
+                    3 * (1 - t) * pow(t, 2) * control2.x +
+                    pow(t, 3) * end.x),
+            (float)(pow(1 - t, 3) * start.y +
+                    3 * pow(1 - t, 2) * t * control1.y +
+                    3 * (1 - t) * pow(t, 2) * control2.y +
+                    pow(t, 3) * end.y)
+        };
+
+        // Cubic Bezier Point at tNext
+        Point pNext = {
+            (float)(pow(1 - tNext, 3) * start.x +
+                    3 * pow(1 - tNext, 2) * tNext * control1.x +
+                    3 * (1 - tNext) * pow(tNext, 2) * control2.x +
+                    pow(tNext, 3) * end.x),
+            (float)(pow(1 - tNext, 3) * start.y +
+                    3 * pow(1 - tNext, 2) * tNext * control1.y +
+                    3 * (1 - tNext) * pow(tNext, 2) * control2.y +
+                    pow(tNext, 3) * end.y)
+        };
+
+        // Estimate linear velocity
+        float dx = pNext.x - p.x;
+        float dy = pNext.y - p.y;
+        float linearVelocity = sqrt(dx * dx + dy * dy) / dt;
+
+        // Estimate angular velocity
+        float theta1 = atan2(dy, dx);
+        float theta0;
+
+        if (i > 0) {
+            float tPrev = (float)(i - 1) / steps;
+        Point pPrev = {
+                (float)(pow(1 - tPrev, 3) * start.x +
+                        3 * pow(1 - tPrev, 2) * tPrev * control1.x +
+                        3 * (1 - tPrev) * pow(tPrev, 2) * control2.x +
+                        pow(tPrev, 3) * end.x),
+                (float)(pow(1 - tPrev, 3) * start.y +
+                        3 * pow(1 - tPrev, 2) * tPrev * control1.y +
+                        3 * (1 - tPrev) * pow(tPrev, 2) * control2.y +
+                        pow(tPrev, 3) * end.y)
+            };
+
+            theta0 = atan2(p.y - pPrev.y, p.x - pPrev.x);
+        } else {
+            theta0 = theta1;
+        }
+
+        float angularVelocity = (theta1 - theta0) / dt;
+
+        // Normalize angle diff
+        while (angularVelocity > M_PI) angularVelocity -= 2 * M_PI;
+        while (angularVelocity < -M_PI) angularVelocity += 2 * M_PI;
+
+        float trackWidthTicks = trackWidth * TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+
+        // Compute wheel velocities using differential drive model
+        float vLeft = linearVelocity - (angularVelocity * trackWidthTicks / 2);
+        float vRight = linearVelocity + (angularVelocity * trackWidthTicks / 2);
+
+        timeSlicesToExecute.push({vLeft, vRight});
+    }
+    velocityUpdateTimerFunction(id);
+}
+
+void danceMonkeyQuadratic(std::string id, Point start, Point control, Point end, float totalTimeMs) {
+    serialLogln("Quadratic Dancer was called", 3);
+    float trackWidth = TRACK_WIDTH_INCHES;
+    int steps = (int)(totalTimeMs / loopDelayMilliseconds); // 20ms steps
+    float dt = totalTimeMs / 1000 / steps;
+
+    for (int i = 0; i < steps; i++) {
+        float t = (float)i / steps;
+        float tNext = (float)(i + 1) / steps;
+
+        // Bezier point at t
+        Point p = {
+                (float)((1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * control.x + t * t * end.x),
+                (float)((1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * control.y + t * t * end.y)
+        };
+
+        // Bezier point at t + dt
+        Point pNext = {
+            (float)((1 - tNext) * (1 - tNext) * start.x + 2 * (1 - tNext) * tNext * control.x + tNext * tNext * end.x),
+            (float)((1 - tNext) * (1 - tNext) * start.y + 2 * (1 - tNext) * tNext * control.y + tNext * tNext * end.y)
+        };
+
+        // Velocity approximation
+        float dx = pNext.x - p.x;
+        float dy = pNext.y - p.y;
+        // dx *= 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+        // dy *= 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+        float linearVelocity = sqrt(dx * dx + dy * dy) / dt;
+
+        // Angular velocity approximation
+        float theta1 = atan2(dy, dx);
+        float theta0 = (i > 0) ? atan2(p.y - ((1 - (float)(i - 1) / steps) * (1 - (float)(i - 1) / steps) * start.y +
+            2 * (1 - (float)(i - 1) / steps) * ((float)(i - 1) / steps) * control.y +
+            ((float)(i - 1) / steps) * ((float)(i - 1) / steps) * end.y),
+            p.x - ((1 - (float)(i - 1) / steps) * (1 - (float)(i - 1) / steps) * start.x +
+            2 * (1 - (float)(i - 1) / steps) * ((float)(i - 1) / steps) * control.x +
+            ((float)(i - 1) / steps) * ((float)(i - 1) / steps) * end.x)) : theta1;
+        float angularVelocity = (theta1 - theta0) / dt;
+
+        // Normalize angle diff
+        while (angularVelocity > M_PI) angularVelocity -= 2 * M_PI;
+        while (angularVelocity < -M_PI) angularVelocity += 2 * M_PI;
+
+        float trackWidthTicks = trackWidth * TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+
+        // Differential drive kinematics
+        float vLeft = linearVelocity - (angularVelocity * trackWidthTicks / 2);
+        float vRight = linearVelocity + (angularVelocity * trackWidthTicks / 2);
+
+
+        timeSlicesToExecute.push({vLeft, vRight});
+        // serialLog(vLeft, 3);
+        // serialLog(", ", 3);
+        // serialLogln(vRight, 3);
+    }
+    velocityUpdateTimerFunction(id);
+}
+
+
+
+int customPrevPositionA = 0, customPrevPositionB = 0;
+
+void startCustomMotionProfileTimer(int leftPositionTarget, int rightPositionTarget, double profileDuration, std::string id)
+{
+    double maxAcceleration = 6000;
+
+    double maxPositionTarget = std::max(std::abs(leftPositionTarget), std::abs(rightPositionTarget));
+    double leftAcceleration = maxAcceleration * std::abs(leftPositionTarget) / maxPositionTarget;
+    double rightAcceleration = maxAcceleration * std::abs(rightPositionTarget) / maxPositionTarget;
+
+    double leftSqrtValue = profileDuration*profileDuration - 4*std::abs(leftPositionTarget)/leftAcceleration;
+    double rightSqrtValue = profileDuration*profileDuration - 4*std::abs(rightPositionTarget)/rightAcceleration;
+
+    if (leftSqrtValue < 0 || rightSqrtValue < 0)
+    {
+        createAndSendPacket(2, "fail", id);
+        return;
+    }
+
+    double maxVelocityLeft = (profileDuration - sqrt(leftSqrtValue))*leftAcceleration/2;
+    double maxVelocityRight = (profileDuration - sqrt(rightSqrtValue))*rightAcceleration/2;
+
+    customPrevPositionA = readLeftEncoder();
+    customPrevPositionB = readRightEncoder();
+
+    MotionProfile customProfileA = {maxVelocityLeft, leftAcceleration, 0, 0, (double)leftPositionTarget, 0, fabs(leftPositionTarget - customPrevPositionA) / 2};
+    MotionProfile customProfileB = {maxVelocityRight, rightAcceleration, 0, 0, (double)rightPositionTarget, 0, fabs(rightPositionTarget - customPrevPositionB) / 2};
+    serialLogln("Custom motion profile timer...", 3);
+    serialLog("Left max vel: ", 3);
+    serialLog(maxVelocityLeft, 3);
+    serialLog(" Max accel: ", 3);
+    serialLog(leftAcceleration, 3);
+    serialLog(" Target: ", 3);
+    serialLogln(leftPositionTarget, 3);
+    serialLog("Right max vel: ", 3);
+    serialLog(maxVelocityRight, 3);
+    serialLog(" Max accel: ", 3);
+    serialLog(rightAcceleration, 3);
+    serialLog(" Target: ", 3);
+    serialLogln(rightPositionTarget, 3);
+    customMotionProfileTimerFunction(customProfileA, customProfileB, loopDelayMilliseconds / 1000.0, id);
+}
+
+void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfile &customProfileB, double dt, std::string id)
+{
+    if (approxEquals(customProfileA.targetPosition, customProfileA.currentPosition, PID_POSITION_TOLERANCE)
+     && approxEquals(customProfileA.currentVelocity, 0.0, PID_VELOCITY_TOLERANCE)
+     && approxEquals(customProfileB.targetPosition, customProfileB.currentPosition, PID_POSITION_TOLERANCE)
+     && approxEquals(customProfileB.currentVelocity, 0.0, PID_VELOCITY_TOLERANCE))
+    {
+        if (id != "NULL")
+        {
+            createAndSendPacket(2, "success", id);
+        }
+        return;
+    }
+
+    int currentPositionEncoderA = readLeftEncoder();
+    int currentPositionEncoderB = readRightEncoder();
+    double currentVelocityA = (currentPositionEncoderA - customPrevPositionA) / dt;
+    double currentVelocityB = (currentPositionEncoderB - customPrevPositionB) / dt;
+
+    customPrevPositionA = currentPositionEncoderA;
+    customPrevPositionB = currentPositionEncoderB;
+
+    customProfileA.currentPosition = currentPositionEncoderA;
+    customProfileA.currentVelocity = currentVelocityA;
+    customProfileB.currentPosition = currentPositionEncoderB;
+    customProfileB.currentVelocity = currentVelocityB;
+
+    float desiredVelocityLeft = updateTrapezoidalProfile(customProfileA, dt, 0);
+    float desiredVelocityRight = updateTrapezoidalProfile(customProfileB, dt, 0);
+
+    setLeftMotorControl({VELOCITY, desiredVelocityLeft});
+    setRightMotorControl({VELOCITY, desiredVelocityRight});
+
+    timerDelay(1, [&customProfileA, &customProfileB, dt, id](){ customMotionProfileTimerFunction(customProfileA, customProfileB, dt, id); });
+}
+
+#endif

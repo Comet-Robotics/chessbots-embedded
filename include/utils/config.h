@@ -7,6 +7,8 @@
 // external Libraries
 #include <ArduinoJson.h>
 
+extern int loopDelayMilliseconds;
+
 // These variables are declared here, and defined in config.cpp
 // config.cpp is the only file that should be modifying these values. Everything else is read-only
 extern gpio_num_t MOTOR_A_PIN1;
@@ -25,11 +27,17 @@ extern gpio_num_t PHOTODIODE_B_PIN;
 extern gpio_num_t PHOTODIODE_C_PIN;
 extern gpio_num_t PHOTODIODE_D_PIN;
 
+extern gpio_num_t ONBOARD_LED_PIN;
+
 extern int TICKS_PER_ROTATION;
 extern float TRACK_WIDTH_INCHES;
 extern float WHEEL_DIAMETER_INCHES;
 extern float MAX_VELOCITY_TPS;
 extern float MAX_ACCELERATION_TPSPS;
+extern float TILES_TO_TICKS;
+
+extern float PID_POSITION_TOLERANCE;
+extern float PID_VELOCITY_TOLERANCE;
 
 void setConfig(JsonObject config);
 

@@ -6,6 +6,7 @@
 
 bool wifiConnected = false;
 bool serverConnected = false;
+bool botStopped = false;
 
 bool getWiFiConnectionStatus() {
     return wifiConnected;
@@ -19,6 +20,14 @@ bool getServerConnectionStatus() {
 }
 void setServerConnectionStatus(bool value) {
     serverConnected = value;
+}
+
+bool getStoppedStatus() {
+    return botStopped;
+}
+
+void setStoppedStatus(bool value) {
+    botStopped = value;
 }
 
 #endif
