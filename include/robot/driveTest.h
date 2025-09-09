@@ -16,7 +16,7 @@ private:
     float prevEncVelA;
     float prevEncVelB;
     float maxEncoderAccel = 0;
-    int encoderCheckTimerId;
+    unsigned long encoderCheckTimerId;
     bool testSuccessful;
     const int ENCODER_TOLERANCE = 100;
 
