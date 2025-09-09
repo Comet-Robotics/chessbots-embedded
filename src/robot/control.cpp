@@ -545,9 +545,10 @@ void drive(float leftPower, float rightPower, std::string id) {
         setLeftPower(leftPower);
         setRightPower(rightPower);
 
-    //we only send null as id during our test drive. The only other time this drive method is called will be
-    //when the server sends it, meaning it will have an id to send back.
-    if (id != "NULL") { sendActionSuccess(id); }
+        //we only send null as id during our test drive. The only other time this drive method is called will be
+        //when the server sends it, meaning it will have an id to send back.
+        if (id != "NULL") { sendActionSuccess(id); }
+    }
 }
 
 //turns the given amount in radians
@@ -630,10 +631,10 @@ boolean isRobotPidAtTarget() {
 
 void sendPacketOnPidComplete(std::string id) {
     if (!DO_PID)
-        createAndSendPacket(2, "fail", id);
+        sendActionFail(id);
 
     if (isRobotPidAtTarget()) {
-        createAndSendPacket(2, "success", id);
+        sendActionSuccess(id);
     } else {
         // Run on next loop
         timerDelay(1, [id](){ sendPacketOnPidComplete(id); });

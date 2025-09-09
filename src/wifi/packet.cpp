@@ -109,7 +109,7 @@ void constructFailPacket(JsonDocument& packet, std::string messageId) {
 }
 
 void constructPingPacket(JsonDocument& packet) {
-    packet["type"] = PING_SEND;
+    packet["type"] = PING_RESPONSE;
     packet["batteryLevel"] = getBatteryLevel();
 }
 
