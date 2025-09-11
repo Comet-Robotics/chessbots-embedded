@@ -144,6 +144,9 @@ void pingTimeout() {
     if (missedPings >= PING_MAX_MISSES) {
         serialLogln((char*)"SERVER TIMED OUT!", 2);
         stop();
+        pinging = false;
+    } else {
+        pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
     }
 }
 
@@ -154,12 +157,12 @@ void sendPingResponse() {
     sendPacket(packet);
     if (pinging) {
         timerReset(pingTimeoutTimer);
-        missedPings = 0;
     } else {
         pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
         serialLogln((char*)"Started Ping Timeout Timer", 2);
-        missedPings = 0;
+        pinging = true;
     }
+    missedPings = 0;
 }
 
 #endif
