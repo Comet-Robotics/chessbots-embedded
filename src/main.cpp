@@ -21,7 +21,7 @@
 //alright SCREW YOU serial monitor i won't print every frame then if you wanna play that game
 const int8_t PRINT_INTERVAL = 60;
 int8_t framesUntilPrint = 60;
-Magnet magnet;
+Magnet* magnet = nullptr; // Declare a pointer to Magnet
 
 // Setup gets run at startup
 void setup() {
@@ -31,9 +31,11 @@ void setup() {
     delay(STARTUP_DELAY);
     serialLogln("Finished Delay!", 2);
 
-
     // Any setup needed to get bot ready
     setupBot();
+
+    // Initialize the Magnet object
+    magnet = new Magnet();
 
     // Create a WiFi network for the laptop to connect to
     if (!RUN_OFFLINE) connectWiFI();
@@ -71,8 +73,8 @@ void loop() {
 
     // Run control loop
     controlLoop(loopDelayMilliseconds, framesUntilPrint);
-    MagnetReading mag_data = magnet.read_calibrated_data();
-    float heading = magnet.getCompassDegree(mag_data);
+    MagnetReading mag_data = magnet->read_calibrated_data();
+    float heading = magnet->getCompassDegree(mag_data);
     serialLogln(heading, 1);
 
     // This delay determines how often the code in loop is run
