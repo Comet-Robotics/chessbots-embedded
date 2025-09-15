@@ -73,9 +73,11 @@ void loop() {
 
     // Run control loop
     controlLoop(loopDelayMilliseconds, framesUntilPrint);
+
+    // test magnet data
     MagnetReading mag_data = magnet->read_calibrated_data();
     float heading = magnet->getCompassDegree(mag_data);
-    serialLogln(heading, 1);
+    serialLogln(heading, 3);
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
