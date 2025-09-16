@@ -31,8 +31,8 @@ TrapezoidProfile::Constraints profileConstraints(MAX_VELOCITY_TPS, MAX_ACCELERAT
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint;
-PIDController encoderAVelocityController(0.00004, 0.000001, 0.00000, -1, +1); // Blue
-PIDController encoderBVelocityController(0.00004, 0.000001, 0.00000, -1, +1); //Red
+PIDController encoderAVelocityController(0.00004, 0.000005, 0.00000, -1, +1); // Blue
+PIDController encoderBVelocityController(0.00004, 0.000005, 0.00000, -1, +1); //Red
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;

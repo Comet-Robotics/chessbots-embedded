@@ -12,8 +12,8 @@ with Path('pid_test.csv').open('r') as f:
     for row in reader:
         for k in keys:
             val = int(row[k]) if "." not in row[k] else float(row[k])
-            if "Left" in k:
-                val *= -1 # Correct for rotation test
+            # if "Left" in k:
+            #     val *= -1 # Correct for rotation test
             lists[k].append(val)
 
     # power_deadzone = [0.15] * len(lists["EncoderLeft"])
