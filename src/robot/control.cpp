@@ -25,8 +25,12 @@
 
 #include "robot/profiledPIDController.h"
 #include "robot/trapezoidalProfileNew.h"
+#include "robot/magnet.h"
 
-//PLEASE ONLY USE CHESSBOT #4 FOR TESTING
+
+Magnet *magnet = nullptr; // Declare a pointer to Magnet
+
+// pid constants
 TrapezoidProfile::Constraints profileConstraints(MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS);
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
@@ -181,6 +185,7 @@ void setupBot() {
     setupMotors();
     setupIR();
     setupEncodersNew();
+    magnet = new Magnet();
     serialLogln("Bot Set Up!", 2);
 
     encoderAVelocityController.Reset();
@@ -332,9 +337,13 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         serialLog(",", 3);
         serialLog(currentVelocityB, 3);
         serialLog(",", 3);
-        serialLogln(rightSetpoint.velocity - currentVelocityB, 3);
+        serialLog(rightSetpoint.velocity - currentVelocityB, 3);
+        serialLog(",", 3);
+        // test magnet data
+        float heading = magnet->readDegrees();
+        serialLogln(heading, 3);
 
-        #endif
+#endif
 
         drive(
             leftMotorPower, // leftMotorPower,
