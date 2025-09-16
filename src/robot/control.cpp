@@ -31,8 +31,8 @@ TrapezoidProfile::Constraints profileConstraints(MAX_VELOCITY_TPS, MAX_ACCELERAT
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint;
-PIDController encoderAVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); // Blue
-PIDController encoderBVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Red
+PIDController encoderAVelocityController(0.00004, 0.000001, 0.00000, -1, +1); // Blue
+PIDController encoderBVelocityController(0.00004, 0.000001, 0.00000, -1, +1); //Red
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -286,42 +286,54 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         
         if(framesUntilPrint == 0)
         {
-            serialLog("Current encoder A pos: ", 2);
-            serialLog(currentPositionEncoderA, 2);
-            serialLog(", ", 2);
-            serialLog("Current encoder B pos: ", 2);
-            serialLog(currentPositionEncoderB, 2);
-            serialLog(", ", 2);
-            serialLog("Desired encoder A speed: ", 2);
-            serialLog(leftSetpoint.velocity, 2);
-            serialLog(", ", 2);
-            serialLog("Desired encoder B speed: ", 2);
-            serialLog(rightSetpoint.velocity, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder a speed: ", 2);
-            serialLog(currentVelocityA, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder b speed: ", 2);
-            serialLog(currentVelocityB, 2);
-            serialLog(", ", 2);
-            serialLog("current left motor power: ", 2);
-            serialLog(leftMotorPower, 2);
-            serialLog(", ", 2);
-            serialLog("current right motor power: ", 2);
-            serialLog(rightMotorPower, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder a target: ", 2);
-            serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder b target: ", 2);
-            serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 2); // TODO log results of trapezoidal profile into csv (on motor value graph)
-            serialLog(", ", 2);
-            serialLog("is robot pid at target? ", 2);
-            serialLog(isRobotPidAtTarget(), 2);
-            serialLog(", ", 2);
-            serialLogln(loopDelaySeconds, 2);
+            // serialLog("Current encoder A pos: ", 2);
+            // serialLog(currentPositionEncoderA, 2);
+            // serialLog(", ", 2);
+            // serialLog("Current encoder B pos: ", 2);
+            // serialLog(currentPositionEncoderB, 2);
+            // serialLog(", ", 2);
+            // serialLog("Desired encoder A speed: ", 2);
+            // serialLog(leftSetpoint.velocity, 2);
+            // serialLog(", ", 2);
+            // serialLog("Desired encoder B speed: ", 2);
+            // serialLog(rightSetpoint.velocity, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder a speed: ", 2);
+            // serialLog(currentVelocityA, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder b speed: ", 2);
+            // serialLog(currentVelocityB, 2);
+            // serialLog(", ", 2);
+            // serialLog("current left motor power: ", 2);
+            // serialLog(leftMotorPower, 2);
+            // serialLog(", ", 2);
+            // serialLog("current right motor power: ", 2);
+            // serialLog(rightMotorPower, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder a target: ", 2);
+            // serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder b target: ", 2);
+            // serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 2); // TODO log results of trapezoidal profile into csv (on motor value graph)
+            // serialLog(", ", 2);
+            // serialLog("is robot pid at target? ", 2);
+            // serialLog(isRobotPidAtTarget(), 2);
+            // serialLog(", ", 2);
+            // serialLogln(loopDelaySeconds, 2);
         }
-        
+    
+        serialLog(leftSetpoint.velocity, 3);
+        serialLog(",", 3);
+        serialLog(currentVelocityA, 3);
+        serialLog(",", 3);
+        serialLog(leftSetpoint.velocity - currentVelocityA, 3);
+        serialLog(",", 3);
+        serialLog(rightSetpoint.velocity, 3);
+        serialLog(",", 3);
+        serialLog(currentVelocityB, 3);
+        serialLog(",", 3);
+        serialLogln(rightSetpoint.velocity - currentVelocityB, 3);
+
         #endif
 
         drive(
