@@ -138,31 +138,35 @@ void sendActionFail(std::string messageId) {
 }
 
 void pingTimeout() {
-    missedPings++;
-    serialLog(missedPings, 2);
-    serialLogln((char*)" missed ping!", 2);
-    if (missedPings >= PING_MAX_MISSES) {
-        serialLogln((char*)"SERVER TIMED OUT!", 2);
-        stop();
-        pinging = false;
-    } else {
-        pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
+    if (DO_PINGING) {
+        missedPings++;
+        serialLog(missedPings, 2);
+        serialLogln((char*)" missed ping!", 2);
+        if (missedPings >= PING_MAX_MISSES) {
+            serialLogln((char*)"SERVER TIMED OUT!", 2);
+            stop();
+            pinging = false;
+        } else {
+            pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
+        }
     }
 }
 
 void sendPingResponse() {
-    JsonDocument packet;
-    constructPingPacket(packet);
-    serialLogln((char*)"Sending Ping Response...", 2);
-    sendPacket(packet);
-    if (pinging) {
-        timerReset(pingTimeoutTimer);
-    } else {
-        pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
-        serialLogln((char*)"Started Ping Timeout Timer", 2);
-        pinging = true;
+    if (DO_PINGING) {
+        JsonDocument packet;
+        constructPingPacket(packet);
+        serialLogln((char*)"Sending Ping Response...", 2);
+        sendPacket(packet);
+        if (pinging) {
+            timerReset(pingTimeoutTimer);
+        } else {
+            pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
+            serialLogln((char*)"Started Ping Timeout Timer", 2);
+            pinging = true;
+        }
+        missedPings = 0;
     }
-    missedPings = 0;
 }
 
 #endif
