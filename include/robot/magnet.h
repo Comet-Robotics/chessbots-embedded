@@ -19,7 +19,7 @@ class Magnet {
         float getCompassDegree(struct MagnetReading mag);
         float readDegrees();
     private:
-        float hard_iron_offset[3] = { 23.71, 5.45, 8.27 };
+        float hard_iron_offset[3] = { -23.71, -5.45, -8.27 };
         float soft_iron_matrix[3][3] = {
             { 1.017, -0.024, 0.023 },
             { -0.024, 0.994, 0.002 },
