@@ -16,10 +16,14 @@
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"
+#include "robot/control.h"
 
 #include "../env.h"
 
 bool serverConnecting = false;
+bool pinging = false;
+int missedPings = 0;
+unsigned long pingTimeoutTimer;
 
 WiFiClient client;
 
@@ -33,17 +37,13 @@ void connectServer() {
         serialLogln("Connected to Server!", 2);
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
-        if (DO_HANDSHAKE) {
-            createAndSendPacket(2, "hello", "Hello");
-        }
-    } 
-    else 
-    {
+        if (DO_HANDSHAKE) { initiateHandshake(); }
+    } else {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
         serialLogln("Connection To Server Failed! Retrying...", 2);
 
-        timerDelay(5000, &connectServer);
+        timerDelay(HANDSHAKE_INTERVAL, &connectServer);
     }
 }
 
@@ -66,6 +66,14 @@ void reconnectServer() {
 // Checks whether still connected to server
 bool checkServerConnection() {
     return client.connected();
+}
+
+// Sends an initial packet to the server. Contains the mac address of this bot
+void initiateHandshake() {
+    JsonDocument packet;
+    constructHelloPacket(packet);
+    serialLogln((char*)"Sending Handshake...", 2);
+    sendPacket(packet);
 }
 
 // The buffer size is 500 characters. If there are issues right after
@@ -115,28 +123,46 @@ void sendPacket(JsonDocument& packet) {
     serialLog("\n", 2);
 }
 
-//Additional method created to call the construction of the packet and then to send it.
-void createAndSendPacket(uint8_t priority, std::string message, std::string messageId)
-{
+void sendActionSuccess(std::string messageId) {
     JsonDocument packet;
-    //How I have it right now is it calls the different packet messages according to the message. Might
-    //be inefficient and require changing.
-    if(message == "hello")
-    {
-        serialLogln("Sending handshake...", priority);
-        constructHelloPacket(packet);
-    }
-    else if(message == "success")
-    {
-        serialLogln("Action succeeded!", priority);
-        constructSuccessPacket(packet, messageId);
-    }
-    else if(message == "fail")
-    {
-        serialLogln("Action failed!", priority);
-        constructFailPacket(packet, messageId);
-    }
+    constructSuccessPacket(packet, messageId);
+    serialLogln((char*)"Sending Action Success...", 2);
     sendPacket(packet);
+}
+
+void sendActionFail(std::string messageId) {
+    JsonDocument packet;
+    constructFailPacket(packet, messageId);
+    serialLogln((char*)"Sending Action Success...", 2);
+    sendPacket(packet);
+}
+
+void pingTimeout() {
+    missedPings++;
+    serialLog(missedPings, 2);
+    serialLogln((char*)" missed ping!", 2);
+    if (missedPings >= PING_MAX_MISSES) {
+        serialLogln((char*)"SERVER TIMED OUT!", 2);
+        stop();
+        pinging = false;
+    } else {
+        pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
+    }
+}
+
+void sendPingResponse() {
+    JsonDocument packet;
+    constructPingPacket(packet);
+    serialLogln((char*)"Sending Ping Response...", 2);
+    sendPacket(packet);
+    if (pinging) {
+        timerReset(pingTimeoutTimer);
+    } else {
+        pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
+        serialLogln((char*)"Started Ping Timeout Timer", 2);
+        pinging = true;
+    }
+    missedPings = 0;
 }
 
 #endif

@@ -21,10 +21,7 @@ void velocityUpdateTimerFunction(std::string id)
 {
     // serialLogln("Update Timer was called", 3);
     if (timeSlicesToExecute.size() == 0) {
-        if (id != "NULL")
-        {
-            createAndSendPacket(2, "success", id);
-        }
+        if (id != "NULL") { sendActionSuccess(id); }
         return;
     }
 
@@ -192,7 +189,7 @@ void startCustomMotionProfileTimer(int leftPositionTarget, int rightPositionTarg
 
     if (leftSqrtValue < 0 || rightSqrtValue < 0)
     {
-        createAndSendPacket(2, "fail", id);
+        sendActionFail(id);
         return;
     }
 
@@ -227,10 +224,7 @@ void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfi
      && approxEquals(customProfileB.targetPosition, customProfileB.currentPosition, PID_POSITION_TOLERANCE)
      && approxEquals(customProfileB.currentVelocity, 0.0, PID_VELOCITY_TOLERANCE))
     {
-        if (id != "NULL")
-        {
-            createAndSendPacket(2, "success", id);
-        }
+        if (id != "NULL") { sendActionSuccess(id); }
         return;
     }
 

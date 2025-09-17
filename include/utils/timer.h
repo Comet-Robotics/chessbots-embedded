@@ -26,7 +26,7 @@ unsigned long timerInterval(int interval, TimerCallback func);
 
 Timer getTimer(unsigned long id);
 
-void resetTimer(unsigned long id);
+void timerReset(unsigned long id);
 void timerCancel(unsigned long id);
 void timerCancelAll();
 
