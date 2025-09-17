@@ -55,3 +55,8 @@ float Magnet::getCompassDegree(MagnetReading mag) {
     }
     return compass * 180 / M_PI;
 }
+
+float Magnet::readDegrees() {
+    MagnetReading mag = read_calibrated_data();
+    return getCompassDegree(mag);
+}
