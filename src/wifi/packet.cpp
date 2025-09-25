@@ -18,6 +18,7 @@
 #include "utils/config.h"
 #include "robot/control.h"
 #include "robot/splines.h"
+#include "robot/battery.h"
 #include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
@@ -53,7 +54,6 @@ void handlePacket(JsonDocument packet) {
     } else if (packet["type"] == DRIVE_TICKS){
         driveTicks(packet["tickDistance"], packet["packetId"]);
     } else if (packet["type"] == ESTOP) {
-        setStoppedStatus(true);
         stop();
     } else if (packet["type"] == CUBIC) {
         Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
@@ -71,22 +71,17 @@ void handlePacket(JsonDocument packet) {
         serialLog("Going to spin!", 3);
         int offsetTicks = radiansToTicks((float)packet["radians"]);
         startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
-    }
-    else if (packet["type"] == TURN_BY_ANGLE) {
+    } else if (packet["type"] == TURN_BY_ANGLE) {
         turn(packet["deltaHeadingRadians"], packet["packetId"]);
-    }
-    else if (packet["type"] == DRIVE_TILES) {
+    } else if (packet["type"] == DRIVE_TILES) {
         drive(packet["tiles"], packet["packetId"]);
-    }
-    
-    else if (packet["type"] == DRIVE_TILES) {
-        drive(packet["tiles"], packet["packetId"]);
+    } else if (packet["type"] == PING_SEND) {
+        sendPingResponse();
     }
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it
-void constructHelloPacket(JsonDocument& packet) 
-{
+void constructHelloPacket(JsonDocument& packet) {
     packet["type"] = CLIENT_HELLO;
     uint8_t mac[8];
     // Gets the mac address of this esp
@@ -99,16 +94,19 @@ void constructHelloPacket(JsonDocument& packet)
 //Note that the assigning of the messageId to the packetId happens in all the methods. One way to better
 //streamline this might be to make a general method "constructPacket" that just handles that. For now I
 //thought it wouldn't be necessary. As we get more types of messages this may be needed.
-void constructSuccessPacket(JsonDocument& packet, std::string messageId)
-{
+void constructSuccessPacket(JsonDocument& packet, std::string messageId) {
     packet["type"] = ACTION_SUCCESS;
     packet["packetId"] = messageId;
 }
 
-void constructFailPacket(JsonDocument& packet, std::string messageId)
-{
+void constructFailPacket(JsonDocument& packet, std::string messageId) {
     packet["type"] = ACTION_FAIL;
     packet["packetId"] = messageId;
+}
+
+void constructPingPacket(JsonDocument& packet) {
+    packet["type"] = PING_RESPONSE;
+    packet["batteryLevel"] = getBatteryLevel();
 }
 
 #endif

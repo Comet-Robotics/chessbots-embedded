@@ -240,8 +240,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         #endif
     }
 
-    if (DO_ENCODER_TEST)
-        encoderLoop();
+    if (DO_ENCODER_TEST) encoderLoop();
 
     if (DO_PID) {
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
@@ -580,9 +579,7 @@ void drive(float leftPower, float rightPower, std::string id) {
 
         //we only send null as id during our test drive. The only other time this drive method is called will be
         //when the server sends it, meaning it will have an id to send back.
-        if(id != "NULL") {
-            createAndSendPacket(2, "success", id);   
-        }
+        if (id != "NULL") { sendActionSuccess(id); }
     }
 }
 
@@ -612,6 +609,7 @@ void turn(float angleRadians, std::string id) {
 
 // Stops the bot in its tracks
 void stop() {
+    setStoppedStatus(true);
     setLeftPower(0);
     setRightPower(0);
 
@@ -666,10 +664,10 @@ boolean isRobotPidAtTarget() {
 
 void sendPacketOnPidComplete(std::string id) {
     if (!DO_PID)
-        createAndSendPacket(2, "fail", id);
+        sendActionFail(id);
 
     if (isRobotPidAtTarget()) {
-        createAndSendPacket(2, "success", id);
+        sendActionSuccess(id);
     } else {
         // Run on next loop
         timerDelay(1, [id](){ sendPacketOnPidComplete(id); });

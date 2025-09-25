@@ -55,7 +55,7 @@ Timer getTimer(unsigned long id) {
 }
 
 // Resets the time on an active timer
-void resetTimer(unsigned long id) {
+void timerReset(unsigned long id) {
     timers[id].lastMillis = millis();
 }
 
@@ -81,7 +81,7 @@ void timerStep() {
                 index = timers.erase(index);
             } else {
                 // If the timer isn't one-off, refresh it after it expires
-                resetTimer(id);
+                timerReset(id);
                 index++;
             }
 
