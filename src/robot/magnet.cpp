@@ -10,7 +10,7 @@ Magnet::Magnet()
     Wire.begin(SDA_PIN, SCL_PIN);
     bmm350.begin();
     bmm350.setOperationMode(eBmm350NormalMode);
-    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_25HZ);
+    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_100HZ);
     bmm350.setMeasurementXYZ();
 }
 
