@@ -35,8 +35,8 @@ TrapezoidProfile::Constraints profileConstraints(VELOCITY_LIMIT_TPS, ACCELERATIO
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint;
-PIDController encoderAVelocityController(0.00006, 0.000001, 0.00000, -1, +1); // Blue
-PIDController encoderBVelocityController(0.00006, 0.000001, 0.00000, -1, +1); //Red
+PIDController encoderAVelocityController(0.00006, 0.000000, 0.00000, -1, +1); // Blue
+PIDController encoderBVelocityController(0.00006, 0.000000, 0.00000, -1, +1); //Red
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -339,8 +339,9 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         serialLog(rightSetpoint.velocity - currentVelocityB, 3);
         serialLog(",", 3);
         // test magnet data
-        float heading = magnet->readDegrees();
-        serialLogln(heading, 3);
+        // float heading = magnet->readDegrees();
+        // serialLogln(heading, 3);
+        serialLogln(0, 3);
 
 #endif
 
