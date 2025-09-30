@@ -2,9 +2,9 @@
 
 TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &current, const State &goal)
 {
-    m_direction = shouldFlipAcceleration(current, goal) ? -1 : 1;
-    m_current = direct(current);
-    State goalDir = direct(goal);
+    int m_direction = shouldFlipAcceleration(current, goal) ? -1 : 1;
+    State m_current = direct(current, m_direction);
+    State goalDir = direct(goal, m_direction);
 
     if (std::abs(m_current.velocity) > m_constraints.maxVelocity)
     {
@@ -28,9 +28,9 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         fullSpeedDist = 0;
     }
 
-    m_endAccel = accelerationTime - cutoffBegin;
-    m_endFullSpeed = m_endAccel + fullSpeedDist / m_constraints.maxVelocity;
-    m_endDecel = m_endFullSpeed + accelerationTime - cutoffEnd;
+    double m_endAccel = accelerationTime - cutoffBegin;
+    double m_endFullSpeed = m_endAccel + fullSpeedDist / m_constraints.maxVelocity;
+    double m_endDecel = m_endFullSpeed + accelerationTime - cutoffEnd;
     State result(m_current.position, m_current.velocity);
 
     if (t < m_endAccel)
@@ -57,74 +57,5 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         result = goalDir;
     }
 
-    return direct(result);
-}
-
-double TrapezoidProfile::timeLeftUntil(double target)
-{
-    double position = m_current.position * m_direction;
-    double velocity = m_current.velocity * m_direction;
-
-    double endAccel = m_endAccel * m_direction;
-    double endFullSpeed = m_endFullSpeed * m_direction - endAccel;
-
-    if (target < position)
-    {
-        endAccel = -endAccel;
-        endFullSpeed = -endFullSpeed;
-        velocity = -velocity;
-    }
-
-    endAccel = std::max(endAccel, 0.0);
-    endFullSpeed = std::max(endFullSpeed, 0.0);
-
-    const double acceleration = m_constraints.maxAcceleration;
-    const double deceleration = -m_constraints.maxAcceleration;
-
-    double distToTarget = std::abs(target - position);
-    if (distToTarget < 1e-6)
-    {
-        return 0;
-    }
-
-    double accelDist = velocity * endAccel + 0.5 * acceleration * endAccel * endAccel;
-
-    double decelVelocity;
-    if (endAccel > 0)
-    {
-        decelVelocity = std::sqrt(std::abs(velocity * velocity + 2 * acceleration * accelDist));
-    }
-    else
-    {
-        decelVelocity = velocity;
-    }
-
-    double fullSpeedDist = m_constraints.maxVelocity * endFullSpeed;
-    double decelDist;
-
-    if (accelDist > distToTarget)
-    {
-        accelDist = distToTarget;
-        fullSpeedDist = 0;
-        decelDist = 0;
-    }
-    else if (accelDist + fullSpeedDist > distToTarget)
-    {
-        fullSpeedDist = distToTarget - accelDist;
-        decelDist = 0;
-    }
-    else
-    {
-        decelDist = distToTarget - fullSpeedDist - accelDist;
-    }
-
-    double accelTime =
-        (-velocity + std::sqrt(std::abs(velocity * velocity + 2 * acceleration * accelDist))) / acceleration;
-
-    double decelTime =
-        (-decelVelocity + std::sqrt(std::abs(decelVelocity * decelVelocity + 2 * deceleration * decelDist))) / deceleration;
-
-    double fullSpeedTime = fullSpeedDist / m_constraints.maxVelocity;
-
-    return accelTime + fullSpeedTime + decelTime;
+    return direct(result, m_direction);
 }

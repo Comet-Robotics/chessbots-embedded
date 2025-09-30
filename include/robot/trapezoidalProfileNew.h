@@ -40,15 +40,11 @@ public:
     };
 
     TrapezoidProfile(const Constraints& constraints)
-        : m_constraints(constraints), m_direction(1), m_endAccel(0), m_endFullSpeed(0), m_endDecel(0) {}
+        : m_constraints(constraints) {}
 
     State calculate(double t, const State& current, const State& goal);
 
-    double timeLeftUntil(double target);
-
-    double totalTime() const { return m_endDecel; }
-
-    bool isFinished(double t) const { return t >= totalTime(); }
+    // bool isFinished(double t) const { return t >= totalTime(); }
 
 private:
     static bool shouldFlipAcceleration(const State& initial, const State& goal)
@@ -56,17 +52,12 @@ private:
         return initial.position > goal.position;
     }
 
-    State direct(const State& in) const
+    State direct(const State& in, int m_direction) const
     {
         return State(in.position * m_direction, in.velocity * m_direction);
     }
 
-    int m_direction;
     Constraints m_constraints;
-    State m_current;
-    double m_endAccel;
-    double m_endFullSpeed;
-    double m_endDecel;
 };
 
 #endif
