@@ -26,13 +26,14 @@
 #include "robot/profiledPIDController.h"
 #include "robot/trapezoidalProfileNew.h"
 
-//PLEASE ONLY USE CHESSBOT #4 FOR TESTING
-TrapezoidProfile::Constraints profileConstraints(MAX_VELOCITY_TPS, MAX_ACCELERATION_TPSPS);
+
+// pid constants
+TrapezoidProfile::Constraints profileConstraints(VELOCITY_LIMIT_TPS, ACCELERATION_LIMIT_TPSPS);
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint;
-PIDController encoderAVelocityController(0.00004, 0.000005, 0.00000, -1, +1); // Blue
-PIDController encoderBVelocityController(0.00004, 0.000005, 0.00000, -1, +1); //Red
+PIDController encoderAVelocityController(0.00002, 0.000000, 0.00000, -1, +1); // Blue
+PIDController encoderBVelocityController(0.00002, 0.000000, 0.00000, -1, +1); //Red
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -269,8 +270,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
-        double leftFeedForward = leftSetpoint.velocity / MAX_VELOCITY_TPS;
-        double rightFeedForward = rightSetpoint.velocity / MAX_VELOCITY_TPS;
+        double leftFeedForward = leftSetpoint.velocity / THEORETICAL_MAX_VELOCITY_TPS;
+        double rightFeedForward = rightSetpoint.velocity / THEORETICAL_MAX_VELOCITY_TPS;
 
         double leftMotorPower = encoderAVelocityController.Compute(leftSetpoint.velocity, currentVelocityA, loopDelaySeconds) + leftFeedForward;
         double rightMotorPower = encoderBVelocityController.Compute(rightSetpoint.velocity, currentVelocityB, loopDelaySeconds) + rightFeedForward;
