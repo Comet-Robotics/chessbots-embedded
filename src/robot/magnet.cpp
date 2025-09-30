@@ -56,7 +56,21 @@ float Magnet::getCompassDegree(MagnetReading mag) {
     return compass * 180 / M_PI;
 }
 
-float Magnet::readDegrees() {
+float Magnet::readDegreesRaw() {
     MagnetReading mag = read_calibrated_data();
     return getCompassDegree(mag);
+}
+
+float Magnet::readDegrees() {
+    float currentReading = readDegreesRaw();
+    // Handle wrap-around
+    if (currentReading - previousReading > 180) {
+        previousReading += 360;
+    } else if (currentReading - previousReading < -180) {
+        previousReading -= 360;
+    }
+    // Simple low-pass filter
+    currentReading = previousReading * 0.8 + currentReading * 0.2;
+    previousReading = currentReading;
+    return currentReading;
 }

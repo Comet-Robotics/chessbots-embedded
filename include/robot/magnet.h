@@ -17,6 +17,7 @@ class Magnet {
         void set_soft_iron_matrix(float matrix[3][3]);
         struct MagnetReading read_calibrated_data();
         float getCompassDegree(struct MagnetReading mag);
+        float readDegreesRaw();
         float readDegrees();
     private:
         float hard_iron_offset[3] = { -23.71, -5.45, -8.27 };
@@ -26,6 +27,8 @@ class Magnet {
             { 0.023, 0.002, .991 }
         };
         DFRobot_BMM350_I2C bmm350;
+
+        float previousReading = 0.0;
 };
 
 #endif // MAGNET_H
