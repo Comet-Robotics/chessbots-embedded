@@ -78,7 +78,7 @@ void MotorEncoderTest::testRightMotor()
     {
         serialLogln("Test successful!", 2);
         serialLogln("To go forward, both left and right should be set positive.", 2);
-        auto fp = std::bind(&MotorEncoderTest::testDriveForward, this);
+        auto fp = std::bind(&MotorEncoderTest::testMotorDeadzones, this);
         timerDelay(2000, fp);
     }
     else
@@ -99,13 +99,58 @@ void MotorEncoderTest::testRightMotor()
     }
 }
 
+void MotorEncoderTest::checkMotorDeadzone(bool leftMotor)
+{
+    serialLogln(leftMotor ? "Checking LEFT motor deadzone..." : "Checking RIGHT motor deadzone...", 2);
+    const float powerStep = 0.01f;
+    const float maxPower = 1.0f;
+    const int encoderThreshold = 200; // Minimum encoder ticks to consider as movement
+    int initialEncoder = leftMotor ? readLeftEncoder() : readRightEncoder();
+
+    for (float power = 0.0f; power <= maxPower; power += powerStep)
+    {
+        if (leftMotor)
+        {
+            setLeftPower(power);
+            setRightPower(0);
+        }
+        else
+        {
+            setLeftPower(0);
+            setRightPower(power);
+        }
+        delay(200); // Wait for motor to respond
+
+        int currentEncoder = leftMotor ? readLeftEncoder() : readRightEncoder();
+        if (abs(currentEncoder - initialEncoder) >= encoderThreshold)
+        {
+            serialLog("Deadzone crossed at power: ", 2);
+            serialLogln(power, 2);
+            break;
+        }
+    }
+    setLeftPower(0);
+    setRightPower(0);
+}
+
+void MotorEncoderTest::testMotorDeadzones()
+{
+    delay(500);
+    checkMotorDeadzone(true);  // Check left motor
+    delay(500);
+    checkMotorDeadzone(false); // Check right motor
+    serialLogln("Deadzone test complete!", 2);
+    auto fp = std::bind(&MotorEncoderTest::testDriveForward, this);
+    timerDelay(1000, fp);
+}
+
 void MotorEncoderTest::checkEncoderVelocity()
 {
     int encA = readLeftEncoder();
     int encB = readRightEncoder();
     float encAVel = (encA - prevEncA) / (float) 0.02;
     float encBVel = (encB - prevEncB) / (float) 0.02;
-    float encAAccel = (encAVel - prevEncVelA);
+    float encAAccel = (encAVel - prevEncVelA); // Am I miscalculating acceleration? Should be change in velocity over change in time, but I'm not dividing by time here
     float encBAccel = (encBVel - prevEncVelB);
     if (abs(encAVel) > maxEncoderVelocity) maxEncoderVelocity = abs(encAVel);
     if (abs(encBVel) > maxEncoderVelocity) maxEncoderVelocity = abs(encBVel);
