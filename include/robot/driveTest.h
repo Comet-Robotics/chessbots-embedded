@@ -25,6 +25,8 @@ private:
     void testWait();
     void testRightMotor();
     void testDriveForward();
+    void checkMotorDeadzone(bool leftMotor);
+    void testMotorDeadzones();
     void checkEncoderVelocity();
     void testDriveDone();
 };
