@@ -41,6 +41,7 @@ float THEORETICAL_MAX_VELOCITY_TPS = 63000;
 float THEORETICAL_MAX_ACCELERATION_TPSPS = 16000;
 float VELOCITY_LIMIT_TPS = 40000;
 float ACCELERATION_LIMIT_TPSPS = 10000;
+float MIN_MOTOR_POWER = 0.12; // Minimum motor power to elicit motor response, empirically determined
 float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
 
 float PID_POSITION_TOLERANCE = 100;
@@ -72,6 +73,7 @@ void setConfig(JsonObject config) {
     if (config["WHEEL_DIAMETER_INCHES"].is<float>()) WHEEL_DIAMETER_INCHES = config["WHEEL_DIAMETER_INCHES"];
     if (config["THEORETICAL_MAX_VELOCITY_TPS"].is<float>()) THEORETICAL_MAX_VELOCITY_TPS = config["THEORETICAL_MAX_VELOCITY_TPS"];
     if (config["THEORETICAL_MAX_ACCELERATION_TPSPS"].is<float>()) THEORETICAL_MAX_ACCELERATION_TPSPS = config["THEORETICAL_MAX_ACCELERATION_TPSPS"];
+    if (config["MIN_MOTOR_POWER"].is<float>()) MIN_MOTOR_POWER = config["MIN_MOTOR_POWER"];
 
     serialLogln("Config Set!", 2);
 }

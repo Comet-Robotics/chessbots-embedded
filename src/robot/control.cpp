@@ -567,10 +567,9 @@ void driveTicks(int tickDistance, std::string id)
 void drive(float leftPower, float rightPower, std::string id) {
     if (!getStoppedStatus()) {
         // TODO: maybe move to motor.cpp?
-        float minPower = 0.16;
-        if (leftPower < minPower && leftPower > -minPower) {
+        if (leftPower < MIN_MOTOR_POWER && leftPower > -MIN_MOTOR_POWER) {
             leftPower = 0;
-        } if (rightPower < minPower && rightPower > -minPower) {
+        } if (rightPower < MIN_MOTOR_POWER && rightPower > -MIN_MOTOR_POWER) {
             rightPower = 0;
         }
 
