@@ -10,7 +10,7 @@ Magnet::Magnet()
     Wire.begin(SDA_PIN, SCL_PIN);
     bmm350.begin();
     bmm350.setOperationMode(eBmm350NormalMode);
-    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_100HZ);
+    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_50HZ);
     bmm350.setMeasurementXYZ();
 }
 
@@ -62,6 +62,9 @@ float Magnet::readDegreesRaw() {
 }
 
 float Magnet::readDegrees() {
+    if (!bmm350.getDataReadyState()) {
+        return previousReading; // Return the last reading if data is not ready
+    }
     float currentReading = readDegreesRaw();
     // Handle wrap-around
     if (currentReading - previousReading > 180) {
