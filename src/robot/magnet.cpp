@@ -62,9 +62,10 @@ float Magnet::readDegreesRaw() {
 }
 
 float Magnet::readDegrees() {
-    if (!bmm350.getDataReadyState()) {
-        return previousReading; // Return the last reading if data is not ready
-    }
+    // Only works if data ready interrupt is enabled
+    // if (!bmm350.getDataReadyState()) {
+    //     return previousReading; // Return the last reading if data is not ready
+    // }
     float currentReading = readDegreesRaw();
     // Handle wrap-around
     if (currentReading - previousReading > 180) {
