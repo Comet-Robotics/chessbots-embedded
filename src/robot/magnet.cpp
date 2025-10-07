@@ -2,7 +2,15 @@
 #include "robot/magnet.h"
 
 #define SDA_PIN 8  
-#define SCL_PIN 9 
+#define SCL_PIN 9
+
+// volatile uint8_t interruptFlag = 0;
+// void Magnet::updateReadings(void)
+// {
+//     // interruptFlag = 1; // Interrupt flag
+//     // detachInterrupt(13); // Detach interrupt
+//     currentRaw = readDegreesRaw();
+// }
 
 Magnet::Magnet()
     : bmm350(&Wire, 0x14)
@@ -10,8 +18,11 @@ Magnet::Magnet()
     Wire.begin(SDA_PIN, SCL_PIN);
     bmm350.begin();
     bmm350.setOperationMode(eBmm350NormalMode);
-    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_50HZ);
+    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_12_5HZ);
     bmm350.setMeasurementXYZ();
+    // bmm350.setDataReadyPin(BMM350_ENABLE_INTERRUPT, BMM350_ACTIVE_LOW);
+    // pinMode(/*Pin */ 13, INPUT_PULLUP);
+    // attachInterrupt(/*interput io*/ 13, [this](){ this->updateReadings(); }, ONLOW);
 }
 
 void Magnet::set_hard_iron_offset(float x, float y, float z) {

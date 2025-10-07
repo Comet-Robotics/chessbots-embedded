@@ -68,6 +68,7 @@ void loop() {
     }
 
     // Run control loop
+    // TODO change time parameter to be actual delta time, not just delay between loops
     controlLoop(loopDelayMilliseconds, framesUntilPrint);
 
     // This delay determines how often the code in loop is run
