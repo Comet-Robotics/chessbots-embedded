@@ -19,6 +19,7 @@ class Magnet {
         float getCompassDegree(struct MagnetReading mag);
         float readDegreesRaw();
         float readDegrees();
+        bool isDataReady() { return bmm350.getDataReadyState(); }
     private:
         float hard_iron_offset[3] = { -23.71, -5.45, -8.27 };
         float soft_iron_matrix[3][3] = {

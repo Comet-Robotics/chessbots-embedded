@@ -186,6 +186,16 @@ void setupBot() {
     setupIR();
     setupEncodersNew();
     magnet = new Magnet();
+    int maxTries = 5;
+    while (maxTries-- > 0 && !magnet->isDataReady()) {
+        delay(100);
+    }
+    if (!magnet->isDataReady()) {
+        serialLogln("Magnetometer not responding!", 0);
+    } else {
+        serialLogln("Magnetometer ready!", 2);
+        // headingTarget = magnet->readDegrees();
+    }
     serialLogln("Bot Set Up!", 2);
 
     encoderAVelocityController.Reset();
