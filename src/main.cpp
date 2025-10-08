@@ -21,6 +21,7 @@
 //alright SCREW YOU serial monitor i won't print every frame then if you wanna play that game
 const int8_t PRINT_INTERVAL = 60;
 int8_t framesUntilPrint = 60;
+unsigned long previousTime = 0; // For loop timing
 
 // Setup gets run at startup
 void setup() {
@@ -44,6 +45,8 @@ void setup() {
     if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
 
     if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
+
+    previousTime = millis() - loopDelayMilliseconds;
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
@@ -69,7 +72,9 @@ void loop() {
 
     // Run control loop
     // TODO change time parameter to be actual delta time, not just delay between loops
-    controlLoop(loopDelayMilliseconds, framesUntilPrint);
+    unsigned long deltaTime = millis() - previousTime;
+    previousTime = millis();
+    controlLoop(deltaTime, framesUntilPrint);
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)

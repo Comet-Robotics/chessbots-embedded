@@ -339,9 +339,9 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         serialLog(rightSetpoint.velocity - currentVelocityB, 3);
         serialLog(",", 3);
         // test magnet data
-        // float heading = magnet->readDegrees();
-        // serialLogln(heading, 3);
-        serialLogln(0, 3);
+        float heading = magnet->readDegrees();
+        serialLogln(heading, 3);
+        // serialLogln(0, 3);
 
 #endif
 
