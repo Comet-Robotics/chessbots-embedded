@@ -19,14 +19,17 @@ struct ControlSetting
 
 static ControlSetting leftMotorControl;
 static ControlSetting rightMotorControl;
+static double headingTarget = 0.0;
 
 static MotionProfile profileA = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 static MotionProfile profileB = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 
 void setLeftMotorControl(ControlSetting control);
 void setRightMotorControl(ControlSetting control);
+void setHeadingTarget(double target);
 ControlSetting getLeftMotorControl();
 ControlSetting getRightMotorControl();
+double getHeadingTarget();
 
 void setupBot();
 void drive(float tiles, std::string id);

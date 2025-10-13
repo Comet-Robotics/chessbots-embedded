@@ -35,8 +35,9 @@ TrapezoidProfile::Constraints profileConstraints(VELOCITY_LIMIT_TPS, ACCELERATIO
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint;
-PIDController encoderAVelocityController(0.00006, 0.000000, 0.00000, -1, +1); // Blue
-PIDController encoderBVelocityController(0.00006, 0.000000, 0.00000, -1, +1); //Red
+PIDController encoderAVelocityController(0.00006, 0.000000, 0.00000, -1, +1); // blue on graph // input ticks per second, output duty cycle
+PIDController encoderBVelocityController(0.00006, 0.000000, 0.00000, -1, +1); // red on graph // input ticks per second, output duty cycle
+PIDController headingController(0.008, 0.00000, 0.0000, -0.3, +0.3); // input degrees, output duty cycle
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -125,12 +126,14 @@ void testEncoderPID()
         testEncoderPID_value = true;
         setLeftMotorControl({POSITION, (float)TICKS_PER_ROTATION * 5});
         setRightMotorControl({POSITION, (float)TICKS_PER_ROTATION * 5});
+        setHeadingTarget(magnet->readDegrees());
     }
     else
     {
         testEncoderPID_value = false;
         setLeftMotorControl({POSITION, 0.0f});
         setRightMotorControl({POSITION, 0.0f});
+        setHeadingTarget(magnet->readDegrees());
     }
 
     updateCritRange();
@@ -194,7 +197,7 @@ void setupBot() {
         serialLogln("Magnetometer not responding!", 0);
     } else {
         serialLogln("Magnetometer ready!", 2);
-        // headingTarget = magnet->readDegrees();
+        headingTarget = magnet->readDegrees();
     }
     serialLogln("Bot Set Up!", 2);
 
@@ -205,7 +208,7 @@ void setupBot() {
         testEncoderPID();
         timerInterval(12000, &testEncoderPID);
     }
-    
+
     if (DO_TURN_TEST) {
         angle = 30;
         testTurn();
@@ -284,11 +287,17 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
-        double leftFeedForward = leftSetpoint.velocity / THEORETICAL_MAX_VELOCITY_TPS;
-        double rightFeedForward = rightSetpoint.velocity / THEORETICAL_MAX_VELOCITY_TPS;
+        double currentHeading = magnet->readDegrees();
+        double velocityOffsetFromHeading = MAGNET_CCW_IS_POSITIVE * headingController.Compute(headingTarget, currentHeading, loopDelaySeconds);
+        // if error is positive, then assume we need to turn CCW, so slow left and speed up right
+        double desiredVelocityLeft = leftSetpoint.velocity - velocityOffsetFromHeading;
+        double desiredVelocityRight = rightSetpoint.velocity + velocityOffsetFromHeading;
 
-        double leftMotorPower = encoderAVelocityController.Compute(leftSetpoint.velocity, currentVelocityA, loopDelaySeconds) + leftFeedForward;
-        double rightMotorPower = encoderBVelocityController.Compute(rightSetpoint.velocity, currentVelocityB, loopDelaySeconds) + rightFeedForward;
+        double leftFeedForward = desiredVelocityLeft / THEORETICAL_MAX_VELOCITY_TPS;
+        double rightFeedForward = desiredVelocityRight / THEORETICAL_MAX_VELOCITY_TPS;
+
+        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityLeft, currentVelocityA, loopDelaySeconds) + leftFeedForward;
+        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityRight, currentVelocityB, loopDelaySeconds) + rightFeedForward;
 
         if (leftMotorPower > 1) leftMotorPower = 1;
         if (leftMotorPower < -1) leftMotorPower = -1;
@@ -349,8 +358,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         serialLog(rightSetpoint.velocity - currentVelocityB, 3);
         serialLog(",", 3);
         // test magnet data
-        float heading = magnet->readDegrees();
-        serialLogln(heading, 3);
+        serialLogln(currentHeading, 3);
         // serialLogln(0, 3);
 
 #endif
@@ -540,12 +548,20 @@ void setRightMotorControl(ControlSetting control) {
         profileB.targetVelocity = control.value;
 }
 
+void setHeadingTarget(double target) {
+    headingTarget = target;
+}
+
 ControlSetting getLeftMotorControl() {
     return leftMotorControl;
 }
 
 ControlSetting getRightMotorControl() {
     return rightMotorControl;
+}
+
+double getHeadingTarget() {
+    return headingTarget;
 }
 
 void drive(float tiles, std::string id) {
@@ -593,7 +609,7 @@ void drive(float leftPower, float rightPower, std::string id) {
     }
 }
 
-//turns the given amount in radians
+//turns the given amount in radians, CCW
 void turn(float angleRadians, std::string id) {
 
     serialLogln("Turning", 3);
@@ -610,6 +626,7 @@ void turn(float angleRadians, std::string id) {
     } else {
         setRightMotorControl({POSITION, (float)(readRightEncoder() + offsetTicks)});
     }
+    setHeadingTarget(getHeadingTarget() + (angleRadians * 180.0 / M_PI));
 
     if (id != "NULL")
     {

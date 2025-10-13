@@ -40,6 +40,8 @@ extern float ACCELERATION_LIMIT_TPSPS;
 extern float MIN_MOTOR_POWER;
 extern float TILES_TO_TICKS;
 
+extern int MAGNET_CCW_IS_POSITIVE; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
+
 extern float PID_POSITION_TOLERANCE;
 extern float PID_VELOCITY_TOLERANCE;
 
