@@ -25,7 +25,7 @@ Magnet::Magnet()
         serialLogln("BMM350 detected.", 1);
     }
     bmm350.setOperationMode(eBmm350NormalMode);
-    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_12_5HZ);
+    bmm350.setPresetMode(BMM350_PRESETMODE_ENHANCED, BMM350_DATA_RATE_12_5HZ);
     bmm350.setMeasurementXYZ();
     bmm350.setDataReadyPin(BMM350_ENABLE_INTERRUPT, BMM350_ACTIVE_LOW);
     pinMode(/*Pin */ 13, INPUT_PULLUP);
@@ -99,8 +99,8 @@ float Magnet::readDegreesRaw() {
 
 float Magnet::readDegrees() {
     // Only works if data ready interrupt is enabled
-    if (!bmm350.getDataReadyState()) {
-        return previousReading; // Return the last reading if data is not ready
+    if (previousReading >= 0 && !bmm350.getDataReadyState()) {
+        return previousReading; // Return the last reading if data is not ready and previousReading is valid
     }
     float currentReading = readDegreesRaw();
     // Handle first reading
