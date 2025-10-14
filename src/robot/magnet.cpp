@@ -1,28 +1,53 @@
 #include "DFRobot_BMM350.h"
 #include "robot/magnet.h"
+#include "utils/logging.h"
 
 #define SDA_PIN 8  
 #define SCL_PIN 9
-
-// volatile uint8_t interruptFlag = 0;
-// void Magnet::updateReadings(void)
-// {
-//     // interruptFlag = 1; // Interrupt flag
-//     // detachInterrupt(13); // Detach interrupt
-//     currentRaw = readDegreesRaw();
-// }
 
 Magnet::Magnet()
     : bmm350(&Wire, 0x14)
 {
     Wire.begin(SDA_PIN, SCL_PIN);
-    bmm350.begin();
+    int maxTries = 6;
+    int errorCode = -1;
+    while (maxTries-- > 0 && (errorCode=bmm350.begin()))
+    {
+        delay(500);
+        serialLog("Retrying BMM350 connection... (error code ", 1);
+        serialLog(errorCode, 1);
+        serialLogln(")", 1);
+    }
+    if (errorCode > 0) {
+        serialLogln("BMM350 not detected at default I2C address. Check wiring.", 1);
+        return;
+    } else {
+        serialLogln("BMM350 detected.", 1);
+    }
     bmm350.setOperationMode(eBmm350NormalMode);
     bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_12_5HZ);
     bmm350.setMeasurementXYZ();
     bmm350.setDataReadyPin(BMM350_ENABLE_INTERRUPT, BMM350_ACTIVE_LOW);
     pinMode(/*Pin */ 13, INPUT_PULLUP);
-    // attachInterrupt(/*interput io*/ 13, [this](){ this->updateReadings(); }, ONLOW);
+    maxTries = 5;
+    bool dataReady = false;
+    while (maxTries-- > 0 && !(dataReady=bmm350.getDataReadyState())) {
+        delay(100);
+    }
+    if (dataReady) {
+        serialLogln("BMM350 data ready interrupt enabled.", 1);
+        activeFlag = true;
+    } else {
+        serialLogln("BMM350 data ready interrupt not detected. Check wiring.", 1);
+    }
+}
+
+bool Magnet::isActive() {
+    return activeFlag;
+}
+
+bool Magnet::isDataReady() {
+    return bmm350.getDataReadyState();
 }
 
 void Magnet::set_hard_iron_offset(float x, float y, float z) {
@@ -78,6 +103,11 @@ float Magnet::readDegrees() {
         return previousReading; // Return the last reading if data is not ready
     }
     float currentReading = readDegreesRaw();
+    // Handle first reading
+    if (previousReading < 0) {
+        previousReading = currentReading;
+        return currentReading;
+    }
     // Handle wrap-around
     if (currentReading - previousReading > 180) {
         previousReading += 360;

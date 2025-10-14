@@ -189,11 +189,7 @@ void setupBot() {
     setupIR();
     setupEncodersNew();
     magnet = new Magnet();
-    int maxTries = 5;
-    while (maxTries-- > 0 && !magnet->isDataReady()) {
-        delay(100);
-    }
-    if (!magnet->isDataReady()) {
+    if (!magnet->isActive()) {
         serialLogln("Magnetometer not responding!", 0);
     } else {
         serialLogln("Magnetometer ready!", 2);
@@ -203,6 +199,7 @@ void setupBot() {
 
     encoderAVelocityController.Reset();
     encoderBVelocityController.Reset();
+    headingController.Reset();
 
     if (DO_PID_TEST) {
         testEncoderPID();
@@ -626,7 +623,7 @@ void turn(float angleRadians, std::string id) {
     } else {
         setRightMotorControl({POSITION, (float)(readRightEncoder() + offsetTicks)});
     }
-    setHeadingTarget(getHeadingTarget() + (angleRadians * 180.0 / M_PI));
+    setHeadingTarget(getHeadingTarget() + MAGNET_CCW_IS_POSITIVE * (angleRadians * 180.0 / M_PI));
 
     if (id != "NULL")
     {
