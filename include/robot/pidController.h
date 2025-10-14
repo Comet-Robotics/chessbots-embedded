@@ -5,7 +5,8 @@ class PIDController
 {
 public:
     // PIDController(double kp, double ki, double kd, double min, double max);
-    PIDController(double kp, double ki, double kd, double min, double max) : kp(kp), ki(ki), kd(kd), minOutput(min), maxOutput(max), prev_error(0), integral(0) {}
+    PIDController(double kp, double ki, double kd, double min, double max, double errorTolerance)
+        : kp(kp), ki(ki), kd(kd), minOutput(min), maxOutput(max), errorTolerance(errorTolerance), prev_error(0), integral(0) {}
 
     double Compute(double setpoint, double actual_value, double dt);
     void Reset(); // Extra space between void and reset because I can't see uneven indent and spacing after doing python for a long time
@@ -15,6 +16,7 @@ public:
 
     double prev_error, prev_velocity_error; // Previous error
     double integral;   // Integral accumulator
+    double errorTolerance; // Allowed error before returning 0
 };
 // Manually making the clamp function
 // template <typename T>

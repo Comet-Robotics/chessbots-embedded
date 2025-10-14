@@ -35,9 +35,9 @@ TrapezoidProfile::Constraints profileConstraints(VELOCITY_LIMIT_TPS, ACCELERATIO
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint;
-PIDController encoderAVelocityController(0.00006, 0.000000, 0.00000, -1, +1); // blue on graph // input ticks per second, output duty cycle
-PIDController encoderBVelocityController(0.00006, 0.000000, 0.00000, -1, +1); // red on graph // input ticks per second, output duty cycle
-PIDController headingController(0.008, 0.00000, 0.0000, -0.3, +0.3); // input degrees, output duty cycle
+PIDController encoderAVelocityController(0.00006, 0.000000, 0.00000, -1, +1, 100); // blue on graph // input ticks per second, output duty cycle
+PIDController encoderBVelocityController(0.00006, 0.000000, 0.00000, -1, +1, 100); // red on graph // input ticks per second, output duty cycle
+PIDController headingController(0.007, 0.00000, 0.0000, -0.3, +0.3, 0.5); // input degrees, output duty cycle
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -285,7 +285,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         prevPositionB = currentPositionEncoderB;
 
         double currentHeading = magnet->readDegrees();
-        double velocityOffsetFromHeading = MAGNET_CCW_IS_POSITIVE * headingController.Compute(headingTarget, currentHeading, loopDelaySeconds);
+        double controllerOutput = headingController.Compute(headingTarget, currentHeading, loopDelaySeconds);
+        double velocityOffsetFromHeading = controllerOutput * THEORETICAL_MAX_VELOCITY_TPS * MAGNET_CCW_IS_POSITIVE;
         // if error is positive, then assume we need to turn CCW, so slow left and speed up right
         double desiredVelocityLeft = leftSetpoint.velocity - velocityOffsetFromHeading;
         double desiredVelocityRight = rightSetpoint.velocity + velocityOffsetFromHeading;
@@ -355,8 +356,12 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         serialLog(rightSetpoint.velocity - currentVelocityB, 3);
         serialLog(",", 3);
         // test magnet data
-        serialLogln(currentHeading, 3);
-        // serialLogln(0, 3);
+        serialLog(velocityOffsetFromHeading, 3);
+        serialLog(",", 3);
+        serialLog(headingTarget, 3);
+        serialLog(",", 3);
+        serialLog(currentHeading, 3);
+        serialLogln("", 3);
 
 #endif
 

@@ -8,8 +8,9 @@ class ProfiledPIDController {
 public:
     ProfiledPIDController(double kp, double ki, double kd,
                           double minOutput, double maxOutput,
+                          double errorTolerance,
                           const TrapezoidProfile::Constraints& constraints)
-        : pid(kp, ki, kd, minOutput, maxOutput), profile(constraints), lastTime(0.0) {}
+        : pid(kp, ki, kd, minOutput, maxOutput, errorTolerance), profile(constraints), lastTime(0.0) {}
 
     // Call this every control loop
     double Compute(double goalPosition, double actualPosition, double actualVelocity, double dt) {
