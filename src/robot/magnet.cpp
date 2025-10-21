@@ -115,7 +115,9 @@ float Magnet::readDegrees() {
         previousReading -= 360;
     }
     // Simple low-pass filter
-    currentReading = previousReading * 0.8 + currentReading * 0.2;
+    // currentReading = previousReading * 0.8 + currentReading * 0.2;
+    if (currentReading >= 360) currentReading -= 360;
+    else if (currentReading < 0) currentReading += 360;
     previousReading = currentReading;
     return currentReading;
 }
