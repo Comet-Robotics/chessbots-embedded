@@ -44,7 +44,7 @@ float ACCELERATION_LIMIT_TPSPS = 10000;
 float MIN_MOTOR_POWER = 0.12; // Minimum motor power to elicit motor response, empirically determined
 float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
 
-int MAGNET_CCW_IS_POSITIVE = -1; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
+int MAGNET_CCW_IS_POSITIVE = 1; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
 
 float PID_POSITION_TOLERANCE = 100;
 float PID_VELOCITY_TOLERANCE = 6000;

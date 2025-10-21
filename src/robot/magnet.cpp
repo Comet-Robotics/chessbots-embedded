@@ -25,7 +25,7 @@ Magnet::Magnet()
         serialLogln("BMM350 detected.", 1);
     }
     bmm350.setOperationMode(eBmm350NormalMode);
-    bmm350.setPresetMode(BMM350_PRESETMODE_ENHANCED, BMM350_DATA_RATE_12_5HZ);
+    bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_25HZ);
     bmm350.setMeasurementXYZ();
     activeFlag = true;
     // bmm350.setDataReadyPin(BMM350_ENABLE_INTERRUPT, BMM350_ACTIVE_LOW);
