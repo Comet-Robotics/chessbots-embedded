@@ -22,11 +22,11 @@ class Magnet {
         bool isDataReady();
         bool isActive();
     private:
-        float hard_iron_offset[3] = { -23.71, -5.45, -8.27 };
+        float hard_iron_offset[3] = { -10.20, -2.62, -13.21 };
         float soft_iron_matrix[3][3] = {
-            { 1.017, -0.024, 0.023 },
-            { -0.024, 0.994, 0.002 },
-            { 0.023, 0.002, .991 }
+            { 1.024, -0.020, 0.027 },
+            { -0.020, 0.968, 0.008 },
+            { 0.027, 0.008, 1.011 }
         };
         DFRobot_BMM350_I2C bmm350;
 
