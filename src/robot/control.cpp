@@ -37,7 +37,7 @@ TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint;
 PIDController encoderAVelocityController(0.00006, 0.000000, 0.00000, -1, +1, 100); // blue on graph // input ticks per second, output duty cycle
 PIDController encoderBVelocityController(0.00006, 0.000000, 0.00000, -1, +1, 100); // red on graph // input ticks per second, output duty cycle
-ContinuousPIDController headingController(0.005, 0.0001, 0.0000, -0.3, +0.3, 1.0, 0, 360); // input degrees, output duty cycle
+ContinuousPIDController headingController(0.001, 0.0000, 0.0000, -0.3, +0.3, 1.0, 0, 360); // input degrees, output duty cycle
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -124,8 +124,8 @@ void testEncoderPID()
     if (!testEncoderPID_value)
     {
         testEncoderPID_value = true;
-        setLeftMotorControl({POSITION, (float)TICKS_PER_ROTATION * 5});
-        setRightMotorControl({POSITION, (float)TICKS_PER_ROTATION * 5});
+        setLeftMotorControl({POSITION, (float)TICKS_PER_ROTATION * 10});
+        setRightMotorControl({POSITION, (float)TICKS_PER_ROTATION * 10});
         setHeadingTarget(magnet->readDegrees());
     }
     else
