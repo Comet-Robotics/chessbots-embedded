@@ -6,9 +6,13 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     State m_current = direct(current, m_direction);
     State goalDir = direct(goal, m_direction);
 
-    if (std::abs(m_current.velocity) > m_constraints.maxVelocity)
+    if (m_current.velocity > m_constraints.maxVelocity)
     {
-        m_current.velocity = std::copysign(m_constraints.maxVelocity, m_current.velocity);
+        m_current.velocity = m_constraints.maxVelocity;
+    }
+    else if (m_current.velocity < -m_constraints.maxVelocity)
+    {
+        m_current.velocity = -m_constraints.maxVelocity;
     }
 
     double cutoffBegin = m_current.velocity / m_constraints.maxAcceleration;
@@ -47,10 +51,10 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     }
     else if (t <= m_endDecel)
     {
-        result.velocity = goalDir.velocity + (m_endDecel - t) * m_constraints.maxAcceleration;
         double timeLeft = m_endDecel - t;
-        result.position =
-            goalDir.position - (goalDir.velocity + timeLeft * m_constraints.maxAcceleration / 2.0) * timeLeft;
+        result.velocity = goalDir.velocity + timeLeft * m_constraints.maxAcceleration;
+        result.position = goalDir.position - goalDir.velocity * timeLeft
+            + timeLeft * timeLeft * m_constraints.maxAcceleration / 2.0;
     }
     else
     {
