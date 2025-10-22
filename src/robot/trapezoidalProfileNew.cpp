@@ -53,8 +53,7 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     {
         double timeLeft = m_endDecel - t;
         result.velocity = goalDir.velocity + timeLeft * m_constraints.maxAcceleration;
-        result.position = goalDir.position - goalDir.velocity * timeLeft
-            + timeLeft * timeLeft * m_constraints.maxAcceleration / 2.0;
+        result.position = goalDir.position - (goalDir.velocity * timeLeft) - (timeLeft * timeLeft * m_constraints.maxAcceleration / 2.0);
     }
     else
     {
