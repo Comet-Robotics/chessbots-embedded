@@ -67,14 +67,15 @@ void Magnet::set_soft_iron_matrix(float matrix[3][3]) {
 
 MagnetReading Magnet::read_calibrated_data() {
     sBmm350MagData_t sensor_mag_data = bmm350.getGeomagneticData();
+    float hi_data[3];
     float mag_data[3];
 
-    mag_data[0] = sensor_mag_data.float_x - hard_iron_offset[0];
-    mag_data[1] = sensor_mag_data.float_y - hard_iron_offset[1];
-    mag_data[2] = sensor_mag_data.float_z - hard_iron_offset[2];
+    hi_data[0] = sensor_mag_data.float_x - hard_iron_offset[0];
+    hi_data[1] = sensor_mag_data.float_y - hard_iron_offset[1];
+    hi_data[2] = sensor_mag_data.float_z - hard_iron_offset[2];
 
     for (int i = 0; i < 3; i++) {
-        mag_data[i] = (soft_iron_matrix[i][0] * mag_data[0]) + (soft_iron_matrix[i][1] * mag_data[1]) + (soft_iron_matrix[i][2] * mag_data[2]);
+        mag_data[i] = (soft_iron_matrix[i][0] * hi_data[0]) + (soft_iron_matrix[i][1] * hi_data[1]) + (soft_iron_matrix[i][2] * hi_data[2]);
     }
 
     MagnetReading calibrated_data = { mag_data[0], mag_data[1], mag_data[2] };
