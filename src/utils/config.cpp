@@ -37,11 +37,11 @@ gpio_num_t BATTERY_VOLTAGE_PIN = GPIO_NUM_10;
 int TICKS_PER_ROTATION = 12000;
 float TRACK_WIDTH_INCHES = 8.29;
 float WHEEL_DIAMETER_INCHES = 4.75;
-float THEORETICAL_MAX_VELOCITY_TPS = 63000;
-float THEORETICAL_MAX_ACCELERATION_TPSPS = 16000;
-float VELOCITY_LIMIT_TPS = 40000;
-float ACCELERATION_LIMIT_TPSPS = 10000;
-float MIN_MOTOR_POWER = 0.12; // Minimum motor power to elicit motor response, empirically determined
+float THEORETICAL_MAX_VELOCITY_TPS = 52000;
+float THEORETICAL_MAX_ACCELERATION_TPSPS = 252000;
+float VELOCITY_LIMIT_TPS = 30000;
+float ACCELERATION_LIMIT_TPSPS = 70000;
+float MIN_MOTOR_POWER = 0.15; // Minimum motor power to elicit motor response, empirically determined
 float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
 
 int MAGNET_CCW_IS_POSITIVE = 1; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive

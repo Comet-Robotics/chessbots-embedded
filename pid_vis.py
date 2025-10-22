@@ -12,6 +12,8 @@ with Path('pid_test.csv').open('r') as f:
     header = "LeftSetpoint,LeftVelocity,LeftError,RightSetpoint,RightVelocity,RightError,HeadingVelocityCorrection,HeadingSetpoint,Heading"
     keys = header.split(",")
     for row in reader:
+        if row["LeftSetpoint"].startswith("Changing"):
+            continue
         for k in keys:
             val = int(row[k]) if "." not in row[k] else float(row[k])
             # if "Left" in k:
