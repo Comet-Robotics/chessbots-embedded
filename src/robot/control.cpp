@@ -267,14 +267,14 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         // Generate trapezoidal profile setpoints
         if (getLeftMotorControl().mode == POSITION) {
             leftSetpoint = leftProfile.calculate(loopDelaySeconds, 
-                                                leftSetpoint,
+                                                TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
                                                 TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
         } else {
             leftSetpoint = TrapezoidProfile::State(currentPositionEncoderA, getLeftMotorControl().value);
         }
         if (getRightMotorControl().mode == POSITION) {
             rightSetpoint = rightProfile.calculate(loopDelaySeconds, 
-                                                rightSetpoint,
+                                                TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
                                                 TrapezoidProfile::State(getRightMotorControl().value, 0.0));
         } else {
             rightSetpoint = TrapezoidProfile::State(currentPositionEncoderB, getRightMotorControl().value);

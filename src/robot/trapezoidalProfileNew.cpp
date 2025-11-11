@@ -1,4 +1,5 @@
 #include "robot/trapezoidalProfileNew.h"
+#include "utils/config.h"
 
 TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &current, const State &goal)
 {
@@ -18,7 +19,7 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     double cutoffBegin = m_current.velocity / m_constraints.maxAcceleration;
     double cutoffDistBegin = cutoffBegin * cutoffBegin * m_constraints.maxAcceleration / 2.0;
 
-    double cutoffEnd = goalDir.velocity / m_constraints.maxAcceleration;
+    double cutoffEnd = max((goalDir.velocity - MIN_MOTOR_VELOCITY_TPS), 0.0)  / m_constraints.maxAcceleration;
     double cutoffDistEnd = cutoffEnd * cutoffEnd * m_constraints.maxAcceleration / 2.0;
 
     double fullTrapezoidDist = cutoffDistBegin + (goalDir.position - m_current.position) + cutoffDistEnd;
@@ -40,6 +41,9 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     if (t < m_endAccel)
     {
         result.velocity += t * m_constraints.maxAcceleration;
+        if (abs(result.velocity) < MIN_MOTOR_VELOCITY_TPS) {
+            result.velocity = MIN_MOTOR_VELOCITY_TPS;
+        }
         result.position += (m_current.velocity + t * m_constraints.maxAcceleration / 2.0) * t;
     }
     else if (t < m_endFullSpeed)
@@ -58,6 +62,10 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     else
     {
         result = goalDir;
+    }
+
+    if (abs(result.position - goalDir.position) <= 100) {
+        result.velocity = 0;
     }
 
     return direct(result, m_direction);

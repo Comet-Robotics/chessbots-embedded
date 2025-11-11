@@ -40,8 +40,9 @@ float WHEEL_DIAMETER_INCHES = 4.75;
 float THEORETICAL_MAX_VELOCITY_TPS = 52000;
 float THEORETICAL_MAX_ACCELERATION_TPSPS = 252000;
 float VELOCITY_LIMIT_TPS = 30000;
-float ACCELERATION_LIMIT_TPSPS = 70000;
+float ACCELERATION_LIMIT_TPSPS = 125000;
 float MIN_MOTOR_POWER = 0.15; // Minimum motor power to elicit motor response, empirically determined
+float MIN_MOTOR_VELOCITY_TPS = 5000;
 float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
 
 int MAGNET_CCW_IS_POSITIVE = 1; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
@@ -76,6 +77,7 @@ void setConfig(JsonObject config) {
     if (config["THEORETICAL_MAX_VELOCITY_TPS"].is<float>()) THEORETICAL_MAX_VELOCITY_TPS = config["THEORETICAL_MAX_VELOCITY_TPS"];
     if (config["THEORETICAL_MAX_ACCELERATION_TPSPS"].is<float>()) THEORETICAL_MAX_ACCELERATION_TPSPS = config["THEORETICAL_MAX_ACCELERATION_TPSPS"];
     if (config["MIN_MOTOR_POWER"].is<float>()) MIN_MOTOR_POWER = config["MIN_MOTOR_POWER"];
+    if (config["MIN_MOTOR_VELOCITY_TPS"].is<float>()) MIN_MOTOR_VELOCITY_TPS = config["MIN_MOTOR_VELOCITY_TPS"];
 
     if (config["MAGNET_CCW_IS_POSITIVE"].is<int>()) MAGNET_CCW_IS_POSITIVE = config["MAGNET_CCW_IS_POSITIVE"];
 
