@@ -137,6 +137,62 @@ void testEncoderPID()
     updateCritRange();
 }
 
+const int MAX_ROTATIONS_IN_SQUARE = 4;
+int CURRENT_ROTATION_IN_SQUARE = 0;
+const int TICKS_PER_INCH = 795;
+const int SQUARE_SIDE_LENGTH_TICKS = TICKS_PER_INCH * 24; // 2 feet in theory
+bool atCornerOfSquare = false;
+
+void testEncoderPIDWithSquare() {    
+    
+    if (!atCornerOfSquare) {
+        serialLog("Driving forward - Beginning side ", 2);
+        serialLog(CURRENT_ROTATION_IN_SQUARE, 2);
+        serialLog(" of ", 2);
+        serialLogln(MAX_ROTATIONS_IN_SQUARE, 2);
+
+        // driveTicks(SQUARE_SIDE_LENGTH_TICKS, NULL);
+        setLeftMotorControl({POSITION, (float)(getLeftMotorControl().value + SQUARE_SIDE_LENGTH_TICKS)});
+        setRightMotorControl({POSITION, (float)(getRightMotorControl().value + SQUARE_SIDE_LENGTH_TICKS)});
+    } else {
+        serialLog("Turning at end of side ", 2);
+        serialLogln(CURRENT_ROTATION_IN_SQUARE, 2);
+        
+        const int angleRadians = HALF_PI;
+        
+        int offsetTicks = radiansToTicks(angleRadians);
+        serialLogln("RADS TO TICKS: ", 2);
+        serialLogln(offsetTicks, 2);
+
+
+        // turn(HALF_PI, NULL);
+
+        if (getLeftMotorControl().mode == POSITION) {
+            setLeftMotorControl({POSITION, getLeftMotorControl().value - offsetTicks});
+        } else {
+            setLeftMotorControl({POSITION, (float)(readLeftEncoder() - offsetTicks)});
+        }
+        if (getRightMotorControl().mode == POSITION) {
+            setRightMotorControl({POSITION, getRightMotorControl().value + offsetTicks});
+        } else {
+            setRightMotorControl({POSITION, (float)(readRightEncoder() + offsetTicks)});
+        }
+        setHeadingTarget(getHeadingTarget() + MAGNET_CCW_IS_POSITIVE * (angleRadians * 180.0 / M_PI));
+
+        CURRENT_ROTATION_IN_SQUARE++;
+    }
+
+    atCornerOfSquare = !atCornerOfSquare;
+    
+    // serialLogln("Crit range updated", 2);
+    // updateCritRange();
+
+    if (CURRENT_ROTATION_IN_SQUARE == 4) {
+        serialLogln("Square done!", 2);
+        CURRENT_ROTATION_IN_SQUARE = 0;
+    }
+}
+
 //crit range is basically getting distance we go until we are halfway to target. By the end of this range,
 //we're at our max speed and are sure we aren't at a low speed just cause we're speeding up
 void updateCritRange()
@@ -215,6 +271,11 @@ void setupBot() {
         testCentering();
         timerInterval(5000, &testCentering);
     }
+    
+    if (DO_SQUARE_PID_TEST) {
+        testEncoderPIDWithSquare();
+        timerInterval(8000, &testEncoderPIDWithSquare);
+    }
 }
 
 // + (0.0001 * desiredVelocityA)
@@ -283,8 +344,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
-        double currentHeading = magnet->readDegrees();
-        // double currentHeading = getHeadingTarget();
+        // double currentHeading = magnet->readDegrees();
+        double currentHeading = getHeadingTarget();
         // double controllerOutput = headingController.Compute(headingTarget, currentHeading, loopDelaySeconds);
         double controllerOutput = 0; // TODO fix magnet calibration, then re-enable heading correction
         double velocityOffsetFromHeading = controllerOutput * THEORETICAL_MAX_VELOCITY_TPS * MAGNET_CCW_IS_POSITIVE;
@@ -615,9 +676,12 @@ void drive(float leftPower, float rightPower, std::string id) {
 //turns the given amount in radians, CCW
 void turn(float angleRadians, std::string id) {
 
-    serialLogln("Turning", 3);
-    serialLogln(angleRadians, 3);
+    serialLog("Turning ", 2);
+    serialLogln(angleRadians, 2);
     int offsetTicks = radiansToTicks(angleRadians);
+
+    serialLog("radians -> ticks: ", 3);
+    serialLogln(offsetTicks, 3);
 
     if (getLeftMotorControl().mode == POSITION) {
         setLeftMotorControl({POSITION, getLeftMotorControl().value - offsetTicks});
