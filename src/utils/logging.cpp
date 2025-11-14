@@ -55,6 +55,12 @@ void serialLogln(double value, int serialLoggingLevel)
         Serial.println(value);
 }
 
+void serialLogln(float value, int serialLoggingLevel)
+{
+    if (serialLoggingLevel <= LOGGING_LEVEL)
+        Serial.println(value);
+}
+
 void serialLogln(std::string value, int serialLoggingLevel)
 {
     serialLogln(value.c_str(), serialLoggingLevel);

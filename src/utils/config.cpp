@@ -37,9 +37,15 @@ gpio_num_t BATTERY_VOLTAGE_PIN = GPIO_NUM_10;
 int TICKS_PER_ROTATION = 12000;
 float TRACK_WIDTH_INCHES = 8.29;
 float WHEEL_DIAMETER_INCHES = 4.75;
-float MAX_VELOCITY_TPS = 39000;
-float MAX_ACCELERATION_TPSPS = 5000;
+float THEORETICAL_MAX_VELOCITY_TPS = 52000;
+float THEORETICAL_MAX_ACCELERATION_TPSPS = 252000;
+float VELOCITY_LIMIT_TPS = 30000;
+float ACCELERATION_LIMIT_TPSPS = 125000;
+float MIN_MOTOR_POWER = 0.15; // Minimum motor power to elicit motor response, empirically determined
+float MIN_MOTOR_VELOCITY_TPS = 5000;
 float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+
+int MAGNET_CCW_IS_POSITIVE = 1; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
 
 float PID_POSITION_TOLERANCE = 100;
 float PID_VELOCITY_TOLERANCE = 6000;
@@ -68,8 +74,12 @@ void setConfig(JsonObject config) {
     if (config["TICKS_PER_ROTATION"].is<int>()) TICKS_PER_ROTATION = config["TICKS_PER_ROTATION"];
     if (config["TRACK_WIDTH_INCHES"].is<float>()) TRACK_WIDTH_INCHES = config["TRACK_WIDTH_INCHES"];
     if (config["WHEEL_DIAMETER_INCHES"].is<float>()) WHEEL_DIAMETER_INCHES = config["WHEEL_DIAMETER_INCHES"];
-    if (config["MAX_VELOCITY_TPS"].is<float>()) MAX_VELOCITY_TPS = config["MAX_VELOCITY_TPS"];
-    if (config["MAX_ACCELERATION_TPSPS"].is<float>()) MAX_ACCELERATION_TPSPS = config["MAX_ACCELERATION_TPSPS"];
+    if (config["THEORETICAL_MAX_VELOCITY_TPS"].is<float>()) THEORETICAL_MAX_VELOCITY_TPS = config["THEORETICAL_MAX_VELOCITY_TPS"];
+    if (config["THEORETICAL_MAX_ACCELERATION_TPSPS"].is<float>()) THEORETICAL_MAX_ACCELERATION_TPSPS = config["THEORETICAL_MAX_ACCELERATION_TPSPS"];
+    if (config["MIN_MOTOR_POWER"].is<float>()) MIN_MOTOR_POWER = config["MIN_MOTOR_POWER"];
+    if (config["MIN_MOTOR_VELOCITY_TPS"].is<float>()) MIN_MOTOR_VELOCITY_TPS = config["MIN_MOTOR_VELOCITY_TPS"];
+
+    if (config["MAGNET_CCW_IS_POSITIVE"].is<int>()) MAGNET_CCW_IS_POSITIVE = config["MAGNET_CCW_IS_POSITIVE"];
 
     serialLogln("Config Set!", 2);
 }

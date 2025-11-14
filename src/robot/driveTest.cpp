@@ -148,10 +148,11 @@ void MotorEncoderTest::checkEncoderVelocity()
 {
     int encA = readLeftEncoder();
     int encB = readRightEncoder();
-    float encAVel = (encA - prevEncA) / (float) 0.02;
-    float encBVel = (encB - prevEncB) / (float) 0.02;
-    float encAAccel = (encAVel - prevEncVelA); // Am I miscalculating acceleration? Should be change in velocity over change in time, but I'm not dividing by time here
-    float encBAccel = (encBVel - prevEncVelB);
+    float timeDiff = (millis() - prevTime) / 1000.0; // in seconds
+    float encAVel = (encA - prevEncA) / timeDiff;
+    float encBVel = (encB - prevEncB) / timeDiff;
+    float encAAccel = (encAVel - prevEncVelA) / timeDiff; // Am I miscalculating acceleration? Should be change in velocity over change in time, but I'm not dividing by time here
+    float encBAccel = (encBVel - prevEncVelB) / timeDiff;
     if (abs(encAVel) > maxEncoderVelocity) maxEncoderVelocity = abs(encAVel);
     if (abs(encBVel) > maxEncoderVelocity) maxEncoderVelocity = abs(encBVel);
     if (abs(encAAccel) > maxEncoderAccel) maxEncoderAccel = abs(encAAccel);
@@ -160,6 +161,7 @@ void MotorEncoderTest::checkEncoderVelocity()
     prevEncB = encB;
     prevEncVelA = encAVel;
     prevEncVelB = encBVel;
+    prevTime = millis();
 }
 
 void MotorEncoderTest::testDriveForward()
@@ -168,6 +170,7 @@ void MotorEncoderTest::testDriveForward()
     prevEncB = readRightEncoder();
     prevEncVelA = 0;
     prevEncVelB = 0;
+    prevTime = millis();
     serialLogln("Setting motors to go 'forward' for 5 seconds...", 2);
     setLeftPower(1);
     setRightPower(1);
