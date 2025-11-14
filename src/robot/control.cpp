@@ -278,8 +278,15 @@ void setupBot() {
     }
 }
 
+// current position
 int X, Y = 0;
+// target position
 int X_target, Y_target = 0;
+// current-target delta
+int xd,yd = 0;
+// heading
+int theta, target_angle = 0
+int target_distance = 0;
 
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
@@ -441,42 +448,49 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         // turn(M_PI / 2, "NULL");
     }
 
-    if (DO_JSON_PID) {
-        int currentPositionEncoderA = readLeftEncoder();
-        int currentPositionEncoderB = readRightEncoder();
-
-        // === from http://www.geology.smu.edu/~dpa-www/robo/challenge/math.html ===
-        int left_inches = (float)currentPositionEncoderA / TICKS_PER_INCH;
-        int right_inches = (float)currentPositionEncoderB / TICKS_PER_INCH;
-        int distance = (left_inches + right_inches) / 2.0;
-
-        // TODO: confirm that TRACK_WIDTH_INCHES const is correct
-        int theta = (left_inches - right_inches) / TRACK_WIDTH_INCHES;
-        theta -= (float)((int)(theta/TWO_PI))*TWO_PI;
-
-        X += distance * sin(theta);
-        Y += distance * cos(theta);
-
-        // xd = X_target - X;
-        // yd = Y_target - Y;
-        // target_distance = sqrt((xd*xd)+(yd*yd));
-        // target_angle = (90 - (atan2(yd,xd)*(180/PI))) - (heading*(180/PI));
-        
-        
-        serialLog("||", 2);
-        serialLog(X, 2);
-        serialLog(",", 2);
-        serialLog(X_target, 2);
-        serialLog(",", 2);
-        serialLog(Y, 2);
-        serialLog(",", 2);
-        serialLog(X_target, 2);
-        serialLogln(";", 2);
-
-        // === end from ===
-
+    if (DO_DPRG_NAV) {
+        sense_location();
+        locate_target();
     }
 }
+
+void sense_location() {
+    int currentPositionEncoderA = readLeftEncoder();
+    int currentPositionEncoderB = readRightEncoder();
+
+    // === from http://www.geology.smu.edu/~dpa-www/robo/challenge/math.html ===
+    int left_inches = (float)currentPositionEncoderA / TICKS_PER_INCH;
+    int right_inches = (float)currentPositionEncoderB / TICKS_PER_INCH;
+    int distance = (left_inches + right_inches) / 2.0;
+
+    // TODO: confirm that TRACK_WIDTH_INCHES const is correct
+    int theta = (left_inches - right_inches) / TRACK_WIDTH_INCHES;
+    theta -= (float)((int)(theta/TWO_PI))*TWO_PI;
+
+    X += distance * sin(theta);
+    Y += distance * cos(theta);
+
+    
+    serialLog("||", 2);
+    serialLog(X, 2);
+    serialLog(",", 2);
+    serialLog(X_target, 2);
+    serialLog(",", 2);
+    serialLog(Y, 2);
+    serialLog(",", 2);
+    serialLog(X_target, 2);
+    serialLogln(";", 2);
+
+    // === end from ===
+}
+
+void locate_target() {
+    xd = X_target - X;
+    yd = Y_target - Y;
+    target_distance = sqrt((xd*xd)+(yd*yd));
+    target_angle = (90 - (atan2(yd,xd)*(180/PI))) - (heading*(180/PI));
+}
+
 
 // start centering process
 void startCentering()
