@@ -423,7 +423,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         serialLog(headingTarget, 3);
         serialLog(",", 3);
         serialLog(currentHeading, 3);
-        serialLogln("", 3);
+        serialLogln("**", 3);
 
 #endif
 
