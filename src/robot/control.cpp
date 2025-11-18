@@ -537,9 +537,10 @@ void sense_location(double leftVelocityTicks, double rightVelocityTicks, double 
 
     // TODO(but way later): use magnetometer for theta :(
     // TODO: confirm that TRACK_WIDTH_INCHES const is correct
-    double theta = (left_inches - right_inches) / TRACK_WIDTH_INCHES;
+    double deltaTheta = (right_inches - left_inches) / TRACK_WIDTH_INCHES;
+    theta += deltaTheta;
     // normalizing theta between 0 and 2pi 
-    // theta -= (double)(floor(theta/TWO_PI))*TWO_PI;
+    theta -= (double)(floor(theta/TWO_PI))*TWO_PI;
 
     X += distance * cos(theta);
     Y += distance * sin(theta);
