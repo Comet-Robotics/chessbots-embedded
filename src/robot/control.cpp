@@ -140,8 +140,23 @@ void testEncoderPID()
 const int MAX_ROTATIONS_IN_SQUARE = 4;
 int CURRENT_ROTATION_IN_SQUARE = 0;
 const int TICKS_PER_INCH = 795;
+const int SQUARE_SIDE_LENGTH_INCHES = 24; 
 const int SQUARE_SIDE_LENGTH_TICKS = TICKS_PER_INCH * 24; // 2 feet in theory
 bool atCornerOfSquare = false;
+
+void testDPRGNav() {    
+    serialLog("Navigating to point ", 2);
+    serialLog(CURRENT_ROTATION_IN_SQUARE + 1, 2);
+    serialLog(" of ", 2);
+    serialLogln(MAX_ROTATIONS_IN_SQUARE, 2);
+
+    CURRENT_ROTATION_IN_SQUARE++;
+
+    if (CURRENT_ROTATION_IN_SQUARE == 4) {
+        serialLogln("Square done!", 2);
+        CURRENT_ROTATION_IN_SQUARE = 0;
+    }
+}
 
 void testEncoderPIDWithSquare() {    
     
@@ -276,17 +291,24 @@ void setupBot() {
         testEncoderPIDWithSquare();
         timerInterval(8000, &testEncoderPIDWithSquare);
     }
+    
+    if (DO_DPRG_NAV_TEST) {
+        testDPRGNav();
+        timerInterval(10000, &testDPRGNav);
+    }
 }
 
 // current position
-int X, Y = 0;
+float X, Y = 0.0;
 // target position
-int X_target, Y_target = 0;
+float X_target, Y_target = 0.0;
 // current-target delta
-int xd,yd = 0;
+float xd, yd = 0.0;
 // heading
-int theta, target_angle = 0
-int target_distance = 0;
+float theta, target_angle = 0.0;
+float target_distance = 0.0;
+
+const int TOP_SPEED_INCHES_PER_SECOND = VELOCITY_LIMIT_TPS / TICKS_PER_INCH;
 
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
@@ -322,13 +344,14 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
     if (DO_ENCODER_TEST) encoderLoop();
 
-    if (DO_PID) {
-        double loopDelaySeconds = ((double) loopDelayMs) / 1000;
+    double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-        int currentPositionEncoderA = readLeftEncoder();
-        int currentPositionEncoderB = readRightEncoder();
-        double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
-        double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
+    int currentPositionEncoderA = readLeftEncoder();
+    int currentPositionEncoderB = readRightEncoder();
+    double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
+    double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
+
+    if (DO_PID) {
 
         profileA.currentPosition = currentPositionEncoderA;
         profileA.currentVelocity = currentVelocityA;
@@ -448,29 +471,62 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         // turn(M_PI / 2, "NULL");
     }
 
+    bool navigation_flag;
+    int navigation_speed, navigation_turn;
+
     if (DO_DPRG_NAV) {
-        sense_location();
+        // Q: is it potentially problematic to depend on loopDelayMs as our dt? should we be tracking delta time???
+
+        sense_location(currentVelocityA, currentVelocityB, loopDelaySeconds);
         locate_target();
+        std::tuple<bool, int, int> navigateValues = navigate();
+        
+        std::tie(navigation_flag, navigation_speed, navigation_turn) = navigateValues;
+        
+        if (navigation_turn == 0) {
+            // go forward
+            drive(
+                navigation_speed / TOP_SPEED_INCHES_PER_SECOND, // leftMotorPower,
+                navigation_speed / TOP_SPEED_INCHES_PER_SECOND, // rightMotorPower,
+                "NULL"
+            );
+        } else if (navigation_turn > 0) {
+            // turn left in place
+            drive(
+                -0.5, // leftMotorPower,
+                0.5, // rightMotorPower,
+                "NULL"
+            );
+        } else if (navigation_turn < 0) {
+            // turn right in place
+            drive(
+                0.5, // leftMotorPower,
+                -0.5, // rightMotorPower,
+                "NULL"
+            );
+        } 
     }
+
 }
 
-void sense_location() {
-    int currentPositionEncoderA = readLeftEncoder();
-    int currentPositionEncoderB = readRightEncoder();
+void sense_location(double leftVelocityTicks, double rightVelocityTicks, int deltaTime) {
+    double leftEncoderTickDelta = deltaTime * leftVelocityTicks;
+    double rightEncoderTickDelta = deltaTime * rightVelocityTicks;
 
     // === from http://www.geology.smu.edu/~dpa-www/robo/challenge/math.html ===
-    int left_inches = (float)currentPositionEncoderA / TICKS_PER_INCH;
-    int right_inches = (float)currentPositionEncoderB / TICKS_PER_INCH;
-    int distance = (left_inches + right_inches) / 2.0;
+    float left_inches = (float)leftEncoderTickDelta / TICKS_PER_INCH;
+    float right_inches = (float)rightEncoderTickDelta / TICKS_PER_INCH;
+    float distance = (left_inches + right_inches) / 2.0;
 
+    // TODO(but way later): use magnetometer for theta :(
     // TODO: confirm that TRACK_WIDTH_INCHES const is correct
-    int theta = (left_inches - right_inches) / TRACK_WIDTH_INCHES;
-    theta -= (float)((int)(theta/TWO_PI))*TWO_PI;
+    float theta = (left_inches - right_inches) / TRACK_WIDTH_INCHES;
+    // normalizing theta between 0 and 2pi 
+    theta -= (float)(floor(theta/TWO_PI))*TWO_PI;
 
-    X += distance * sin(theta);
-    Y += distance * cos(theta);
+    X += distance * cos(theta);
+    Y += distance * sin(theta);
 
-    
     serialLog("||", 2);
     serialLog(X, 2);
     serialLog(",", 2);
@@ -479,16 +535,96 @@ void sense_location() {
     serialLog(Y, 2);
     serialLog(",", 2);
     serialLog(X_target, 2);
+    serialLog(",", 2);
+    serialLog(theta, 2);
     serialLogln(";", 2);
 
     // === end from ===
+}
+
+// constants that control the navigation behavior
+#define TARGET_CIRCLE 2    // error circle, 2 inches
+#define NAVIGATION_TURN 1  // turn size, adjust to taste
+#define TARGET_CLOSE 12     // slow down within 1 foot of target
+#define DEADZONE 5          // steering tolerance near 0
+
+// navigate() target seeking behavior.  Run this from the 20 Hz
+// subsumption control loop.
+
+// target == true when actively seeking a target.
+// Set by waypoint() that assigns the  X_target,Y_target coords,
+// Reset by this behavior when we arrive at a target.
+bool target = false;
+
+std::tuple<bool, int, int> navigate()            
+{
+
+     // slowdown == true, robot slows down when approaching target
+     // Set by the user, read by this behavior.
+     bool slowdown = true;
+
+     // TODO: last target distance...
+     int last_target_distance;
+
+     // outputs of this behavior, for subsumption arbitrater
+     bool navigation_flag;
+     float navigation_speed, navigation_turn;
+
+     if (target) {
+
+        // CALL NOT NEEDED FOR OUR USECASE - WE RUN locate_target() in the control loop directly,
+        // whereas they don't. see '7. Subsumption control loop' at 
+        // http://www.geology.smu.edu/~dpa-www/robo/challenge/navigation.html
+        //  // calculate target_distance and target_angle
+        //  locate_target();
+
+         // have we arrived at target?
+         if ((target_distance < TARGET_CIRCLE)
+            && (target_distance > last_target_distance)){
+             
+             // yes!  signal arrival and disable behavior
+             target = false;
+             navigation_flag = false;
+
+         } else {
+
+             // no, still seeking target, signal arbitrater
+             navigation_flag = true;
+             
+             // steer toward target
+             if (abs(target_angle) < DEADZONE) {
+                     navigation_turn = 0;
+             } else {
+                 if (target_angle < 0 ) {
+                     navigation_turn = -NAVIGATION_TURN;
+                 } else {
+                     navigation_turn =  NAVIGATION_TURN;
+                 }
+             }
+
+             // slow down when close to target
+             if ((slowdown == true)
+                  && (target_distance < TARGET_CLOSE)) {
+                      navigation_speed =
+                         (target_distance*TOP_SPEED_INCHES_PER_SECOND)/TARGET_CLOSE;
+             } else {
+                      navigation_speed = TOP_SPEED_INCHES_PER_SECOND;
+             }
+         }
+    } else {
+         navigation_flag = false;   // no target, turn behavior off
+    }
+
+    return std::make_tuple(navigation_flag, navigation_speed, navigation_turn);
 }
 
 void locate_target() {
     xd = X_target - X;
     yd = Y_target - Y;
     target_distance = sqrt((xd*xd)+(yd*yd));
-    target_angle = (90 - (atan2(yd,xd)*(180/PI))) - (heading*(180/PI));
+    // TODO: figure out what heading is meant to be
+    int heading = 0;
+    target_angle = (90 - (atan2(yd,xd)*(180/PI))) - (theta*(180/PI));
 }
 
 

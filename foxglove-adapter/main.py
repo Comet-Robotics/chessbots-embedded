@@ -42,7 +42,8 @@ with foxglove.open_mcap(file_name) as writer:
         if len(split) == 4:
             try:
                 parsed = [float(s) for s in split]
-                X, X_target, Y, Y_target = parsed
+                X, X_target, Y, Y_target, theta = parsed
+                # TODO: send theta to foxglove
                 dprg_nav_current_pos_channel.log(Vector2(x=X, y=Y))
                 dprg_nav_target_pos_channel.log(Vector2(x=X_target, y=Y_target))
             except ValueError:
