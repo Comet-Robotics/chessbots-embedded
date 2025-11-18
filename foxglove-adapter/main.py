@@ -20,6 +20,7 @@ with foxglove.open_mcap(file_name) as writer:
     dprg_nav_current_pos_channel = Vector2Channel("/json_pid_current_position")
     dprg_nav_target_pos_channel = Vector2Channel("/json_pid_target_position")
 
+    locate_target_channel = Channel("/locate_target", message_encoding="json")
     esp = serial.Serial(port=SERIAL_PORT, baudrate=115200, timeout=.1) 
 
     def read_and_log_serial(ser: serial.Serial):
@@ -30,13 +31,30 @@ with foxglove.open_mcap(file_name) as writer:
                     message = line.decode(errors="replace").strip()
                     if message.endswith("**"):
                         handle_possible_pid_log(message[:-2])
-                    elif message.startswith("||") and message.endswith(";"):
-                        handle_possible_dprg_nav_log(message[2:-1])
+                    elif message.startswith("SENSE_LOCATION") and message.endswith(";"):
+                        handle_possible_dprg_nav_log(message[len("SENSE_LOCATION"):-1])
+                    elif message.startswith("LOCATE_TARGET") and message.endswith(";"):
+                        handle_possible_locate_target_log(message[len("LOCATE_TARGET"):-1])
                     else:
                         log_channel.log(Log(message=message, timestamp=Timestamp.now()))
             except Exception as e:
                 print({"message": f"Error reading serial: {str(e)}"})
 
+    def handle_possible_locate_target_log(message: str):
+        split = message.split(",")
+        if len(split) == 4:
+            try:
+                parsed = [float(s) for s in split]
+                xd, yd, target_distance, target_angle = parsed
+                locate_target_channel.log({
+                    "xd": xd,
+                    "yd": yd,
+                    "target_distance": target_distance,
+                    "target_angle": target_angle
+                })
+            except ValueError:
+                print("tuff")
+    
     def handle_possible_dprg_nav_log(message: str):
         split = message.split(",")
         if len(split) == 4:

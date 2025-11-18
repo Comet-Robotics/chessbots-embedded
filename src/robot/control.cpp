@@ -306,7 +306,7 @@ float X_target, Y_target = 0.0;
 float xd, yd = 0.0;
 // heading
 float theta, target_angle = 0.0;
-float target_distance = 0.0;
+float target_distance, last_target_distance = 0.0;
 
 const int TOP_SPEED_INCHES_PER_SECOND = VELOCITY_LIMIT_TPS / TICKS_PER_INCH;
 
@@ -527,7 +527,7 @@ void sense_location(double leftVelocityTicks, double rightVelocityTicks, int del
     X += distance * cos(theta);
     Y += distance * sin(theta);
 
-    serialLog("||", 2);
+    serialLog("SENSE_LOCATION", 2);
     serialLog(X, 2);
     serialLog(",", 2);
     serialLog(X_target, 2);
@@ -558,13 +558,9 @@ bool target = false;
 
 std::tuple<bool, int, int> navigate()            
 {
-
      // slowdown == true, robot slows down when approaching target
      // Set by the user, read by this behavior.
      bool slowdown = true;
-
-     // TODO: last target distance...
-     int last_target_distance;
 
      // outputs of this behavior, for subsumption arbitrater
      bool navigation_flag;
@@ -621,10 +617,19 @@ std::tuple<bool, int, int> navigate()
 void locate_target() {
     xd = X_target - X;
     yd = Y_target - Y;
+    last_target_distance = target_distance;
     target_distance = sqrt((xd*xd)+(yd*yd));
-    // TODO: figure out what heading is meant to be
-    int heading = 0;
     target_angle = (90 - (atan2(yd,xd)*(180/PI))) - (theta*(180/PI));
+
+    serialLog("LOCATE_TARGET", 2);
+    serialLog(xd, 2);
+    serialLog(",", 2);
+    serialLog(yd, 2);
+    serialLog(",", 2);
+    serialLog(target_distance, 2);
+    serialLog(",", 2);
+    serialLog(target_angle, 2);
+    serialLogln(";", 2);
 }
 
 
