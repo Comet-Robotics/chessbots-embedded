@@ -118,6 +118,25 @@ bool onFirstTile[4] = {false, false, false, false};
 
 bool waitingForLight = false;
 
+const int MAX_ROTATIONS_IN_SQUARE = 4;
+int CURRENT_ROTATION_IN_SQUARE = 0;
+const int TICKS_PER_INCH = 795;
+const int SQUARE_SIDE_LENGTH_INCHES = 24; 
+const int SQUARE_SIDE_LENGTH_TICKS = TICKS_PER_INCH * 24; // 2 feet in theory
+bool atCornerOfSquare = false;
+
+// current position
+float X, Y = 0.0;
+// target position
+float X_target, Y_target = 0.0;
+// current-target delta
+float xd, yd = 0.0;
+// heading
+float theta, target_angle = 0.0;
+float target_distance, last_target_distance = 0.0;
+
+const int TOP_SPEED_INCHES_PER_SECOND = VELOCITY_LIMIT_TPS / TICKS_PER_INCH;
+
 void testEncoderPID()
 {
     serialLogln("Changing encoder PID setpoint!", 2);
@@ -137,18 +156,25 @@ void testEncoderPID()
     updateCritRange();
 }
 
-const int MAX_ROTATIONS_IN_SQUARE = 4;
-int CURRENT_ROTATION_IN_SQUARE = 0;
-const int TICKS_PER_INCH = 795;
-const int SQUARE_SIDE_LENGTH_INCHES = 24; 
-const int SQUARE_SIDE_LENGTH_TICKS = TICKS_PER_INCH * 24; // 2 feet in theory
-bool atCornerOfSquare = false;
-
 void testDPRGNav() {    
     serialLog("Navigating to point ", 2);
     serialLog(CURRENT_ROTATION_IN_SQUARE + 1, 2);
     serialLog(" of ", 2);
     serialLogln(MAX_ROTATIONS_IN_SQUARE, 2);
+
+    if (CURRENT_ROTATION_IN_SQUARE == 0) {
+        X_target = 0.0;
+        Y_target = 0.0;
+    } else if (CURRENT_ROTATION_IN_SQUARE == 1) {
+        X_target = 0.0;
+        Y_target = SQUARE_SIDE_LENGTH_INCHES;
+    } else if (CURRENT_ROTATION_IN_SQUARE == 2) {
+        X_target = SQUARE_SIDE_LENGTH_INCHES;
+        Y_target = SQUARE_SIDE_LENGTH_INCHES;
+    } else if (CURRENT_ROTATION_IN_SQUARE == 3) {
+        X_target = SQUARE_SIDE_LENGTH_INCHES;
+        Y_target = 0.0;
+    }
 
     CURRENT_ROTATION_IN_SQUARE++;
 
@@ -298,17 +324,7 @@ void setupBot() {
     }
 }
 
-// current position
-float X, Y = 0.0;
-// target position
-float X_target, Y_target = 0.0;
-// current-target delta
-float xd, yd = 0.0;
-// heading
-float theta, target_angle = 0.0;
-float target_distance, last_target_distance = 0.0;
 
-const int TOP_SPEED_INCHES_PER_SECOND = VELOCITY_LIMIT_TPS / TICKS_PER_INCH;
 
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
@@ -475,8 +491,6 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
     int navigation_speed, navigation_turn;
 
     if (DO_DPRG_NAV) {
-        // Q: is it potentially problematic to depend on loopDelayMs as our dt? should we be tracking delta time???
-
         sense_location(currentVelocityA, currentVelocityB, loopDelaySeconds);
         locate_target();
         std::tuple<bool, int, int> navigateValues = navigate();
@@ -610,7 +624,13 @@ std::tuple<bool, int, int> navigate()
     } else {
          navigation_flag = false;   // no target, turn behavior off
     }
-
+    serialLog("NAVIGATE", 2);
+    serialLog(navigation_flag, 2);
+    serialLog(",", 2);
+    serialLog(navigation_speed, 2);
+    serialLog(",", 2);
+    serialLog(navigation_turn, 2);
+    serialLogln(";", 2);
     return std::make_tuple(navigation_flag, navigation_speed, navigation_turn);
 }
 

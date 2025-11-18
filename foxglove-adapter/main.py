@@ -7,6 +7,12 @@ from foxglove.schemas import Timestamp, Vector2, Log
 
 SERIAL_PORT = "/dev/cu.usbmodem01"
 
+def serial_setup():
+    while True:
+        try:
+            return serial.Serial(port=SERIAL_PORT, baudrate=115200, timeout=.1)
+        except serial.SerialException:
+            continue
 
 file_name = f"recordings/recording_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mcap"
 
@@ -20,8 +26,11 @@ with foxglove.open_mcap(file_name) as writer:
     dprg_nav_current_pos_channel = Vector2Channel("/json_pid_current_position")
     dprg_nav_target_pos_channel = Vector2Channel("/json_pid_target_position")
 
+    # Navigation messages from the firmware (navigate())
+    navigate_channel = Channel("/navigate", message_encoding="json")
+
     locate_target_channel = Channel("/locate_target", message_encoding="json")
-    esp = serial.Serial(port=SERIAL_PORT, baudrate=115200, timeout=.1) 
+    esp = serial_setup()
 
     def read_and_log_serial(ser: serial.Serial):
         while True:
@@ -35,6 +44,8 @@ with foxglove.open_mcap(file_name) as writer:
                         handle_possible_dprg_nav_log(message[len("SENSE_LOCATION"):-1])
                     elif message.startswith("LOCATE_TARGET") and message.endswith(";"):
                         handle_possible_locate_target_log(message[len("LOCATE_TARGET"):-1])
+                    elif message.startswith("NAVIGATE") and message.endswith(";"):
+                        handle_possible_navigate_log(message[len("NAVIGATE"):-1])
                     else:
                         log_channel.log(Log(message=message, timestamp=Timestamp.now()))
             except Exception as e:
@@ -90,5 +101,28 @@ with foxglove.open_mcap(file_name) as writer:
                 })
             except ValueError:
                 print("tuff")
+
+    def handle_possible_navigate_log(message: str):
+        # Expected format from firmware: "NAVIGATE" + <flag> + "," + <speed> + "," + <turn> + ";"
+        # where <flag> may be 0/1, speed/turn are numeric.
+        split = message.split(",")
+        if len(split) != 3:
+            return
+        try:
+            flag_raw = int(split[0].strip())
+            # accept boolean-like values
+            navigation_flag = False if flag_raw == 0 else True
+
+            navigation_speed = float(split[1])
+            # navigation_turn is usually an integer (e.g., -1, 0, 1) but accept float
+            navigation_turn = int(float(split[2]))
+
+            navigate_channel.log({
+                "navigation_flag": navigation_flag,
+                "navigation_speed": navigation_speed,
+                "navigation_turn": navigation_turn,
+            })
+        except Exception:
+            print("tuff")
 
     read_and_log_serial(esp)
