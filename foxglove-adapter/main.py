@@ -28,6 +28,7 @@ with foxglove.open_mcap(file_name):
 
     dprg_nav_current_pos_channel = Vector2Channel("/navigate/position/current")
     dprg_nav_target_pos_channel = Vector2Channel("/navigate/position/target")
+    sense_location_channel = Channel("/sense_location", message_encoding="json")
 
     # Navigation messages from the firmware (navigate())
     navigate_channel = Channel("/navigate", message_encoding="json")
@@ -49,6 +50,7 @@ with foxglove.open_mcap(file_name):
                     elif message.startswith("LOCATE_TARGET") and message.endswith(";"):
                         handle_possible_locate_target_log(message[len("LOCATE_TARGET"):-1])
                     elif message.startswith("NAVIGATE") and message.endswith(";"):
+                        print("NAVIGATE log", message)
                         handle_possible_navigate_log(message[len("NAVIGATE"):-1])
                     else:
                         log_channel.log(Log(message=message, timestamp=Timestamp.now()))
@@ -70,19 +72,29 @@ with foxglove.open_mcap(file_name):
                     "target_angle": target_angle
                 })
             except ValueError:
-                print("tuff")
+                print("Failed to parse locate_target log", message)
     
     def handle_possible_dprg_nav_log(message: str):
         split = message.split(",")
-        if len(split) == 5:
+        if len(split) == 13:
             try:
                 parsed = [float(s) for s in split]
-                X, X_target, Y, Y_target, theta = parsed
-                # TODO: send theta to foxglove
+                X, X_target, Y, Y_target, theta, distance, left_inches, right_inches, deltaTime, leftTicks, rightTicks, leftEncoderTickDelta, rightEncoderTickDelta = parsed
                 dprg_nav_current_pos_channel.log(Vector2(x=X, y=Y))
                 dprg_nav_target_pos_channel.log(Vector2(x=X_target, y=Y_target))
+                sense_location_channel.log({
+                    "theta": theta,
+                    "distance": distance,
+                    "left_inches": left_inches,
+                    "right_inches": right_inches,
+                    "deltaTime": deltaTime,
+                    "leftTicks": leftTicks,
+                    "rightTicks": rightTicks,
+                    "leftEncoderTickDelta": leftEncoderTickDelta,
+                    "rightEncoderTickDelta": rightEncoderTickDelta,
+                })
             except ValueError:
-                print("tuff")
+                print("Failed to parse dprg_nav log", message)
 
     def handle_possible_pid_log(message: str):
         split = message.split(",")
@@ -106,7 +118,7 @@ with foxglove.open_mcap(file_name):
                     }
                 })
             except ValueError:
-                print("tuff")
+                print("Failed to parse pid log", message)
 
     def handle_possible_navigate_log(message: str):
         # Expected format from firmware: "NAVIGATE" + <flag> + "," + <speed> + "," + <turn> + ";"
@@ -128,6 +140,6 @@ with foxglove.open_mcap(file_name):
                 "navigation_turn": navigation_turn,
             })
         except Exception:
-            print("tuff")
+            print("Failed to parse navigate log", message)
 
     read_and_log_serial()

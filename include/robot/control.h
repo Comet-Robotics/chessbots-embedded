@@ -55,7 +55,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint);
 void updateCentering();
 void updateToNextDistance();
 void testDPRGNav();
-std::tuple<bool, float, float> navigate();
-void sense_location(double leftVelocityTicks, double rightVelocityTicks, int deltaTime);
+std::tuple<bool, double, double> navigate();
+void sense_location(double leftVelocityTicks, double rightVelocityTicks, double deltaTime, int leftTicks, int rightTicks);
 void locate_target();
 #endif
