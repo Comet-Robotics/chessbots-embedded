@@ -8,23 +8,26 @@ from foxglove.schemas import Timestamp, Vector2, Log
 SERIAL_PORT = "/dev/cu.usbmodem01"
 
 def serial_setup():
+    print("Connecting to serial port:", SERIAL_PORT)
     while True:
         try:
-            return serial.Serial(port=SERIAL_PORT, baudrate=115200, timeout=.1)
+            ser = serial.Serial(port=SERIAL_PORT, baudrate=115200, timeout=.1)
+            print("Connected to serial port:", SERIAL_PORT)
+            return ser
         except serial.SerialException:
             continue
 
 file_name = f"recordings/recording_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mcap"
 
-with foxglove.open_mcap(file_name) as writer:
+with foxglove.open_mcap(file_name):
     print("Recording at:", file_name)
     server = foxglove.start_server()
 
     log_channel = LogChannel("/esp_logs")
     pid_data_channel = Channel("/prev_pid", message_encoding="json")
 
-    dprg_nav_current_pos_channel = Vector2Channel("/json_pid_current_position")
-    dprg_nav_target_pos_channel = Vector2Channel("/json_pid_target_position")
+    dprg_nav_current_pos_channel = Vector2Channel("/navigate/position/current")
+    dprg_nav_target_pos_channel = Vector2Channel("/navigate/position/target")
 
     # Navigation messages from the firmware (navigate())
     navigate_channel = Channel("/navigate", message_encoding="json")
@@ -32,10 +35,11 @@ with foxglove.open_mcap(file_name) as writer:
     locate_target_channel = Channel("/locate_target", message_encoding="json")
     esp = serial_setup()
 
-    def read_and_log_serial(ser: serial.Serial):
+    def read_and_log_serial():
+        global esp
         while True:
             try:
-                line = ser.readline()
+                line = esp.readline()
                 if line:
                     message = line.decode(errors="replace").strip()
                     if message.endswith("**"):
@@ -49,7 +53,9 @@ with foxglove.open_mcap(file_name) as writer:
                     else:
                         log_channel.log(Log(message=message, timestamp=Timestamp.now()))
             except Exception as e:
-                print({"message": f"Error reading serial: {str(e)}"})
+                print({"message": f"Error reading serial: {str(e)}. Reconnecting..."})
+                esp.close()
+                esp = serial_setup()
 
     def handle_possible_locate_target_log(message: str):
         split = message.split(",")
@@ -68,7 +74,7 @@ with foxglove.open_mcap(file_name) as writer:
     
     def handle_possible_dprg_nav_log(message: str):
         split = message.split(",")
-        if len(split) == 4:
+        if len(split) == 5:
             try:
                 parsed = [float(s) for s in split]
                 X, X_target, Y, Y_target, theta = parsed
@@ -114,8 +120,7 @@ with foxglove.open_mcap(file_name) as writer:
             navigation_flag = False if flag_raw == 0 else True
 
             navigation_speed = float(split[1])
-            # navigation_turn is usually an integer (e.g., -1, 0, 1) but accept float
-            navigation_turn = int(float(split[2]))
+            navigation_turn = float(split[2])
 
             navigate_channel.log({
                 "navigation_flag": navigation_flag,
@@ -125,4 +130,4 @@ with foxglove.open_mcap(file_name) as writer:
         except Exception:
             print("tuff")
 
-    read_and_log_serial(esp)
+    read_and_log_serial()
