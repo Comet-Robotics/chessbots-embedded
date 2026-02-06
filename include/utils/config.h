@@ -33,9 +33,15 @@ extern gpio_num_t ONBOARD_LED_PIN;
 extern int TICKS_PER_ROTATION;
 extern float TRACK_WIDTH_INCHES;
 extern float WHEEL_DIAMETER_INCHES;
-extern float MAX_VELOCITY_TPS;
-extern float MAX_ACCELERATION_TPSPS;
+extern float THEORETICAL_MAX_VELOCITY_TPS;
+extern float VELOCITY_LIMIT_TPS;
+extern float THEORETICAL_MAX_ACCELERATION_TPSPS;
+extern float ACCELERATION_LIMIT_TPSPS;
+extern float MIN_MOTOR_POWER;
+extern float MIN_MOTOR_VELOCITY_TPS;
 extern float TILES_TO_TICKS;
+
+extern int MAGNET_CCW_IS_POSITIVE; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
 
 extern float PID_POSITION_TOLERANCE;
 extern float PID_VELOCITY_TOLERANCE;
