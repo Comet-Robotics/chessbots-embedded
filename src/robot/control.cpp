@@ -23,6 +23,7 @@
 #include "../../env.h"
 #include <algorithm>
 #include "utils/functions.h"
+#include <robot/AutoLQR.h>
 
 //PLEASE ONLY USE CHESSBOT #4 FOR TESTING
 PIDController encoderAVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Blue
@@ -48,6 +49,17 @@ boolean testEncoderPID_value = false;
 //determines the encoder values the iteration right before
 int prevPositionA = 0;
 int prevPositionB = 0;
+
+//robot rotation in radians
+int prevRotation = 0;
+
+//calculated previous X and Y values
+float prevX = 0;
+float prevY = 0;
+
+float goalX = 10000;
+float goalY = 10000;
+float goalRot = 0;
 
 //when moving to a different target, this is the encoder position we started from
 int startEncoderAPos = -1;
@@ -179,6 +191,7 @@ void setupBot() {
 
     encoderAVelocityController.Reset();
     encoderBVelocityController.Reset();
+
 
     if (DO_PID_TEST) {
         testEncoderPID();
@@ -323,6 +336,98 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         // serialLogln(leftMotorPower, 3);
 
         // turn(M_PI / 2, "NULL");
+    }
+    if (DO_LQR){
+        // Define system size
+        #define STATE_SIZE 3    // Number of state variables
+        #define CONTROL_SIZE 2  // Number of control inputs
+
+        // Create controller instance
+        AutoLQR controller(STATE_SIZE, CONTROL_SIZE);
+
+        //A is identity since the robot *shouldn't* move when the motors are off
+        float A[STATE_SIZE * STATE_SIZE] = {
+            1.0, .0001, 0,
+            .0001, 1.0, 0,
+            0, 0, 1.0
+        };
+
+        float B[STATE_SIZE * CONTROL_SIZE] = {
+            (float)cos(prevRotation),(float)cos(prevRotation),
+            (float)sin(prevRotation),(float)sin(prevRotation),
+            -1,1
+        };
+
+        // Set matrices in controller
+        controller.setStateMatrix(A);
+        controller.setInputMatrix(B);
+
+        // Q matrix - state cost
+        float Q[STATE_SIZE * STATE_SIZE] = {
+            .1,0,
+            0,.1,0,
+            0,0,.01
+        };
+
+        // R matrix - control cost
+        float R[CONTROL_SIZE * CONTROL_SIZE] = {
+            1, 0,
+            0, 1
+        };
+
+        // Set cost matrices
+        controller.setCostMatrices(Q, R);
+
+        float currentX = prevX + cos(prevRotation)*(readLeftEncoder()-prevPositionA);
+        float currentY = prevY + sin(prevRotation)*(readLeftEncoder()-prevPositionA);
+        float currentRot = prevRotation + atan(((readRightEncoder()-prevPositionB)- (readLeftEncoder()-prevPositionA))*TICK_TO_METERS);
+
+        serialLog("encoders: ",2);
+        serialLog(readLeftEncoder(),2);
+        serialLog(", ", 2);
+        serialLogln(readRightEncoder(),2);
+
+        if (controller.computeGains()) {
+            serialLogln("Gain computation successful",2);
+        } else {
+            serialLogln("Error: Failed to compute gains",2);
+        }
+
+
+        // Calculate state error (current state - desired state)
+        float state_error[STATE_SIZE] = {
+            currentX - goalX,
+            currentY - goalY,
+            currentRot - goalRot,
+
+        };
+
+        controller.updateState(state_error);
+        
+        if (controller.isSystemControllable()) {
+            serialLogln("System is controllable",2);
+        } else {
+            serialLogln("Warning: System is not controllable",2);
+        }
+
+        float control[CONTROL_SIZE];
+        controller.calculateControl(control);
+
+        
+        if(!isnan(control[0]) && !isnan(control[1])){
+            setLeftPower(control[0]);
+            setRightPower(control[1]);
+        }
+        serialLog(control[0],2);
+        serialLog(", ", 2);
+        serialLogln(control[1],2);
+
+        prevPositionA = readLeftEncoder();
+        prevPositionB = readRightEncoder();
+
+        prevX = currentX;
+        prevY = currentY;
+        prevRotation = currentRot;
     }
 }
 
