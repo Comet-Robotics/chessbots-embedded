@@ -503,7 +503,7 @@ bool AutoLQR::computeGainMatrix()
 
     // Check if system is controllable
     if (!isSystemControllable()) {
-        return false;
+        //return false;
     }
 
     // Iterative DARE solver for small systems

@@ -68,9 +68,9 @@ int prevRotation = 0;
 float prevX = 0;
 float prevY = 0;
 
-float goalX = 10000;
-float goalY = 10000;
-float goalRot = 0;
+float goalX = 1;
+float goalY = 1;
+float goalRot;
 
 //when moving to a different target, this is the encoder position we started from
 int startEncoderAPos = -1;
@@ -204,6 +204,7 @@ void setupBot() {
     } else {
         serialLogln("Magnetometer ready!", 2);
         headingTarget = magnet->readDegrees();
+        goalRot = 0;
     }
     serialLogln("Bot Set Up!", 2);
 
@@ -396,18 +397,19 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
         // Create controller instance
         AutoLQR controller(STATE_SIZE, CONTROL_SIZE);
-
+        //A has x position, y position, and rotation
         //A is identity since the robot *shouldn't* move when the motors are off
         float A[STATE_SIZE * STATE_SIZE] = {
-            1.0, .0001, 0,
-            .0001, 1.0, 0,
-            0, 0, 1.0
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
         };
-
+        //B has speed and angle
+        //the speed will predictably change x and y, and angle changes rotation
         float B[STATE_SIZE * CONTROL_SIZE] = {
-            (float)cos(prevRotation),(float)cos(prevRotation),
-            (float)sin(prevRotation),(float)sin(prevRotation),
-            -1,1
+            (float)cos(prevRotation),0,
+            (float)sin(prevRotation),0,
+            0, 1
         };
 
         // Set matrices in controller
@@ -415,32 +417,33 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         controller.setInputMatrix(B);
 
         // Q matrix - state cost
+        // 
         float Q[STATE_SIZE * STATE_SIZE] = {
-            .1,0,
-            0,.1,0,
-            0,0,.01
+            1,0,0,
+            0,1,0,
+            0,0,2
         };
 
         // R matrix - control cost
         float R[CONTROL_SIZE * CONTROL_SIZE] = {
             1, 0,
-            0, 1
+            0, 0.1
         };
 
         // Set cost matrices
         controller.setCostMatrices(Q, R);
+        float diff = (readLeftEncoder()-prevPositionA + readRightEncoder()-prevPositionB)/2;
+        float currentX = prevX + (cos(prevRotation)*(diff))*TICK_TO_METERS;
+        float currentY = prevY + (sin(prevRotation)*(diff))*TICK_TO_METERS;
+        float currentRot = prevRotation + atan((readLeftEncoder()-prevPositionA)*TICK_TO_METERS - (readRightEncoder()-prevPositionB)*TICK_TO_METERS);
 
-        float currentX = prevX + cos(prevRotation)*(readLeftEncoder()-prevPositionA);
-        float currentY = prevY + sin(prevRotation)*(readLeftEncoder()-prevPositionA);
-        float currentRot = prevRotation + atan(((readRightEncoder()-prevPositionB)- (readLeftEncoder()-prevPositionA))*TICK_TO_METERS);
-
-        serialLog("encoders: ",2);
-        serialLog(readLeftEncoder(),2);
+        serialLog("pos: ",2);
+        serialLog(currentX,2);
         serialLog(", ", 2);
-        serialLogln(readRightEncoder(),2);
+        serialLogln(currentY,2);
 
         if (controller.computeGains()) {
-            serialLogln("Gain computation successful",2);
+            //serialLogln("Gain computation successful",2);
         } else {
             serialLogln("Error: Failed to compute gains",2);
         }
@@ -450,30 +453,41 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         float state_error[STATE_SIZE] = {
             currentX - goalX,
             currentY - goalY,
-            currentRot - goalRot,
+            (float)DEG_TO_RAD*(currentRot - goalRot),
 
         };
 
         controller.updateState(state_error);
         
         if (controller.isSystemControllable()) {
-            serialLogln("System is controllable",2);
+            //serialLogln("System is controllable",2);
         } else {
             serialLogln("Warning: System is not controllable",2);
+            // Get the controllability rank
         }
 
         float control[CONTROL_SIZE];
         controller.calculateControl(control);
 
         
-        if(!isnan(control[0]) && !isnan(control[1])){
-            setLeftPower(control[0]);
-            setRightPower(control[1]);
+        if(!isnan(control[0]) && !isnan(control[1]) && control[0] >= 0.1){
+            control[1] = atan2(sin(control[1]),cos(control[1]));
+            if(control[1] > 0){
+                setLeftPower(control[0]-2*control[0]*sin(control[1]));
+                setRightPower(control[0]+2*control[0]*sin(control[1]));
+            }
+            else{
+                setLeftPower(control[0] +2*control[0]*sin(control[1]));
+                setRightPower(control[0]-2*control[0]*sin(control[1]));
+            }
         }
         serialLog(control[0],2);
         serialLog(", ", 2);
-        serialLogln(control[1],2);
-
+        serialLog(control[1],2);
+        serialLog(", curr ", 2);
+        serialLog(currentRot, 2);
+        serialLog(" goal ", 2);
+        serialLogln(goalRot,2);
         prevPositionA = readLeftEncoder();
         prevPositionB = readRightEncoder();
 
