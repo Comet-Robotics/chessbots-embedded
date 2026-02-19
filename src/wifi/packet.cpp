@@ -39,6 +39,7 @@ const char* ESTOP = "ESTOP";
 const char* CUBIC = "DRIVE_CUBIC_SPLINE";
 const char* QUADRATIC = "DRIVE_QUADRATIC_SPLINE";
 const char* SPIN_RADIANS = "SPIN_RADIANS";
+const char* LQR_MOVE = "LQR_MOVE";
 
 // Takes a packet a does specific things based on the type
 void handlePacket(JsonDocument packet) {
@@ -77,6 +78,8 @@ void handlePacket(JsonDocument packet) {
         drive(packet["tiles"], packet["packetId"]);
     } else if (packet["type"] == PING_SEND) {
         sendPingResponse();
+    } else if (packet["type"] == LQR_MOVE){
+        newSetPointLQR((float)packet["distance"], (float)packet["rotation"]);
     }
 }
 

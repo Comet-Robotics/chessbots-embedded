@@ -15,13 +15,13 @@ AutoLQR::AutoLQR(int stateSize, int controlSize)
     , solverTolerance(1e-6f)
 {
     if (stateSize > 0 && controlSize > 0) {
-        A = new float[stateSize * stateSize]();
-        B = new float[stateSize * controlSize]();
-        Q = new float[stateSize * stateSize]();
-        R = new float[controlSize * controlSize]();
-        K = new float[controlSize * stateSize]();
-        state = new float[stateSize]();
-        P = new float[stateSize * stateSize](); // Store Riccati solution
+        A = new double[stateSize * stateSize]();
+        B = new double[stateSize * controlSize]();
+        Q = new double[stateSize * stateSize]();
+        R = new double[controlSize * controlSize]();
+        K = new double[controlSize * stateSize]();
+        state = new double[stateSize]();
+        P = new double[stateSize * stateSize](); // Store Riccati solution
     }
 }
 
@@ -36,36 +36,36 @@ AutoLQR::~AutoLQR()
     delete[] P;
 }
 
-bool AutoLQR::setStateMatrix(const float* inputA)
+bool AutoLQR::setStateMatrix(const double* inputA)
 {
     if (!inputA || !A)
         return false;
-    memcpy(A, inputA, sizeof(float) * stateSize * stateSize);
+    memcpy(A, inputA, sizeof(double) * stateSize * stateSize);
     return true;
 }
 
-bool AutoLQR::setInputMatrix(const float* inputB)
+bool AutoLQR::setInputMatrix(const double* inputB)
 {
     if (!inputB || !B)
         return false;
-    memcpy(B, inputB, sizeof(float) * stateSize * controlSize);
+    memcpy(B, inputB, sizeof(double) * stateSize * controlSize);
     return true;
 }
 
-bool AutoLQR::setCostMatrices(const float* inputQ, const float* inputR)
+bool AutoLQR::setCostMatrices(const double* inputQ, const double* inputR)
 {
     if (!inputQ || !inputR || !Q || !R)
         return false;
-    memcpy(Q, inputQ, sizeof(float) * stateSize * stateSize);
-    memcpy(R, inputR, sizeof(float) * controlSize * controlSize);
+    memcpy(Q, inputQ, sizeof(double) * stateSize * stateSize);
+    memcpy(R, inputR, sizeof(double) * controlSize * controlSize);
     return true;
 }
 
-void AutoLQR::setGains(const float* inputK)
+void AutoLQR::setGains(const double* inputK)
 {
     if (!inputK || !K)
         return;
-    memcpy(K, inputK, sizeof(float) * controlSize * stateSize);
+    memcpy(K, inputK, sizeof(double) * controlSize * stateSize);
 }
 
 bool AutoLQR::computeGains()
@@ -73,11 +73,11 @@ bool AutoLQR::computeGains()
     return computeGainMatrix();
 }
 
-bool AutoLQR::computeGains(int maxIterations, float tolerance)
+bool AutoLQR::computeGains(int maxIterations, double tolerance)
 {
     // Temporarily set solver parameters and compute
     int oldMaxIter = solverMaxIterations;
-    float oldTol = solverTolerance;
+    double oldTol = solverTolerance;
     
     solverMaxIterations = maxIterations;
     solverTolerance = tolerance;
@@ -91,7 +91,7 @@ bool AutoLQR::computeGains(int maxIterations, float tolerance)
     return result;
 }
 
-void AutoLQR::setSolverParameters(int maxIterations, float tolerance)
+void AutoLQR::setSolverParameters(int maxIterations, double tolerance)
 {
     if (maxIterations > 0) {
         solverMaxIterations = maxIterations;
@@ -106,19 +106,19 @@ int AutoLQR::getMaxIterations() const
     return solverMaxIterations;
 }
 
-float AutoLQR::getTolerance() const
+double AutoLQR::getTolerance() const
 {
     return solverTolerance;
 }
 
-void AutoLQR::updateState(const float* currentState)
+void AutoLQR::updateState(const double* currentState)
 {
     if (!currentState || !state)
         return;
-    memcpy(state, currentState, sizeof(float) * stateSize);
+    memcpy(state, currentState, sizeof(double) * stateSize);
 }
 
-void AutoLQR::calculateControl(float* controlOutput)
+void AutoLQR::calculateControl(double* controlOutput)
 {
     if (!controlOutput || !K || !state)
         return;
@@ -136,7 +136,7 @@ void AutoLQR::calculateControl(float* controlOutput)
     }
 }
 
-void AutoLQR::matrixMultiply(const float* m1, const float* m2, float* result, int rows1, int cols1, int cols2)
+void AutoLQR::matrixMultiply(const double* m1, const double* m2, double* result, int rows1, int cols1, int cols2)
 {
     if (!m1 || !m2 || !result)
         return;
@@ -155,7 +155,7 @@ void AutoLQR::matrixMultiply(const float* m1, const float* m2, float* result, in
     }
 }
 
-void AutoLQR::matrixAdd(const float* m1, const float* m2, float* result, int rows, int cols)
+void AutoLQR::matrixAdd(const double* m1, const double* m2, double* result, int rows, int cols)
 {
     if (!m1 || !m2 || !result)
         return;
@@ -165,7 +165,7 @@ void AutoLQR::matrixAdd(const float* m1, const float* m2, float* result, int row
     }
 }
 
-void AutoLQR::matrixSubtract(const float* m1, const float* m2, float* result, int rows, int cols)
+void AutoLQR::matrixSubtract(const double* m1, const double* m2, double* result, int rows, int cols)
 {
     if (!m1 || !m2 || !result)
         return;
@@ -175,7 +175,7 @@ void AutoLQR::matrixSubtract(const float* m1, const float* m2, float* result, in
     }
 }
 
-void AutoLQR::transposeMatrix(const float* matrix, float* result, int rows, int cols)
+void AutoLQR::transposeMatrix(const double* matrix, double* result, int rows, int cols)
 {
     if (!matrix || !result)
         return;
@@ -189,7 +189,7 @@ void AutoLQR::transposeMatrix(const float* matrix, float* result, int rows, int 
 
 // Matrix inversion for small matrices (1x1, 2x2, 3x3) using closed-form
 // and Gauss-Jordan elimination for larger matrices (4x4 and above)
-bool AutoLQR::invertMatrix(const float* matrix, float* result, int n)
+bool AutoLQR::invertMatrix(const double* matrix, double* result, int n)
 {
     if (!matrix || !result)
         return false;
@@ -201,10 +201,10 @@ bool AutoLQR::invertMatrix(const float* matrix, float* result, int n)
         result[0] = 1.0f / matrix[0];
         return true;
     } else if (n == 2) {
-        float det = matrix[0] * matrix[3] - matrix[1] * matrix[2];
+        double det = matrix[0] * matrix[3] - matrix[1] * matrix[2];
         if (fabs(det) < 1e-6)
             return false;
-        float invDet = 1.0f / det;
+        double invDet = 1.0f / det;
         result[0] = matrix[3] * invDet;
         result[1] = -matrix[1] * invDet;
         result[2] = -matrix[2] * invDet;
@@ -212,15 +212,15 @@ bool AutoLQR::invertMatrix(const float* matrix, float* result, int n)
         return true;
     } else if (n == 3) {
         // 3x3 Matrix inversion using Sarrus rule
-        float a = matrix[0], b = matrix[1], c = matrix[2];
-        float d = matrix[3], e = matrix[4], f = matrix[5];
-        float g = matrix[6], h = matrix[7], i = matrix[8];
+        double a = matrix[0], b = matrix[1], c = matrix[2];
+        double d = matrix[3], e = matrix[4], f = matrix[5];
+        double g = matrix[6], h = matrix[7], i = matrix[8];
 
-        float det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+        double det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
         if (fabs(det) < 1e-6)
             return false;
 
-        float invDet = 1.0f / det;
+        double invDet = 1.0f / det;
 
         result[0] = (e * i - f * h) * invDet;
         result[1] = (c * h - b * i) * invDet;
@@ -239,7 +239,7 @@ bool AutoLQR::invertMatrix(const float* matrix, float* result, int n)
     // with partial pivoting for numerical stability
     
     // Allocate augmented matrix [A|I] of size n x 2n
-    float* aug = new float[n * 2 * n];
+    double* aug = new double[n * 2 * n];
     if (!aug)
         return false;
     
@@ -255,9 +255,9 @@ bool AutoLQR::invertMatrix(const float* matrix, float* result, int n)
     for (int col = 0; col < n; col++) {
         // Find pivot (row with maximum absolute value in current column)
         int maxRow = col;
-        float maxVal = fabs(aug[col * 2 * n + col]);
+        double maxVal = fabs(aug[col * 2 * n + col]);
         for (int row = col + 1; row < n; row++) {
-            float val = fabs(aug[row * 2 * n + col]);
+            double val = fabs(aug[row * 2 * n + col]);
             if (val > maxVal) {
                 maxVal = val;
                 maxRow = row;
@@ -273,14 +273,14 @@ bool AutoLQR::invertMatrix(const float* matrix, float* result, int n)
         // Swap rows if needed
         if (maxRow != col) {
             for (int k = 0; k < 2 * n; k++) {
-                float tmp = aug[col * 2 * n + k];
+                double tmp = aug[col * 2 * n + k];
                 aug[col * 2 * n + k] = aug[maxRow * 2 * n + k];
                 aug[maxRow * 2 * n + k] = tmp;
             }
         }
         
         // Scale pivot row to make pivot element 1
-        float pivot = aug[col * 2 * n + col];
+        double pivot = aug[col * 2 * n + col];
         for (int k = 0; k < 2 * n; k++) {
             aug[col * 2 * n + k] /= pivot;
         }
@@ -288,7 +288,7 @@ bool AutoLQR::invertMatrix(const float* matrix, float* result, int n)
         // Eliminate column in all other rows
         for (int row = 0; row < n; row++) {
             if (row != col) {
-                float factor = aug[row * 2 * n + col];
+                double factor = aug[row * 2 * n + col];
                 for (int k = 0; k < 2 * n; k++) {
                     aug[row * 2 * n + k] -= factor * aug[col * 2 * n + k];
                 }
@@ -314,7 +314,7 @@ bool AutoLQR::isSystemControllable()
     return rank == stateSize;
 }
 
-bool AutoLQR::getControllabilityMatrix(float* C)
+bool AutoLQR::getControllabilityMatrix(double* C)
 {
     if (!C || !A || !B)
         return false;
@@ -330,7 +330,7 @@ int AutoLQR::getControllabilityRank()
     
     // Controllability matrix size: stateSize x (stateSize * controlSize)
     int cols = stateSize * controlSize;
-    float* C = new float[stateSize * cols]();
+    double* C = new double[stateSize * cols]();
     
     buildControllabilityMatrix(C);
     
@@ -351,12 +351,12 @@ int AutoLQR::getControlSize() const
     return controlSize;
 }
 
-const float* AutoLQR::getRicattiSolution() const
+const double* AutoLQR::getRicattiSolution() const
 {
     return P;
 }
 
-void AutoLQR::buildControllabilityMatrix(float* C)
+void AutoLQR::buildControllabilityMatrix(double* C)
 {
     // Build controllability matrix C = [B, AB, A²B, ..., A^(n-1)B]
     // C is stateSize x (stateSize * controlSize)
@@ -371,11 +371,11 @@ void AutoLQR::buildControllabilityMatrix(float* C)
     }
     
     // Subsequent blocks: A^k * B for k = 1, 2, ..., stateSize-1
-    float* A_power = new float[stateSize * stateSize]();
-    float* temp = new float[stateSize * controlSize]();
+    double* A_power = new double[stateSize * stateSize]();
+    double* temp = new double[stateSize * controlSize]();
     
     // Initialize A_power as A
-    memcpy(A_power, A, sizeof(float) * stateSize * stateSize);
+    memcpy(A_power, A, sizeof(double) * stateSize * stateSize);
     
     for (int k = 1; k < stateSize; k++) {
         // Compute A^k * B
@@ -390,9 +390,9 @@ void AutoLQR::buildControllabilityMatrix(float* C)
         }
         
         // Update A_power = A_power * A for next iteration
-        float* A_new = new float[stateSize * stateSize]();
+        double* A_new = new double[stateSize * stateSize]();
         matrixMultiply(A_power, A, A_new, stateSize, stateSize, stateSize);
-        memcpy(A_power, A_new, sizeof(float) * stateSize * stateSize);
+        memcpy(A_power, A_new, sizeof(double) * stateSize * stateSize);
         delete[] A_new;
     }
     
@@ -400,25 +400,25 @@ void AutoLQR::buildControllabilityMatrix(float* C)
     delete[] temp;
 }
 
-int AutoLQR::computeMatrixRank(float* matrix, int rows, int cols)
+int AutoLQR::computeMatrixRank(double* matrix, int rows, int cols)
 {
     // Gaussian elimination with partial pivoting to find rank
     // Works on a copy to preserve original matrix
     
-    float* M = new float[rows * cols];
-    memcpy(M, matrix, sizeof(float) * rows * cols);
+    double* M = new double[rows * cols];
+    memcpy(M, matrix, sizeof(double) * rows * cols);
     
-    const float epsilon = 1e-6f;
+    const double epsilon = 1e-6f;
     int rank = 0;
     int pivotCol = 0;
     
     for (int row = 0; row < rows && pivotCol < cols; row++) {
         // Find pivot
         int maxRow = row;
-        float maxVal = fabs(M[row * cols + pivotCol]);
+        double maxVal = fabs(M[row * cols + pivotCol]);
         
         for (int i = row + 1; i < rows; i++) {
-            float val = fabs(M[i * cols + pivotCol]);
+            double val = fabs(M[i * cols + pivotCol]);
             if (val > maxVal) {
                 maxVal = val;
                 maxRow = i;
@@ -435,7 +435,7 @@ int AutoLQR::computeMatrixRank(float* matrix, int rows, int cols)
         // Swap rows
         if (maxRow != row) {
             for (int j = 0; j < cols; j++) {
-                float temp = M[row * cols + j];
+                double temp = M[row * cols + j];
                 M[row * cols + j] = M[maxRow * cols + j];
                 M[maxRow * cols + j] = temp;
             }
@@ -443,7 +443,7 @@ int AutoLQR::computeMatrixRank(float* matrix, int rows, int cols)
         
         // Eliminate column
         for (int i = row + 1; i < rows; i++) {
-            float factor = M[i * cols + pivotCol] / M[row * cols + pivotCol];
+            double factor = M[i * cols + pivotCol] / M[row * cols + pivotCol];
             for (int j = pivotCol; j < cols; j++) {
                 M[i * cols + j] -= factor * M[row * cols + j];
             }
@@ -457,21 +457,21 @@ int AutoLQR::computeMatrixRank(float* matrix, int rows, int cols)
     return rank;
 }
 
-float AutoLQR::computeDeterminant(const float* matrix, int n)
+double AutoLQR::computeDeterminant(const double* matrix, int n)
 {
     if (n == 1) {
         return matrix[0];
     } else if (n == 2) {
         return matrix[0] * matrix[3] - matrix[1] * matrix[2];
     } else if (n == 3) {
-        float a = matrix[0], b = matrix[1], c = matrix[2];
-        float d = matrix[3], e = matrix[4], f = matrix[5];
-        float g = matrix[6], h = matrix[7], i = matrix[8];
+        double a = matrix[0], b = matrix[1], c = matrix[2];
+        double d = matrix[3], e = matrix[4], f = matrix[5];
+        double g = matrix[6], h = matrix[7], i = matrix[8];
         return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
     } else if (n == 4) {
         // 4x4 determinant using cofactor expansion
-        float det = 0;
-        float submatrix[9];
+        double det = 0;
+        double submatrix[9];
         
         for (int col = 0; col < 4; col++) {
             // Build 3x3 submatrix
@@ -486,7 +486,7 @@ float AutoLQR::computeDeterminant(const float* matrix, int n)
                 subi++;
             }
             
-            float sign = (col % 2 == 0) ? 1.0f : -1.0f;
+            double sign = (col % 2 == 0) ? 1.0f : -1.0f;
             det += sign * matrix[col] * computeDeterminant(submatrix, 3);
         }
         
@@ -507,17 +507,17 @@ bool AutoLQR::computeGainMatrix()
     }
 
     // Iterative DARE solver for small systems
-    float* P_next = new float[stateSize * stateSize]();
-    float* BT = new float[controlSize * stateSize]();
-    float* AT = new float[stateSize * stateSize]();
-    float* temp1 = new float[controlSize * stateSize]();
-    float* temp2 = new float[controlSize * controlSize]();
-    float* temp3 = new float[controlSize * stateSize]();
-    float* temp4 = new float[stateSize * stateSize]();
-    float* temp5 = new float[stateSize * stateSize]();
+    double* P_next = new double[stateSize * stateSize]();
+    double* BT = new double[controlSize * stateSize]();
+    double* AT = new double[stateSize * stateSize]();
+    double* temp1 = new double[controlSize * stateSize]();
+    double* temp2 = new double[controlSize * controlSize]();
+    double* temp3 = new double[controlSize * stateSize]();
+    double* temp4 = new double[stateSize * stateSize]();
+    double* temp5 = new double[stateSize * stateSize]();
 
     // Initialize P as Q
-    memcpy(P, Q, sizeof(float) * stateSize * stateSize);
+    memcpy(P, Q, sizeof(double) * stateSize * stateSize);
 
     // Compute B transpose and A transpose
     transposeMatrix(B, BT, stateSize, controlSize);
@@ -571,13 +571,13 @@ bool AutoLQR::computeGainMatrix()
         }
 
         // Check convergence
-        float diff = 0;
+        double diff = 0;
         for (int i = 0; i < stateSize * stateSize; i++) {
             diff += fabs(P_next[i] - P[i]);
         }
 
         // Update P for next iteration
-        memcpy(P, P_next, sizeof(float) * stateSize * stateSize);
+        memcpy(P, P_next, sizeof(double) * stateSize * stateSize);
 
         if (diff < solverTolerance) {
             break; // Converged
@@ -621,7 +621,7 @@ bool AutoLQR::computeGainMatrix()
     return true;
 }
 
-void AutoLQR::estimateFeedforwardGain(float* ffGain, const float* desiredState)
+void AutoLQR::estimateFeedforwardGain(double* ffGain, const double* desiredState)
 {
     if (!ffGain || !desiredState || !A || !B || !K)
         return;
@@ -631,14 +631,14 @@ void AutoLQR::estimateFeedforwardGain(float* ffGain, const float* desiredState)
 
     if (stateSize == 2 && controlSize == 1) {
         // Special case for position-velocity systems
-        float Bsq = B[0] * B[0] + B[1] * B[1];
+        double Bsq = B[0] * B[0] + B[1] * B[1];
         if (Bsq < 1e-6)
             return;
 
-        float invBsq = 1.0f / Bsq;
+        double invBsq = 1.0f / Bsq;
 
         // Compute (A-I) * x_desired
-        float dx[2];
+        double dx[2];
         dx[0] = (A[0] - 1.0f) * desiredState[0] + A[1] * desiredState[1];
         dx[1] = A[2] * desiredState[0] + (A[3] - 1.0f) * desiredState[1];
 
@@ -652,14 +652,14 @@ void AutoLQR::estimateFeedforwardGain(float* ffGain, const float* desiredState)
     }
 }
 
-float AutoLQR::estimateConvergenceTime(float convergenceThreshold)
+double AutoLQR::estimateConvergenceTime(double convergenceThreshold)
 {
     // Estimate convergence time based on eigenvalues
     // This is a simplified estimate for 2x2 systems
 
     if (stateSize == 2) {
         // Compute closed-loop dynamics: A - B*K
-        float CL[4];
+        double CL[4];
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
                 CL[i * 2 + j] = A[i * 2 + j];
@@ -670,23 +670,23 @@ float AutoLQR::estimateConvergenceTime(float convergenceThreshold)
         }
 
         // Approximate dominant eigenvalue using trace and determinant
-        float trace = CL[0] + CL[3];
-        float det = CL[0] * CL[3] - CL[1] * CL[2];
+        double trace = CL[0] + CL[3];
+        double det = CL[0] * CL[3] - CL[1] * CL[2];
 
         // Characteristic equation: λ² - trace·λ + det = 0
-        float discriminant = trace * trace - 4 * det;
+        double discriminant = trace * trace - 4 * det;
 
         if (discriminant >= 0) {
             // Real eigenvalues
-            float lambda1 = (trace + sqrt(discriminant)) / 2;
-            float lambda2 = (trace - sqrt(discriminant)) / 2;
+            double lambda1 = (trace + sqrt(discriminant)) / 2;
+            double lambda2 = (trace - sqrt(discriminant)) / 2;
 
             // Dominant eigenvalue (larger magnitude)
-            float domEigenvalue = (fabs(lambda1) > fabs(lambda2)) ? lambda1 : lambda2;
+            double domEigenvalue = (fabs(lambda1) > fabs(lambda2)) ? lambda1 : lambda2;
 
             if (fabs(domEigenvalue) < 1.0f && fabs(domEigenvalue) > 0.0f) {
                 // Estimate time constant
-                float timeConstant = -1.0f / log(fabs(domEigenvalue));
+                double timeConstant = -1.0f / log(fabs(domEigenvalue));
 
                 // Time to reach convergenceThreshold
                 return timeConstant * log(1.0f / convergenceThreshold);
@@ -698,22 +698,22 @@ float AutoLQR::estimateConvergenceTime(float convergenceThreshold)
     return -1.0f;
 }
 
-bool AutoLQR::exportGains(float* exportedK)
+bool AutoLQR::exportGains(double* exportedK)
 {
     if (!K || !exportedK)
         return false;
 
-    memcpy(exportedK, K, sizeof(float) * controlSize * stateSize);
+    memcpy(exportedK, K, sizeof(double) * controlSize * stateSize);
     return true;
 }
 
-float AutoLQR::calculateExpectedCost()
+double AutoLQR::calculateExpectedCost()
 {
     if (!P || !state)
         return -1.0f;
 
     // Cost = x'Px
-    float cost = 0;
+    double cost = 0;
     for (int i = 0; i < stateSize; i++) {
         for (int j = 0; j < stateSize; j++) {
             cost += state[i] * P[i * stateSize + j] * state[j];

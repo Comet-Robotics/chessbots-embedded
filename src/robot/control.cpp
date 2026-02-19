@@ -62,15 +62,16 @@ int prevPositionA = 0;
 int prevPositionB = 0;
 
 //robot rotation in radians
-int prevRotation = 0;
+double prevRotation = 0;
 
 //calculated previous X and Y values
-float prevX = 0;
-float prevY = 0;
+double prevX = 0;
+double prevY = 0;
 
-float goalX = 1;
-float goalY = 1;
-float goalRot;
+double goalX = 0;
+double goalY = 0;
+double goalRot;
+float maxVel = 1;
 
 //when moving to a different target, this is the encoder position we started from
 int startEncoderAPos = -1;
@@ -147,6 +148,19 @@ void testEncoderPID()
     }
 
     updateCritRange();
+}
+/**
+ * set point for LQR based on distance to travel and radians to rotate
+ */
+void newSetPointLQR(float distance, float rotation){
+    prevPositionA = readLeftEncoder();
+    prevPositionB = readRightEncoder();
+    prevX = 0;
+    prevY = 0;
+    prevRotation = 0;
+    goalX = distance;
+    goalY = 0;
+    goalRot = rotation;
 }
 
 //crit range is basically getting distance we go until we are halfway to target. By the end of this range,
@@ -378,7 +392,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         serialLog(currentHeading, 3);
         serialLogln("", 3);
 
-#endif
+        #endif
 
         drive(
             leftMotorPower, // leftMotorPower,
@@ -390,25 +404,28 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
         // turn(M_PI / 2, "NULL");
     }
+    
     if (DO_LQR){
         // Define system size
         #define STATE_SIZE 3    // Number of state variables
         #define CONTROL_SIZE 2  // Number of control inputs
 
+        double trackWidth = TRACK_WIDTH_INCHES/39.37;
+
         // Create controller instance
         AutoLQR controller(STATE_SIZE, CONTROL_SIZE);
         //A has x position, y position, and rotation
         //A is identity since the robot *shouldn't* move when the motors are off
-        float A[STATE_SIZE * STATE_SIZE] = {
+        double A[STATE_SIZE * STATE_SIZE] = {
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
         };
         //B has speed and angle
         //the speed will predictably change x and y, and angle changes rotation
-        float B[STATE_SIZE * CONTROL_SIZE] = {
-            (float)cos(prevRotation),0,
-            (float)sin(prevRotation),0,
+        double B[STATE_SIZE * CONTROL_SIZE] = {
+            cos(prevRotation),0,
+            sin(prevRotation),0,
             0, 1
         };
 
@@ -417,27 +434,62 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         controller.setInputMatrix(B);
 
         // Q matrix - state cost
-        // 
-        float Q[STATE_SIZE * STATE_SIZE] = {
-            1,0,0,
-            0,1,0,
-            0,0,2
+        // x and y are treated the same, but rotation has greater penalties
+        double Q[STATE_SIZE * STATE_SIZE] = {
+            2000,0,0,
+            0,100,0,
+            0,0,1
         };
 
         // R matrix - control cost
-        float R[CONTROL_SIZE * CONTROL_SIZE] = {
-            1, 0,
-            0, 0.1
+        // It costs less to rotate to ensure we stay straight
+        double R[CONTROL_SIZE * CONTROL_SIZE] = {
+            0.001, 0,
+            0, 0.0005
         };
 
         // Set cost matrices
         controller.setCostMatrices(Q, R);
-        float diff = (readLeftEncoder()-prevPositionA + readRightEncoder()-prevPositionB)/2;
-        float currentX = prevX + (cos(prevRotation)*(diff))*TICK_TO_METERS;
-        float currentY = prevY + (sin(prevRotation)*(diff))*TICK_TO_METERS;
-        float currentRot = prevRotation + atan((readLeftEncoder()-prevPositionA)*TICK_TO_METERS - (readRightEncoder()-prevPositionB)*TICK_TO_METERS);
+        
+        double lDist = (double)(readLeftEncoder()-prevPositionA)/TICKS_PER_ROTATION*2*PI;
+        double rDist= (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
 
-        serialLog("pos: ",2);
+        prevPositionA = readLeftEncoder();
+        prevPositionB = readRightEncoder();
+
+        double angleDist = (rDist - lDist)*TIRE_RADIUS/trackWidth;
+
+        double currentRot = prevRotation + angleDist;
+
+        double currentX;
+        double currentY;
+        if(angleDist != 0){
+            double temp = (trackWidth*(rDist+lDist))/(2*(rDist-lDist));
+            serialLog(" temp: ",2);
+            serialLog(temp,2);
+            currentX = prevX + temp * (sin(currentRot) - sin(prevRotation));
+            currentY = prevY + temp * 100 * (cos(prevRotation) - cos(currentRot));
+            
+        } else {
+            double totalDist = TIRE_RADIUS*(lDist + rDist)/2;
+            serialLog(" dist: ",2);
+            serialLog(totalDist,2);
+            currentX = prevX + totalDist * cos(currentRot);
+            currentY = prevY + totalDist * sin(currentRot);
+        }
+        
+
+        prevX = currentX;
+        prevY = currentY;
+        prevRotation = currentRot;
+
+        serialLog(" rotDeg: ",2);
+        serialLog(currentRot,2);
+        serialLog(" angleDeg: ",2);
+        serialLog(angleDist,2);
+        serialLog(" prevDeg: ",2);
+        serialLog(prevRotation,2);
+        serialLog(" pos: ",2);
         serialLog(currentX,2);
         serialLog(", ", 2);
         serialLogln(currentY,2);
@@ -450,50 +502,67 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
 
         // Calculate state error (current state - desired state)
-        float state_error[STATE_SIZE] = {
+        double state_error[STATE_SIZE] = {
             currentX - goalX,
             currentY - goalY,
-            (float)DEG_TO_RAD*(currentRot - goalRot),
+            currentRot - goalRot,
 
         };
 
         controller.updateState(state_error);
-        
-        if (controller.isSystemControllable()) {
-            //serialLogln("System is controllable",2);
-        } else {
-            serialLogln("Warning: System is not controllable",2);
-            // Get the controllability rank
-        }
 
-        float control[CONTROL_SIZE];
+        double control[CONTROL_SIZE];
         controller.calculateControl(control);
 
-        
-        if(!isnan(control[0]) && !isnan(control[1]) && control[0] >= 0.1){
-            control[1] = atan2(sin(control[1]),cos(control[1]));
-            if(control[1] > 0){
-                setLeftPower(control[0]-2*control[0]*sin(control[1]));
-                setRightPower(control[0]+2*control[0]*sin(control[1]));
-            }
-            else{
-                setLeftPower(control[0] +2*control[0]*sin(control[1]));
-                setRightPower(control[0]-2*control[0]*sin(control[1]));
-            }
+        double lMotorVel = (control[0]-control[1]*trackWidth/2)/TIRE_RADIUS;
+        double rMotorVel = (control[0]+control[1]*trackWidth/2)/TIRE_RADIUS;
+        if(fabs(lMotorVel) > maxVel){
+            maxVel = fabs(lMotorVel);
+        } else if (fabs(rMotorVel) > maxVel){
+            maxVel = fabs(rMotorVel);
+        }
+        float minMotor = MIN_MOTOR_POWER + 0.05;
+        float lMotorPower = fmap(lMotorVel, -maxVel, maxVel, -1, 1);
+        float rMotorPower = fmap(rMotorVel, -maxVel, maxVel, -1, 1);
+        if((!isnan(control[0])) && (!isnan(control[1])) && 
+            (fabs(lMotorPower) >= minMotor) && (fabs(rMotorPower) >= minMotor)){
+            setLeftPower(lMotorPower);
+            setRightPower(rMotorPower);
+        } else if (control[1] > 0.001){
+            setLeftPower(-minMotor);
+            setRightPower(minMotor);
+        } else if (control[1] < -0.001){
+            setLeftPower(minMotor);
+            setRightPower(-minMotor);
+        } else if (currentX - goalX < -0.01){
+            setLeftPower(minMotor);
+            setRightPower(minMotor);
+        } else if (currentX - goalX > 0.01){
+            setLeftPower(-minMotor);
+            setRightPower(-minMotor);
+        } else{
+            setLeftPower(0);
+            setRightPower(0);
         }
         serialLog(control[0],2);
         serialLog(", ", 2);
-        serialLog(control[1],2);
+        serialLog((double)control[1],2);
         serialLog(", curr ", 2);
         serialLog(currentRot, 2);
         serialLog(" goal ", 2);
-        serialLogln(goalRot,2);
-        prevPositionA = readLeftEncoder();
-        prevPositionB = readRightEncoder();
-
-        prevX = currentX;
-        prevY = currentY;
-        prevRotation = currentRot;
+        serialLog(goalRot,2);
+        serialLog(" leftEnc ", 2);
+        serialLog(readLeftEncoder(),2);
+        serialLog(" rightEnc ", 2);
+        serialLogln(readRightEncoder(), 2);
+        if(fabs(currentX - goalX) < 0.01){
+            goalX = currentX;
+            goalY = currentY;
+        }
+        if (maxVel > 0.05)
+            maxVel -= 0.005;
+        else if (lMotorPower < maxVel/2)
+            maxVel /= 1.5;
     }
 }
 
@@ -850,7 +919,7 @@ void startMotorAndEncoderTest() {
 // Tests the motors. This turns the motors on.
 void startDriveTest() {
     drive(0.5f, 0.5f, "NULL");
-    timerDelay(2000, &driveTestOff);
+    //timerDelay(2000, &driveTestOff);
 }
 
 //updates us to the next distance we're traveling
