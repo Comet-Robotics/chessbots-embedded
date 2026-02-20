@@ -3,7 +3,6 @@
 
 // Associated Header File
 #include "robot/control.h"
-#include "robot/trapezoidalProfile.h"
 
 // Built-In Libraries
 #include "Arduino.h"
@@ -24,9 +23,17 @@
 #include <algorithm>
 #include "utils/functions.h"
 
-//PLEASE ONLY USE CHESSBOT #4 FOR TESTING
-PIDController encoderAVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Blue
-PIDController encoderBVelocityController(0.00008, 0.0000035, 0.000001, -1, +1); //Red
+#include "robot/profiledPIDController.h"
+#include "robot/trapezoidalProfileNew.h"
+
+
+// pid constants
+TrapezoidProfile::Constraints profileConstraints(VELOCITY_LIMIT_TPS, ACCELERATION_LIMIT_TPSPS);
+TrapezoidProfile leftProfile(profileConstraints);
+TrapezoidProfile rightProfile(profileConstraints);
+TrapezoidProfile::State leftSetpoint, rightSetpoint;
+PIDController encoderAVelocityController(0.00006, 0.000001, 0.00000, -1, +1); // Blue
+PIDController encoderBVelocityController(0.00006, 0.000001, 0.00000, -1, +1); //Red
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -244,27 +251,30 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         profileB.currentPosition = currentPositionEncoderB;
         profileB.currentVelocity = currentVelocityB;
 
-        double desiredVelocityA, desiredVelocityB;
-
+        // Generate trapezoidal profile setpoints
         if (getLeftMotorControl().mode == POSITION) {
-            desiredVelocityA = updateTrapezoidalProfile(profileA, loopDelaySeconds, framesUntilPrint);
+            leftSetpoint = leftProfile.calculate(loopDelaySeconds, 
+                                                leftSetpoint,
+                                                TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
         } else {
-            desiredVelocityA = getLeftMotorControl().value;
+            leftSetpoint = TrapezoidProfile::State(currentPositionEncoderA, getLeftMotorControl().value);
         }
         if (getRightMotorControl().mode == POSITION) {
-            desiredVelocityB = updateTrapezoidalProfile(profileB, loopDelaySeconds, framesUntilPrint);
+            rightSetpoint = rightProfile.calculate(loopDelaySeconds, 
+                                                rightSetpoint,
+                                                TrapezoidProfile::State(getRightMotorControl().value, 0.0));
         } else {
-            desiredVelocityB = getRightMotorControl().value;
+            rightSetpoint = TrapezoidProfile::State(currentPositionEncoderB, getRightMotorControl().value);
         }
 
         prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
-        double leftFeedForward = desiredVelocityA / MAX_VELOCITY_TPS;
-        double rightFeedForward = desiredVelocityB / MAX_VELOCITY_TPS;
+        double leftFeedForward = leftSetpoint.velocity / THEORETICAL_MAX_VELOCITY_TPS;
+        double rightFeedForward = rightSetpoint.velocity / THEORETICAL_MAX_VELOCITY_TPS;
 
-        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityA, currentVelocityA, loopDelaySeconds) + leftFeedForward;
-        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityB, currentVelocityB, loopDelaySeconds) + rightFeedForward;
+        double leftMotorPower = encoderAVelocityController.Compute(leftSetpoint.velocity, currentVelocityA, loopDelaySeconds) + leftFeedForward;
+        double rightMotorPower = encoderBVelocityController.Compute(rightSetpoint.velocity, currentVelocityB, loopDelaySeconds) + rightFeedForward;
 
         if (leftMotorPower > 1) leftMotorPower = 1;
         if (leftMotorPower < -1) leftMotorPower = -1;
@@ -272,46 +282,58 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         if (rightMotorPower < -1) rightMotorPower = -1;
 
         //using macros this code isn't uploaded if not proper loging levels
-        #if LOGGING_LEVEL >= 4
+        #if LOGGING_LEVEL >= 3
         
         if(framesUntilPrint == 0)
         {
-            serialLog("Current encoder A pos: ", 2);
-            serialLog(currentEncoderA, 2);
-            serialLog(", ", 2);
-            serialLog("Current encoder B pos: ", 2);
-            serialLog(currentEncoderB, 2);
-            serialLog(", ", 2);
-            serialLog("Desired encoder A speed: ", 2);
-            serialLog(desiredVelocityA, 2);
-            serialLog(", ", 2);
-            serialLog("Desired encoder B speed: ", 2);
-            serialLog(desiredVelocityB, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder a speed: ", 2);
-            serialLog(currentVelocityA, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder b speed: ", 2);
-            serialLog(currentVelocityB, 2);
-            serialLog(", ", 2);
-            serialLog("current left motor power: ", 2);
-            serialLog(leftMotorPower, 2);
-            serialLog(", ", 2);
-            serialLog("current right motor power: ", 2);
-            serialLog(rightMotorPower, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder a target: ", 2);
-            serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 2);
-            serialLog(", ", 2);
-            serialLog("current encoder b target: ", 2);
-            serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 2); // TODO log results of trapezoidal profile into csv (on motor value graph)
-            serialLog(", ", 2);
-            serialLog("is robot pid at target? ", 2);
-            serialLog(isRobotPidAtTarget(), 2);
-            serialLog(", ", 2);
-            serialLogln(loopDelaySeconds, 2);
+            // serialLog("Current encoder A pos: ", 2);
+            // serialLog(currentPositionEncoderA, 2);
+            // serialLog(", ", 2);
+            // serialLog("Current encoder B pos: ", 2);
+            // serialLog(currentPositionEncoderB, 2);
+            // serialLog(", ", 2);
+            // serialLog("Desired encoder A speed: ", 2);
+            // serialLog(leftSetpoint.velocity, 2);
+            // serialLog(", ", 2);
+            // serialLog("Desired encoder B speed: ", 2);
+            // serialLog(rightSetpoint.velocity, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder a speed: ", 2);
+            // serialLog(currentVelocityA, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder b speed: ", 2);
+            // serialLog(currentVelocityB, 2);
+            // serialLog(", ", 2);
+            // serialLog("current left motor power: ", 2);
+            // serialLog(leftMotorPower, 2);
+            // serialLog(", ", 2);
+            // serialLog("current right motor power: ", 2);
+            // serialLog(rightMotorPower, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder a target: ", 2);
+            // serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 2);
+            // serialLog(", ", 2);
+            // serialLog("current encoder b target: ", 2);
+            // serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 2); // TODO log results of trapezoidal profile into csv (on motor value graph)
+            // serialLog(", ", 2);
+            // serialLog("is robot pid at target? ", 2);
+            // serialLog(isRobotPidAtTarget(), 2);
+            // serialLog(", ", 2);
+            // serialLogln(loopDelaySeconds, 2);
         }
-        
+    
+        serialLog(leftSetpoint.velocity, 3);
+        serialLog(",", 3);
+        serialLog(currentVelocityA, 3);
+        serialLog(",", 3);
+        serialLog(leftSetpoint.velocity - currentVelocityA, 3);
+        serialLog(",", 3);
+        serialLog(rightSetpoint.velocity, 3);
+        serialLog(",", 3);
+        serialLog(currentVelocityB, 3);
+        serialLog(",", 3);
+        serialLogln(rightSetpoint.velocity - currentVelocityB, 3);
+
         #endif
 
         drive(
@@ -483,6 +505,7 @@ bool checkIfCanUpdateMovement()
 
 void setLeftMotorControl(ControlSetting control) {
     leftMotorControl = control;
+    leftSetpoint = TrapezoidProfile::State(readLeftEncoder(), profileA.currentVelocity);
     if (control.mode == POSITION)
         profileA.targetPosition = control.value;
     else
@@ -491,6 +514,7 @@ void setLeftMotorControl(ControlSetting control) {
 
 void setRightMotorControl(ControlSetting control) {
     rightMotorControl = control;
+    rightSetpoint = TrapezoidProfile::State(readRightEncoder(), profileB.currentVelocity);
     if (control.mode == POSITION)
         profileB.targetPosition = control.value;
     else
@@ -535,10 +559,9 @@ void driveTicks(int tickDistance, std::string id)
 void drive(float leftPower, float rightPower, std::string id) {
     if (!getStoppedStatus()) {
         // TODO: maybe move to motor.cpp?
-        float minPower = 0.16;
-        if (leftPower < minPower && leftPower > -minPower) {
+        if (leftPower < MIN_MOTOR_POWER && leftPower > -MIN_MOTOR_POWER) {
             leftPower = 0;
-        } if (rightPower < minPower && rightPower > -minPower) {
+        } if (rightPower < MIN_MOTOR_POWER && rightPower > -MIN_MOTOR_POWER) {
             rightPower = 0;
         }
 
