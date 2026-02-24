@@ -54,5 +54,5 @@ void updateCritRange();
 void controlLoop(int loopDelayMs, int8_t framesUntilPrint);
 void updateCentering();
 void updateToNextDistance();
-void newSetPointLQR(float distance, float rotation);
+void newSetPointBS(float distance);
 #endif

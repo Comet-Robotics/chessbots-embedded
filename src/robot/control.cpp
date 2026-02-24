@@ -22,7 +22,6 @@
 #include "../../env.h"
 #include <algorithm>
 #include "utils/functions.h"
-#include <robot/AutoLQR.h>
 
 #include "robot/profiledPIDController.h"
 #include "robot/trapezoidalProfileNew.h"
@@ -35,10 +34,10 @@ Magnet *magnet = nullptr; // Declare a pointer to Magnet
 TrapezoidProfile::Constraints profileConstraints(VELOCITY_LIMIT_TPS, ACCELERATION_LIMIT_TPSPS);
 TrapezoidProfile leftProfile(profileConstraints);
 TrapezoidProfile rightProfile(profileConstraints);
-TrapezoidProfile::State leftSetpoint, rightSetpoint;
-PIDController encoderAVelocityController(0.00004, 0.000000, 0.00000, -1, +1, 100); // blue on graph // input ticks per second, output duty cycle
-PIDController encoderBVelocityController(0.00004, 0.000000, 0.00000, -1, +1, 100); // red on graph // input ticks per second, output duty cycle
-ContinuousPIDController headingController(0.002, 0.0000, 0.0000, -0.3, +0.3, 1.0, 0, 360); // input degrees, output duty cycle
+TrapezoidProfile::State leftSetpoint, rightSetpoint, velSetpoint, ySetpoint;
+PIDController encoderAVelocityController(0.000009, 0.000035, 0.000000000001, -1, +1, 10); // blue on graph // input ticks per second, output duty cycle
+PIDController encoderBVelocityController(0.0000005, 0.000035, 0.000000000001, -1, +1, 10); // red on graph // input ticks per second, output duty cycle
+ContinuousPIDController headingController(0.2, 0.000001, 0.000000000001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -71,7 +70,6 @@ double prevY = 0;
 double goalX = 0;
 double goalY = 0;
 double goalRot;
-float maxVel = 1;
 
 //when moving to a different target, this is the encoder position we started from
 int startEncoderAPos = -1;
@@ -150,17 +148,18 @@ void testEncoderPID()
     updateCritRange();
 }
 /**
- * set point for LQR based on distance to travel and radians to rotate
+ * set point for the modified pid
  */
-void newSetPointLQR(float distance, float rotation){
+void newSetPointBS(float distance){
     prevPositionA = readLeftEncoder();
     prevPositionB = readRightEncoder();
     prevX = 0;
     prevY = 0;
     prevRotation = 0;
-    goalX = distance;
-    goalY = 0;
-    goalRot = rotation;
+    setLeftMotorControl({POSITION, distance / TICK_TO_METERS});
+    setRightMotorControl({POSITION, 0});
+    updateCritRange();
+    setHeadingTarget(0);
 }
 
 //crit range is basically getting distance we go until we are halfway to target. By the end of this range,
@@ -405,54 +404,12 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         // turn(M_PI / 2, "NULL");
     }
     
-    if (DO_LQR){
-        // Define system size
-        #define STATE_SIZE 3    // Number of state variables
-        #define CONTROL_SIZE 2  // Number of control inputs
+    if (DO_BS){
 
         double trackWidth = TRACK_WIDTH_INCHES/39.37;
 
-        // Create controller instance
-        AutoLQR controller(STATE_SIZE, CONTROL_SIZE);
-        //A has x position, y position, and rotation
-        //A is identity since the robot *shouldn't* move when the motors are off
-        double A[STATE_SIZE * STATE_SIZE] = {
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1
-        };
-        //B has speed and angle
-        //the speed will predictably change x and y, and angle changes rotation
-        double B[STATE_SIZE * CONTROL_SIZE] = {
-            cos(prevRotation),0,
-            sin(prevRotation),0,
-            0, 1
-        };
-
-        // Set matrices in controller
-        controller.setStateMatrix(A);
-        controller.setInputMatrix(B);
-
-        // Q matrix - state cost
-        // x and y are treated the same, but rotation has greater penalties
-        double Q[STATE_SIZE * STATE_SIZE] = {
-            2000,0,0,
-            0,100,0,
-            0,0,1
-        };
-
-        // R matrix - control cost
-        // It costs less to rotate to ensure we stay straight
-        double R[CONTROL_SIZE * CONTROL_SIZE] = {
-            0.001, 0,
-            0, 0.0005
-        };
-
-        // Set cost matrices
-        controller.setCostMatrices(Q, R);
-        
         double lDist = (double)(readLeftEncoder()-prevPositionA)/TICKS_PER_ROTATION*2*PI;
-        double rDist= (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
+        double rDist = (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
 
         prevPositionA = readLeftEncoder();
         prevPositionB = readRightEncoder();
@@ -462,107 +419,78 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         double currentRot = prevRotation + angleDist;
 
         double currentX;
+        double deltaX;
         double currentY;
+        double deltaY;
         if(angleDist != 0){
             double temp = (trackWidth*(rDist+lDist))/(2*(rDist-lDist));
-            serialLog(" temp: ",2);
-            serialLog(temp,2);
-            currentX = prevX + temp * (sin(currentRot) - sin(prevRotation));
-            currentY = prevY + temp * 100 * (cos(prevRotation) - cos(currentRot));
+            deltaX = temp * (sin(currentRot) - sin(prevRotation));
+            deltaY = temp * (cos(prevRotation) - cos(currentRot));
+            currentX = prevX + deltaX;
+            currentY = prevY + deltaY;
             
         } else {
             double totalDist = TIRE_RADIUS*(lDist + rDist)/2;
-            serialLog(" dist: ",2);
-            serialLog(totalDist,2);
-            currentX = prevX + totalDist * cos(currentRot);
-            currentY = prevY + totalDist * sin(currentRot);
+            deltaX = totalDist * cos(currentRot);
+            deltaY = totalDist * sin(currentRot);
+            currentX = prevX + deltaX;
+            currentY = prevY + deltaY;
         }
-        
-
         prevX = currentX;
         prevY = currentY;
         prevRotation = currentRot;
 
-        serialLog(" rotDeg: ",2);
-        serialLog(currentRot,2);
-        serialLog(" angleDeg: ",2);
-        serialLog(angleDist,2);
-        serialLog(" prevDeg: ",2);
-        serialLog(prevRotation,2);
-        serialLog(" pos: ",2);
-        serialLog(currentX,2);
-        serialLog(", ", 2);
-        serialLogln(currentY,2);
 
-        if (controller.computeGains()) {
-            //serialLogln("Gain computation successful",2);
-        } else {
-            serialLogln("Error: Failed to compute gains",2);
-        }
+        double loopDelaySeconds = ((double) loopDelayMs) / 1000;
+        profileA.currentPosition = currentX / TICK_TO_METERS;
+        profileA.currentVelocity = deltaX / TICK_TO_METERS /loopDelaySeconds;
+        velSetpoint = leftProfile.calculate(loopDelaySeconds, 
+                                                TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
+                                                TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
+
+        double velocity = encoderAVelocityController.Compute(velSetpoint.velocity, profileA.currentVelocity, loopDelaySeconds);
+
+        double aVel = headingController.Compute(headingTarget, currentRot*RAD_TO_DEG, loopDelaySeconds);
+
+        profileB.currentPosition = currentY / TICK_TO_METERS;
+        profileB.currentVelocity = deltaY / TICK_TO_METERS /loopDelaySeconds;
+        ySetpoint = rightProfile.calculate(loopDelaySeconds, 
+                                                TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
+                                                TrapezoidProfile::State(getRightMotorControl().value, 0.0));
+
+        double yVel = encoderBVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds); 
+        aVel += yVel;
+
+        double lMotorPower = ((velocity-aVel*trackWidth/2)/TIRE_RADIUS);
+        double rMotorPower = ((velocity+aVel*trackWidth/2)/TIRE_RADIUS);
+   
 
 
-        // Calculate state error (current state - desired state)
-        double state_error[STATE_SIZE] = {
-            currentX - goalX,
-            currentY - goalY,
-            currentRot - goalRot,
+        serialLog("vel ", 3);
+        serialLog(velocity, 3);
+        serialLog(" yvel ", 3);
+        serialLog(yVel, 3);
+        serialLog(" avel ", 3);
+        serialLogln(aVel, 3);
+        serialLog("lpower ", 3);
+        serialLog(lMotorPower, 3);
+        serialLog(" rpower ", 3);
+        serialLogln(rMotorPower, 3);
+        serialLog("xpos ", 3);
+        serialLog(currentX, 3);
+        serialLog(" ypos ", 3);
+        serialLogln(currentY*100, 3);
 
-        };
 
-        controller.updateState(state_error);
+        if (lMotorPower > 1) lMotorPower = 1;
+        if (lMotorPower < -1) lMotorPower = -1;
+        if (rMotorPower > 1) rMotorPower = 1;
+        if (rMotorPower < -1) rMotorPower = -1;
 
-        double control[CONTROL_SIZE];
-        controller.calculateControl(control);
 
-        double lMotorVel = (control[0]-control[1]*trackWidth/2)/TIRE_RADIUS;
-        double rMotorVel = (control[0]+control[1]*trackWidth/2)/TIRE_RADIUS;
-        if(fabs(lMotorVel) > maxVel){
-            maxVel = fabs(lMotorVel);
-        } else if (fabs(rMotorVel) > maxVel){
-            maxVel = fabs(rMotorVel);
-        }
-        float minMotor = MIN_MOTOR_POWER + 0.05;
-        float lMotorPower = fmap(lMotorVel, -maxVel, maxVel, -1, 1);
-        float rMotorPower = fmap(rMotorVel, -maxVel, maxVel, -1, 1);
-        if((!isnan(control[0])) && (!isnan(control[1])) && 
-            (fabs(lMotorPower) >= minMotor) && (fabs(rMotorPower) >= minMotor)){
-            setLeftPower(lMotorPower);
-            setRightPower(rMotorPower);
-        } else if (control[1] > 0.001){
-            setLeftPower(-minMotor);
-            setRightPower(minMotor);
-        } else if (control[1] < -0.001){
-            setLeftPower(minMotor);
-            setRightPower(-minMotor);
-        } else if (currentX - goalX < -0.01){
-            setLeftPower(minMotor);
-            setRightPower(minMotor);
-        } else if (currentX - goalX > 0.01){
-            setLeftPower(-minMotor);
-            setRightPower(-minMotor);
-        } else{
-            setLeftPower(0);
-            setRightPower(0);
-        }
-        serialLog(control[0],2);
-        serialLog(", ", 2);
-        serialLog((double)control[1],2);
-        serialLog(", curr ", 2);
-        serialLog(currentRot, 2);
-        serialLog(" goal ", 2);
-        serialLog(goalRot,2);
-        serialLog(" leftEnc ", 2);
-        serialLog(readLeftEncoder(),2);
-        serialLog(" rightEnc ", 2);
-        serialLogln(readRightEncoder(), 2);
-        if(fabs(currentX - goalX) < 0.01){
-            goalX = currentX;
-            goalY = currentY;
-        }
-        if (maxVel > 0.05)
-            maxVel -= 0.005;
-        else if (lMotorPower < maxVel/2)
-            maxVel /= 1.5;
+
+        setLeftPower(lMotorPower);
+        setRightPower(rMotorPower);
     }
 }
 
