@@ -37,7 +37,7 @@ TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint, velSetpoint, ySetpoint;
 PIDController encoderAVelocityController(0.000009, 0.000035, 0.000000000001, -1, +1, 10); // blue on graph // input ticks per second, output duty cycle
 PIDController encoderBVelocityController(0.0000005, 0.000035, 0.000000000001, -1, +1, 10); // red on graph // input ticks per second, output duty cycle
-ContinuousPIDController headingController(0.2, 0.000001, 0.000000000001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
+ContinuousPIDController headingController(0.21, 0.000001, 0.000000000001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -70,6 +70,8 @@ double prevY = 0;
 double goalX = 0;
 double goalY = 0;
 double goalRot;
+bool runningBS = false;
+double average[100];
 
 //when moving to a different target, this is the encoder position we started from
 int startEncoderAPos = -1;
@@ -160,6 +162,8 @@ void newSetPointBS(float distance){
     setRightMotorControl({POSITION, 0});
     updateCritRange();
     setHeadingTarget(0);
+    runningBS = true;
+    for (int x = 0; x < 100; x++) average[x] = 100;
 }
 
 //crit range is basically getting distance we go until we are halfway to target. By the end of this range,
@@ -405,92 +409,108 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
     }
     
     if (DO_BS){
+        if(runningBS){
 
-        double trackWidth = TRACK_WIDTH_INCHES/39.37;
+            double trackWidth = TRACK_WIDTH_INCHES/39.37;
 
-        double lDist = (double)(readLeftEncoder()-prevPositionA)/TICKS_PER_ROTATION*2*PI;
-        double rDist = (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
+            double lDist = (double)(readLeftEncoder()-prevPositionA)/TICKS_PER_ROTATION*2*PI;
+            double rDist = (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
 
-        prevPositionA = readLeftEncoder();
-        prevPositionB = readRightEncoder();
+            prevPositionA = readLeftEncoder();
+            prevPositionB = readRightEncoder();
 
-        double angleDist = (rDist - lDist)*TIRE_RADIUS/trackWidth;
+            double angleDist = (rDist - lDist)*TIRE_RADIUS/trackWidth;
 
-        double currentRot = prevRotation + angleDist;
+            double currentRot = prevRotation + angleDist;
 
-        double currentX;
-        double deltaX;
-        double currentY;
-        double deltaY;
-        if(angleDist != 0){
-            double temp = (trackWidth*(rDist+lDist))/(2*(rDist-lDist));
-            deltaX = temp * (sin(currentRot) - sin(prevRotation));
-            deltaY = temp * (cos(prevRotation) - cos(currentRot));
-            currentX = prevX + deltaX;
-            currentY = prevY + deltaY;
+            double currentX;
+            double deltaX;
+            double currentY;
+            double deltaY;
+            if(angleDist != 0){
+                double temp = (trackWidth*(rDist+lDist))/(2*(rDist-lDist));
+                deltaX = temp * (sin(currentRot) - sin(prevRotation));
+                deltaY = temp * (cos(prevRotation) - cos(currentRot));
+                currentX = prevX + deltaX;
+                currentY = prevY + deltaY;
+                
+            } else {
+                double totalDist = TIRE_RADIUS*(lDist + rDist)/2;
+                deltaX = totalDist * cos(currentRot);
+                deltaY = totalDist * sin(currentRot);
+                currentX = prevX + deltaX;
+                currentY = prevY + deltaY;
+            }
+            prevX = currentX;
+            prevY = currentY;
+            prevRotation = currentRot;
+
+
+
+            double loopDelaySeconds = ((double) loopDelayMs) / 1000;
+            profileA.currentPosition = currentX / TICK_TO_METERS;
+            profileA.currentVelocity = deltaX / TICK_TO_METERS /loopDelaySeconds;
+            velSetpoint = leftProfile.calculate(loopDelaySeconds, 
+                                                    TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
+                                                    TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
+
+            double velocity = encoderAVelocityController.Compute(velSetpoint.velocity, profileA.currentVelocity, loopDelaySeconds);
+
+            double aVel = headingController.Compute(headingTarget, currentRot*RAD_TO_DEG, loopDelaySeconds);
+
+            profileB.currentPosition = currentY / TICK_TO_METERS;
+            profileB.currentVelocity = deltaY / TICK_TO_METERS /loopDelaySeconds;
+            ySetpoint = rightProfile.calculate(loopDelaySeconds, 
+                                                    TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
+                                                    TrapezoidProfile::State(getRightMotorControl().value, 0.0));
+
+            double yVel = encoderBVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds); 
+
+            serialLog("vel ", 3);
+            serialLog(velocity, 3);
+            serialLog(" yvel ", 3);
+            serialLog(yVel, 3);
+            serialLog(" avel ", 3);
+            serialLogln(aVel, 3);
+
+            aVel += yVel;
+
+            double lMotorPower = fmap((velocity-8*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
+            double rMotorPower = fmap((velocity+8*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
+
+            if (fabs(lMotorPower) < MIN_MOTOR_POWER) lMotorPower = 0;
+            if (fabs(rMotorPower) < MIN_MOTOR_POWER) rMotorPower = 0;
             
-        } else {
-            double totalDist = TIRE_RADIUS*(lDist + rDist)/2;
-            deltaX = totalDist * cos(currentRot);
-            deltaY = totalDist * sin(currentRot);
-            currentX = prevX + deltaX;
-            currentY = prevY + deltaY;
-        }
-        prevX = currentX;
-        prevY = currentY;
-        prevRotation = currentRot;
 
+            serialLog("lpower ", 3);
+            serialLog(lMotorPower, 3);
+            serialLog(" rpower ", 3);
+            serialLogln(rMotorPower, 3);
+            serialLog("xpos ", 3);
+            serialLog(currentX, 3);
+            serialLog(" ypos ", 3);
+            serialLogln(currentY*100, 3);
 
-        double loopDelaySeconds = ((double) loopDelayMs) / 1000;
-        profileA.currentPosition = currentX / TICK_TO_METERS;
-        profileA.currentVelocity = deltaX / TICK_TO_METERS /loopDelaySeconds;
-        velSetpoint = leftProfile.calculate(loopDelaySeconds, 
-                                                TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
-                                                TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
+            setLeftPower(lMotorPower);
+            setRightPower(rMotorPower);
 
-        double velocity = encoderAVelocityController.Compute(velSetpoint.velocity, profileA.currentVelocity, loopDelaySeconds);
-
-        double aVel = headingController.Compute(headingTarget, currentRot*RAD_TO_DEG, loopDelaySeconds);
-
-        profileB.currentPosition = currentY / TICK_TO_METERS;
-        profileB.currentVelocity = deltaY / TICK_TO_METERS /loopDelaySeconds;
-        ySetpoint = rightProfile.calculate(loopDelaySeconds, 
-                                                TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
-                                                TrapezoidProfile::State(getRightMotorControl().value, 0.0));
-
-        double yVel = encoderBVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds); 
-        aVel += yVel;
-
-        double lMotorPower = ((velocity-aVel*trackWidth/2)/TIRE_RADIUS);
-        double rMotorPower = ((velocity+aVel*trackWidth/2)/TIRE_RADIUS);
-   
-
-
-        serialLog("vel ", 3);
-        serialLog(velocity, 3);
-        serialLog(" yvel ", 3);
-        serialLog(yVel, 3);
-        serialLog(" avel ", 3);
-        serialLogln(aVel, 3);
-        serialLog("lpower ", 3);
-        serialLog(lMotorPower, 3);
-        serialLog(" rpower ", 3);
-        serialLogln(rMotorPower, 3);
-        serialLog("xpos ", 3);
-        serialLog(currentX, 3);
-        serialLog(" ypos ", 3);
-        serialLogln(currentY*100, 3);
-
-
-        if (lMotorPower > 1) lMotorPower = 1;
-        if (lMotorPower < -1) lMotorPower = -1;
-        if (rMotorPower > 1) rMotorPower = 1;
-        if (rMotorPower < -1) rMotorPower = -1;
-
-
-
-        setLeftPower(lMotorPower);
-        setRightPower(rMotorPower);
+            double sum = 0;
+            for(int x = 99; x >= 0; x--) {
+                average[x+1] = average[x];
+                sum += fabs(average[x+1]);
+            }
+            average[0] = lMotorPower;
+            sum += fabs(average[0]);
+            if (sum/100 < 0.01){
+                serialLogln(sum/100,3);
+                serialLogln(runningBS,3);
+                runningBS = false;
+                setLeftPower(0);
+                setRightPower(0);
+            } else {
+                runningBS = true;
+            }
+        } 
     }
 }
 
