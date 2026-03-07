@@ -71,7 +71,8 @@ double goalX = 0;
 double goalY = 0;
 double goalRot;
 bool runningBS = false;
-double average[100];
+double average[50];
+String data[7];
 
 //when moving to a different target, this is the encoder position we started from
 int startEncoderAPos = -1;
@@ -163,7 +164,8 @@ void newSetPointBS(float distance){
     updateCritRange();
     setHeadingTarget(0);
     runningBS = true;
-    for (int x = 0; x < 100; x++) average[x] = 100;
+    for (int x = 0; x < 50; x++) average[x] = 100;
+    for (int x = 0; x < 7; x++) data[x] = "";
 }
 
 //crit range is basically getting distance we go until we are halfway to target. By the end of this range,
@@ -466,12 +468,12 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             double yVel = encoderBVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds); 
 
-            serialLog("vel ", 3);
-            serialLog(velocity, 3);
-            serialLog(" yvel ", 3);
-            serialLog(yVel, 3);
-            serialLog(" avel ", 3);
-            serialLogln(aVel, 3);
+            data[0].concat(velocity);
+            data[0].concat(",");
+            data[1].concat(yVel);
+            data[1].concat(",");
+            data[2].concat(aVel);
+            data[2].concat(",");
 
             aVel += yVel;
 
@@ -482,35 +484,57 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             if (fabs(rMotorPower) < MIN_MOTOR_POWER) rMotorPower = 0;
             
 
-            serialLog("lpower ", 3);
-            serialLog(lMotorPower, 3);
-            serialLog(" rpower ", 3);
-            serialLogln(rMotorPower, 3);
-            serialLog("xpos ", 3);
-            serialLog(currentX, 3);
-            serialLog(" ypos ", 3);
-            serialLogln(currentY*100, 3);
+            data[3].concat(lMotorPower);
+            data[3].concat(",");
+            data[4].concat(rMotorPower);
+            data[4].concat(",");   
+            data[5].concat(currentX);
+            data[5].concat(",");
+            data[6].concat(currentY*100);
+            data[6].concat(",");
+
 
             setLeftPower(lMotorPower);
             setRightPower(rMotorPower);
 
             double sum = 0;
-            for(int x = 99; x >= 0; x--) {
+            for(int x = 49; x >= 0; x--) {
                 average[x+1] = average[x];
                 sum += fabs(average[x+1]);
             }
-            average[0] = lMotorPower;
+            average[0] = velocity;
             sum += fabs(average[0]);
-            if (sum/100 < 0.01){
-                serialLogln(sum/100,3);
+            if (sum/50 < 0.01){
+                serialLogln(sum/50,3);
                 serialLogln(runningBS,3);
                 runningBS = false;
                 setLeftPower(0);
                 setRightPower(0);
+
+                sendActionSuccess("bs done");
+
+                /* print logs
+                serialLog("vel ", 3);
+                serialLog(data[0], 3);
+                serialLog(" yvel ", 3);
+                serialLog(data[1], 3);
+                serialLog(" avel ", 3);
+                serialLogln(data[2], 3);
+
+                serialLog("lpower ", 3);
+                serialLog(data[3], 3);
+                serialLog(" rpower ", 3);
+                serialLogln(data[4], 3);
+                serialLog("xpos ", 3);
+                serialLog(data[5], 3);
+                serialLog(" ypos ", 3);
+                serialLogln(data[6*100, 3);
+                */
+
             } else {
                 runningBS = true;
             }
-        } 
+        }
     }
 }
 
