@@ -55,4 +55,5 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint);
 void updateCentering();
 void updateToNextDistance();
 void newSetPointBS(float distance);
+void bsSetTest();
 #endif

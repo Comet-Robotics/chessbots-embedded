@@ -156,10 +156,29 @@ void testEncoderPID()
 void newSetPointBS(float distance){
     prevPositionA = readLeftEncoder();
     prevPositionB = readRightEncoder();
+    
     prevX = 0;
     prevY = 0;
     prevRotation = 0;
     setLeftMotorControl({POSITION, distance / TICK_TO_METERS});
+    setRightMotorControl({POSITION, 0});
+    updateCritRange();
+    setHeadingTarget(0);
+    runningBS = true;
+    for (int x = 0; x < 50; x++) average[x] = 100;
+    for (int x = 0; x < 7; x++) data[x] = "";
+}
+
+float bsTestDistance = 2;
+void bsSetTest(){
+    bsTestDistance *= -1;
+    prevPositionA = readLeftEncoder();
+    prevPositionB = readRightEncoder();
+    
+    prevX = 0;
+    prevY = 0;
+    prevRotation = 0;
+    setLeftMotorControl({POSITION, bsTestDistance / TICK_TO_METERS});
     setRightMotorControl({POSITION, 0});
     updateCritRange();
     setHeadingTarget(0);
@@ -183,9 +202,12 @@ void updateCritRange()
     timeSinceTurn = millis();
 }
 
+// note for this function: the angle you pass in isn't the angle heading it should turn to, but how much it should turn by.
+// this is probably obviously to everyone else (except me).
 void testTurn()
 {
     resetSpeed();
+    runningBS = true;
     
     serialLog("Changing destination angle to ", 2);
     serialLog(angle, 2);
@@ -197,8 +219,18 @@ void testTurn()
     serialLog(getRightMotorControl().value, 2);
     serialLogln(")", 2);
 
+    serialLog("Heading target is: ", 2);
+    serialLogln(getHeadingTarget(), 2);
+
+
     //compute the new crit range now that target and start encoder have changed
     updateCritRange();
+    // setHeadingTarget(0);
+    runningBS = true;
+    for (int x = 0; x < 50; x++) average[x] = 100;
+    for (int x = 0; x < 7; x++) data[x] = "";
+
+    // angle += 30;
 }
 
 void testCentering()
@@ -236,6 +268,11 @@ void setupBot() {
         setHeadingTarget(magnet->readDegrees());
         testEncoderPID();
         timerInterval(8000, &testEncoderPID);
+    }
+
+    if (DO_BS_TEST) {
+        bsSetTest();
+        timerInterval(10000, &bsSetTest);
     }
 
     if (DO_TURN_TEST) {
@@ -316,7 +353,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         prevPositionA = currentPositionEncoderA;
         prevPositionB = currentPositionEncoderB;
 
-        double currentHeading = magnet->readDegrees();
+        // double currentHeading = magnet->readDegrees();
         // double currentHeading = getHeadingTarget();
         // double controllerOutput = headingController.Compute(headingTarget, currentHeading, loopDelaySeconds);
         double controllerOutput = 0; // TODO fix magnet calibration, then re-enable heading correction
@@ -409,7 +446,9 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
         // turn(M_PI / 2, "NULL");
     }
-    
+    // serialLogln(readLeftEncoder(),2);
+    // serialLogln(readRightEncoder(),2);
+
     if (DO_BS){
         if(runningBS){
 
@@ -420,6 +459,12 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             prevPositionA = readLeftEncoder();
             prevPositionB = readRightEncoder();
+
+            // serialLog("Left encoder:", 2);
+            // serialLogln(prevPositionA, 2);
+            // serialLog("Right encoder:", 2);
+            // serialLogln(prevPositionB, 2);
+
 
             double angleDist = (rDist - lDist)*TIRE_RADIUS/trackWidth;
 
@@ -460,6 +505,12 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             double aVel = headingController.Compute(headingTarget, currentRot*RAD_TO_DEG, loopDelaySeconds);
 
+            serialLog("Ideal rotation: ", 2);
+            serialLogln(headingTarget, 2);
+            serialLog("actual rotation: ", 2);
+            serialLogln(currentRot*RAD_TO_DEG, 2);
+
+
             profileB.currentPosition = currentY / TICK_TO_METERS;
             profileB.currentVelocity = deltaY / TICK_TO_METERS /loopDelaySeconds;
             ySetpoint = rightProfile.calculate(loopDelaySeconds, 
@@ -496,6 +547,11 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             setLeftPower(lMotorPower);
             setRightPower(rMotorPower);
+
+            // serialLog("Left power is: ", 2);
+            // serialLogln(lMotorPower, 2);
+            // serialLog("Right power is: ", 2);
+            // serialLogln(rMotorPower, 2);
 
             double sum = 0;
             for(int x = 49; x >= 0; x--) {
@@ -780,17 +836,16 @@ void turn(float angleRadians, std::string id) {
     int offsetTicks = radiansToTicks(angleRadians);
 
     if (getLeftMotorControl().mode == POSITION) {
-        setLeftMotorControl({POSITION, getLeftMotorControl().value - offsetTicks});
+        setLeftMotorControl({POSITION, getLeftMotorControl().value});
     } else {
-        setLeftMotorControl({POSITION, (float)(readLeftEncoder() - offsetTicks)});
+        setLeftMotorControl({POSITION, (float)(readLeftEncoder())});
     }
     if (getRightMotorControl().mode == POSITION) {
-        setRightMotorControl({POSITION, getRightMotorControl().value + offsetTicks});
+        setRightMotorControl({POSITION, getRightMotorControl().value});
     } else {
-        setRightMotorControl({POSITION, (float)(readRightEncoder() + offsetTicks)});
+        setRightMotorControl({POSITION, (float)(readRightEncoder())});
     }
     setHeadingTarget(getHeadingTarget() + MAGNET_CCW_IS_POSITIVE * (angleRadians * 180.0 / M_PI));
-
     if (id != "NULL")
     {
         sendPacketOnPidComplete(id);
