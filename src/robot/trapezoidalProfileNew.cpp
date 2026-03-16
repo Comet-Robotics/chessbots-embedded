@@ -1,5 +1,6 @@
 #include "robot/trapezoidalProfileNew.h"
 #include "utils/config.h"
+#include "utils/logging.h"
 
 TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &current, const State &goal)
 {
@@ -43,6 +44,12 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         result.velocity += t * m_constraints.maxAcceleration;
         if (abs(result.velocity) < MIN_MOTOR_VELOCITY_TPS) {
             result.velocity = MIN_MOTOR_VELOCITY_TPS;
+            serialLogln("UH OH", 2);
+        }
+        else
+        {
+            serialLog("current velocity is: ", 2);
+            serialLogln(result.velocity, 2);
         }
         result.position += (m_current.velocity + t * m_constraints.maxAcceleration / 2.0) * t;
     }

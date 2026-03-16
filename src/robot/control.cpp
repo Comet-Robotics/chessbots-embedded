@@ -37,7 +37,7 @@ TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint, velSetpoint, ySetpoint;
 PIDController encoderAVelocityController(0.000009, 0.000035, 0.000000000001, -1, +1, 10); // blue on graph // input ticks per second, output duty cycle
 PIDController encoderBVelocityController(0.0000005, 0.000035, 0.000000000001, -1, +1, 10); // red on graph // input ticks per second, output duty cycle
-ContinuousPIDController headingController(0.21, 0.000001, 0.000000000001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
+ContinuousPIDController headingController(0.21, 0.001, 0.001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -79,8 +79,7 @@ int startEncoderAPos = -1;
 int startEncoderBPos = -1;
 
 //the encoder distance to about halfway through the tile
-int encoderAHalfwayDist = 0;
-int encoderBHalfwayDist = 0;
+int encoderHalfwayDist = 0;
 
 //when we receive a command from the website to center, set this from false to true,
 //then when the code sets it back to false, that's when we know we're done centering
@@ -132,6 +131,11 @@ bool onFirstTile[4] = {false, false, false, false};
 
 bool waitingForLight = false;
 
+bool turning = false;
+
+int leftEncoder = 0;
+int rightEncoder = 0;
+
 void testEncoderPID()
 {
     serialLogln("Changing encoder PID setpoint!", 2);
@@ -154,8 +158,8 @@ void testEncoderPID()
  * set point for the modified pid
  */
 void newSetPointBS(float distance){
-    prevPositionA = readLeftEncoder();
-    prevPositionB = readRightEncoder();
+    prevPositionA = leftEncoder;
+    prevPositionB = rightEncoder;
     
     prevX = 0;
     prevY = 0;
@@ -172,8 +176,8 @@ void newSetPointBS(float distance){
 float bsTestDistance = 2;
 void bsSetTest(){
     bsTestDistance *= -1;
-    prevPositionA = readLeftEncoder();
-    prevPositionB = readRightEncoder();
+    prevPositionA = leftEncoder;
+    prevPositionB = rightEncoder;
     
     prevX = 0;
     prevY = 0;
@@ -193,10 +197,8 @@ void updateCritRange()
 {
     //want to record the values before we move now
     startEncoderAPos = profileA.currentPosition;
-    startEncoderBPos = profileB.currentPosition;
     
     profileA.criticalRange = fabs(profileA.targetPosition - startEncoderAPos) / 2;
-    profileB.criticalRange = fabs(profileB.targetPosition - startEncoderBPos) / 2;
 
     //update it so that time since start is now equal to this. Only really care about this value after turns though
     timeSinceTurn = millis();
@@ -208,6 +210,7 @@ void testTurn()
 {
     resetSpeed();
     runningBS = true;
+    turning = true;
     
     serialLog("Changing destination angle to ", 2);
     serialLog(angle, 2);
@@ -241,6 +244,9 @@ void testCentering()
 
 // Sets up all the aspects needed for the bot to work
 void setupBot() {
+    leftEncoder = readLeftEncoder();
+    rightEncoder = readRightEncoder();
+    
     serialLogln("Setting Up Bot...", 2);
 
     pinMode(ONBOARD_LED_PIN, OUTPUT);
@@ -276,20 +282,23 @@ void setupBot() {
     }
 
     if (DO_TURN_TEST) {
-        angle = 30;
+        angle = 90;
         testTurn();
         timerInterval(5000, testTurn);
     }
 
     if (DO_CENTERING_TEST) {
         testCentering();
-        timerInterval(5000, &testCentering);
+        timerInterval(50000, &testCentering);
     }
 }
 
 // + (0.0001 * desiredVelocityA)
 // Manages control loop (loopDelayMs is for reference)
 void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
+    leftEncoder = readLeftEncoder();
+    rightEncoder = readRightEncoder();
+    
     if (DO_LIGHT_SENSOR_TEST)
     {
         //read the light values. May actually.... not want to do this if not centering? Keeping it outside the if
@@ -324,8 +333,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
     if (DO_PID) {
         double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-        int currentPositionEncoderA = readLeftEncoder();
-        int currentPositionEncoderB = readRightEncoder();
+        int currentPositionEncoderA = leftEncoder;
+        int currentPositionEncoderB = rightEncoder;
         double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
         double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
 
@@ -414,25 +423,25 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             // serialLogln(loopDelaySeconds, 2);
         }
     
-        serialLog(leftSetpoint.velocity, 3);
-        serialLog(",", 3);
-        serialLog(currentVelocityA, 3);
-        serialLog(",", 3);
-        serialLog(leftSetpoint.velocity - currentVelocityA, 3);
-        serialLog(",", 3);
-        serialLog(rightSetpoint.velocity, 3);
-        serialLog(",", 3);
-        serialLog(currentVelocityB, 3);
-        serialLog(",", 3);
-        serialLog(rightSetpoint.velocity - currentVelocityB, 3);
-        serialLog(",", 3);
-        // test magnet data
-        serialLog(velocityOffsetFromHeading, 3);
-        serialLog(",", 3);
-        serialLog(headingTarget, 3);
-        serialLog(",", 3);
-        serialLog(currentHeading, 3);
-        serialLogln("", 3);
+        // serialLog(leftSetpoint.velocity, 3);
+        // serialLog(",", 3);
+        // serialLog(currentVelocityA, 3);
+        // serialLog(",", 3);
+        // serialLog(leftSetpoint.velocity - currentVelocityA, 3);
+        // serialLog(",", 3);
+        // serialLog(rightSetpoint.velocity, 3);
+        // serialLog(",", 3);
+        // serialLog(currentVelocityB, 3);
+        // serialLog(",", 3);
+        // serialLog(rightSetpoint.velocity - currentVelocityB, 3);
+        // serialLog(",", 3);
+        // // test magnet data
+        // serialLog(velocityOffsetFromHeading, 3);
+        // serialLog(",", 3);
+        // serialLog(headingTarget, 3);
+        // serialLog(",", 3);
+        // serialLog(currentHeading, 3);
+        // serialLogln("", 3);
 
         #endif
 
@@ -454,11 +463,11 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             double trackWidth = TRACK_WIDTH_INCHES/39.37;
 
-            double lDist = (double)(readLeftEncoder()-prevPositionA)/TICKS_PER_ROTATION*2*PI;
-            double rDist = (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
+            double lDist = (double)(leftEncoder-prevPositionA)/TICKS_PER_ROTATION*2*PI;
+            double rDist = (double)(rightEncoder-prevPositionB)/TICKS_PER_ROTATION*2*PI;
 
-            prevPositionA = readLeftEncoder();
-            prevPositionB = readRightEncoder();
+            prevPositionA = leftEncoder;
+            prevPositionB = rightEncoder;
 
             // serialLog("Left encoder:", 2);
             // serialLogln(prevPositionA, 2);
@@ -501,8 +510,20 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                                                     TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
                                                     TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
 
+            if(turning)
+            {
+                velSetpoint.velocity = 0;
+            }
+
             double velocity = encoderAVelocityController.Compute(velSetpoint.velocity, profileA.currentVelocity, loopDelaySeconds);
 
+            serialLog("Computed velocity (normal) is: ", 2);
+            serialLogln(velSetpoint.velocity, 2);
+
+            serialLog("Computed velocity (PID) is: ", 2);
+            serialLogln(velocity, 2);
+
+            
             double aVel = headingController.Compute(headingTarget, currentRot*RAD_TO_DEG, loopDelaySeconds);
 
             serialLog("Ideal rotation: ", 2);
@@ -517,6 +538,11 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                                                     TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
                                                     TrapezoidProfile::State(getRightMotorControl().value, 0.0));
 
+            if(turning)
+            {
+                ySetpoint.velocity = 0;
+            }
+
             double yVel = encoderBVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds); 
 
             data[0].concat(velocity);
@@ -528,8 +554,10 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             aVel += yVel;
 
-            double lMotorPower = fmap((velocity-8*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
-            double rMotorPower = fmap((velocity+8*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
+            int magnifier = turning ? 4 : 8;
+
+            double lMotorPower = fmap((velocity-magnifier*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
+            double rMotorPower = fmap((velocity+magnifier*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
 
             if (fabs(lMotorPower) < MIN_MOTOR_POWER) lMotorPower = 0;
             if (fabs(rMotorPower) < MIN_MOTOR_POWER) rMotorPower = 0;
@@ -548,10 +576,10 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             setLeftPower(lMotorPower);
             setRightPower(rMotorPower);
 
-            // serialLog("Left power is: ", 2);
-            // serialLogln(lMotorPower, 2);
-            // serialLog("Right power is: ", 2);
-            // serialLogln(rMotorPower, 2);
+            serialLog("Left power is: ", 2);
+            serialLogln(lMotorPower, 2);
+            serialLog("Right power is: ", 2);
+            serialLogln(rMotorPower, 2);
 
             double sum = 0;
             for(int x = 49; x >= 0; x--) {
@@ -564,8 +592,10 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                 serialLogln(sum/50,3);
                 serialLogln(runningBS,3);
                 runningBS = false;
+                turning = false;
                 setLeftPower(0);
                 setRightPower(0);
+                serialLogln("Bs is dnoe", 2);
 
                 sendActionSuccess("bs done");
 
@@ -642,8 +672,7 @@ void determineNextAction()
     else if(forwardAligning)
     {
         //if going forward, store the current encoder value so we can see the full encoder length of the tiles
-        encoderAHalfwayDist = profileA.currentPosition;
-        encoderBHalfwayDist = profileB.currentPosition;
+        encoderHalfwayDist = (leftEncoder + rightEncoder) / 2;
         //swap to going back
         forwardAligning = !forwardAligning;
         //set that new drive
@@ -651,9 +680,9 @@ void determineNextAction()
         centeringStatus = 'E';
 
         serialLog((char*)"Current encoder A: ", 2);
-        serialLogln(profileA.currentPosition, 2);
+        serialLogln(leftEncoder, 2);
         serialLog((char*)"Current encoder B: ", 2);
-        serialLogln(profileB.currentPosition, 2);
+        serialLogln(rightEncoder, 2);
         serialLog((char*)"Target encoder A: ", 2);
         serialLogln(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 2);
         serialLog((char*)"Target encoder B: ", 2);
@@ -668,12 +697,11 @@ void determineNextAction()
         //since we always go forward first and then backwards, the current value of encoderHalfwayDist > currentEncoder always
         //what we're doing is currently, "encoderAHalfwayDist" just stores the value of the other edge in encoder ticks, now we're
         //finding the difference between them. And of course divide by 2 as want half that distance
-        encoderAHalfwayDist = (encoderAHalfwayDist - profileA.currentPosition) / 2;
-        encoderBHalfwayDist = (encoderBHalfwayDist - profileB.currentPosition) / 2;
+        int middleCurrentValue = (leftEncoder + rightEncoder) / 2;
+        encoderHalfwayDist = (encoderHalfwayDist - middleCurrentValue) / 2;
 
         //decide that we take average of encoder A and B's distances, since ideally we want both to travel the same amount
-        int totalHalfwayDistance = (encoderAHalfwayDist + encoderBHalfwayDist) / 2;
-        driveTicks(totalHalfwayDistance, "NULL");
+        newSetPointBS(encoderHalfwayDist * TICK_TO_METERS);
         centeringStatus = 'M';
         //now we moving to da center
         movingCenter = true;
@@ -716,7 +744,7 @@ void updateCentering()
         }
         case 'M':
             //check if we're the moving we're doing is finished. If so, determine what we do next.
-            if(checkMoveFinished())
+            if(!runningBS)
             {
                 determineNextAction();
             }
@@ -724,34 +752,34 @@ void updateCentering()
     }
 }
 
-//checks if we're done moving to our target when either moving half a tile's length or turning
-bool checkMoveFinished()
-{
-    //first, checks like "fabs(profileA.currentVelocity) < 2" see if we're slowing down or not.
+// //checks if we're done moving to our target when either moving half a tile's length or turning
+// bool checkMoveFinished()
+// {
+//     //first, checks like "fabs(profileA.currentVelocity) < 2" see if we're slowing down or not.
 
-    //then, something like "fabs(currentEncoderA - encoderATarget) < criticalRangeA" is making sure
-    //the reason our speed is slow is specifically because we're slowing down and not because we're
-    //beginning to speed up.
-    //do this by seeing if the distance remaining is less than the midpoint distance from start to end, as by then we're at our max speed.
+//     //then, something like "fabs(currentEncoderA - encoderATarget) < criticalRangeA" is making sure
+//     //the reason our speed is slow is specifically because we're slowing down and not because we're
+//     //beginning to speed up.
+//     //do this by seeing if the distance remaining is less than the midpoint distance from start to end, as by then we're at our max speed.
 
-    bool encoderAChecks = fabs(profileA.currentPosition - profileA.targetPosition) < profileA.criticalRange && fabs(profileA.currentVelocity) < 3;
-    bool encoderBChecks = fabs(profileB.currentPosition - profileB.targetPosition) < profileB.criticalRange  && fabs(profileB.currentVelocity) < 3;
+//     bool encoderAChecks = fabs(profileA.currentPosition - profileA.targetPosition) < profileA.criticalRange && fabs(profileA.currentVelocity) < 3;
+//     bool encoderBChecks = fabs(profileB.currentPosition - profileB.targetPosition) < profileB.criticalRange  && fabs(profileB.currentVelocity) < 3;
 
-    //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, and means we should declare the movement finished.
-    bool timerCheck = millis() - timeSinceTurn > 8000;
+//     //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, and means we should declare the movement finished.
+//     bool timerCheck = millis() - timeSinceTurn > 8000;
     
-    return ((encoderAChecks && encoderBChecks) || timerCheck);
-}
+//     return ((encoderAChecks && encoderBChecks) || timerCheck);
+// }
 
 //like the one above but just seeing if we can keep moving or not
 bool checkIfCanUpdateMovement()
 {
-    return fabs(profileA.currentPosition - profileA.targetPosition) < profileA.criticalRange && fabs(profileB.currentPosition - profileB.targetPosition) < profileB.criticalRange;
+    return fabs(profileA.currentPosition - profileA.targetPosition) < profileA.criticalRange;
 }
 
 void setLeftMotorControl(ControlSetting control) {
     leftMotorControl = control;
-    leftSetpoint = TrapezoidProfile::State(readLeftEncoder(), profileA.currentVelocity);
+    leftSetpoint = TrapezoidProfile::State(leftEncoder, profileA.currentVelocity);
     if (control.mode == POSITION)
         profileA.targetPosition = control.value;
     else
@@ -760,7 +788,7 @@ void setLeftMotorControl(ControlSetting control) {
 
 void setRightMotorControl(ControlSetting control) {
     rightMotorControl = control;
-    rightSetpoint = TrapezoidProfile::State(readRightEncoder(), profileB.currentVelocity);
+    rightSetpoint = TrapezoidProfile::State(rightEncoder, profileB.currentVelocity);
     if (control.mode == POSITION)
         profileB.targetPosition = control.value;
     else
@@ -799,8 +827,8 @@ void driveTicks(int tickDistance, std::string id)
 {
     if (!getStoppedStatus()) {
         resetSpeed();
-        setLeftMotorControl({POSITION, (float)(readLeftEncoder() + tickDistance)});
-        setRightMotorControl({POSITION, (float)(readRightEncoder() + tickDistance)});
+        setLeftMotorControl({POSITION, (float)(leftEncoder + tickDistance)});
+        setRightMotorControl({POSITION, (float)(rightEncoder + tickDistance)});
         updateCritRange();
 
         if (id != "NULL") {
@@ -838,12 +866,12 @@ void turn(float angleRadians, std::string id) {
     if (getLeftMotorControl().mode == POSITION) {
         setLeftMotorControl({POSITION, getLeftMotorControl().value});
     } else {
-        setLeftMotorControl({POSITION, (float)(readLeftEncoder())});
+        setLeftMotorControl({POSITION, (float)(leftEncoder)});
     }
     if (getRightMotorControl().mode == POSITION) {
         setRightMotorControl({POSITION, getRightMotorControl().value});
     } else {
-        setRightMotorControl({POSITION, (float)(readRightEncoder())});
+        setRightMotorControl({POSITION, (float)(rightEncoder)});
     }
     setHeadingTarget(getHeadingTarget() + MAGNET_CCW_IS_POSITIVE * (angleRadians * 180.0 / M_PI));
     if (id != "NULL")
@@ -954,14 +982,9 @@ void updateToNextDistance()
 {
     //this way if we're reversing, we're actually subtracting. if going forward was 0, then 0 * 2 - 1 = -1.
     //if going forward was 1, 1 * 2 - 1 = 1.
-    float encTargetA = (float)profileA.currentPosition + 2500 * (forwardAligning * 2 - 1);
-    float encTargetB = (float)profileB.currentPosition + 2500 * (forwardAligning * 2 - 1);
-    setLeftMotorControl({POSITION, encTargetA});
-    setRightMotorControl({POSITION, encTargetB});
+    newSetPointBS(3000 * TICK_TO_METERS * (forwardAligning * 2 - 1));
 #if LOGGING_LEVEL >= 3
     serialLogln("changing direction!", 3);
-    serialLogln(encTargetA, 3);
-    serialLogln(encTargetB, 3);
 #endif
 
     //update crit range yessir
@@ -974,7 +997,7 @@ void createDriveUntilNewTile()
     //set the next distance to travel
     resetSpeed();
     updateToNextDistance();
-    
+
     //assign values here, will detect when they change
     if(forwardAligning)
     {
@@ -1020,19 +1043,19 @@ uint8_t driveUntilNewTile()
             uint8_t status = 0; 
             if(leadingEncoder != 0)
             {
-                setLeftMotorControl({POSITION, (float)profileA.currentPosition});
-                setRightMotorControl({POSITION, (float)profileB.currentPosition});
+                setLeftMotorControl({POSITION, (float)leftEncoder});
+                setRightMotorControl({POSITION, (float)rightEncoder});
                 
                 //first get the encoder that we're comparing to get the distance. If leading encoder is 1 and we were moving forward, or if
                 //leading encoder is 2 but we were moving backward, then the back encoder is b, otherwise it's A
-                double encoderChosen = (leadingEncoder == 1 && forwardAligning || leadingEncoder == 2 && !forwardAligning) ? profileB.currentPosition : profileA.currentPosition;
+                double encoderChosen = (leadingEncoder == 1 && forwardAligning || leadingEncoder == 2 && !forwardAligning) ? rightEncoder : leftEncoder;
                 //now, the distance we traveled is the difference between the encoders
                 double backEncoderDist = fabs(encoderChosen - backPrevDistance);
 #if LOGGING_LEVEL >= 3
                 serialLog("Begin encoder is: ", 2);
                 serialLogln(backPrevDistance, 2);
                 serialLog("End encoder is: ", 2);
-                serialLogln((leadingEncoder == 1) ? profileA.currentPosition : profileB.currentPosition, 2);
+                serialLogln((leadingEncoder == 1) ? leftEncoder : rightEncoder, 2);
 #endif
                 //now convert difference in ticks to meter value
                 backEncoderDist *= TICK_TO_METERS;
@@ -1093,7 +1116,7 @@ uint8_t driveUntilNewTile()
             leadingEncoder = leftEncoderChange ? 1 : 2;
             //this makes sense as if the left encoder first crossed but we're going backwards, that's encoder A that's behind. Meanwhile if the right
             //encoder crossed first and we're going forwards, its encoder A that's behind too. In all other cases, its encoder B
-            backPrevDistance = (leftEncoderChange && !forwardAligning || rightEncoderChange && forwardAligning) ? profileA.currentPosition : profileB.currentPosition;            
+            backPrevDistance = (leftEncoderChange && !forwardAligning || rightEncoderChange && forwardAligning) ? leftEncoder : rightEncoder;            
         }
     }
     return 1;

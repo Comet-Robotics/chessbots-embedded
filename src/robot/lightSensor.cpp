@@ -107,7 +107,7 @@ void readLightLevels() {
 
     //Logs the values for debugging purposes. This way, if the logging level doesn't permit it,
     //we don't ever get to this code as it's not flashed, which saved on time.
-#if LOGGING_LEVEL >= 4
+#if LOGGING_LEVEL >= 2
     serialLog("Light Levels: ", 2);
     serialLog(lightArray[0], 2);
     serialLog(" ", 2);

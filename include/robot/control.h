@@ -40,7 +40,7 @@ void stop();
 void sendPacketOnPidComplete(std::string id);
 void readLight(int loopDelayMs);
 void startMotorAndEncoderTest();
-bool checkMoveFinished();
+// bool checkMoveFinished();
 void startDriveTest();
 void startCentering();
 bool checkIfCanUpdateMovement();
