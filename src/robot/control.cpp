@@ -59,6 +59,7 @@ boolean testEncoderPID_value = false;
 //determines the encoder values the iteration right before
 int prevPositionA = 0;
 int prevPositionB = 0;
+int timeMs = 0;
 
 //robot rotation in radians
 double prevRotation = 0;
@@ -164,6 +165,7 @@ void newSetPointBS(float distance){
     updateCritRange();
     setHeadingTarget(0);
     runningBS = true;
+    timeMs = 0;
     for (int x = 0; x < 50; x++) average[x] = 100;
     for (int x = 0; x < 7; x++) data[x] = "";
 }
@@ -410,6 +412,11 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         // turn(M_PI / 2, "NULL");
     }
     
+    //serialLog(readLeftEncoder(),3);
+    //serialLog(" ",3);
+    //serialLogln(readRightEncoder(),3);
+    //setLeftPower(1);
+    //setRightPower(1);
     if (DO_BS){
         if(runningBS){
 
@@ -449,7 +456,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
 
 
-            double loopDelaySeconds = ((double) loopDelayMs) / 1000;
+            double loopDelaySeconds = ((double) timeMs) / 1000;
             profileA.currentPosition = currentX / TICK_TO_METERS;
             profileA.currentVelocity = deltaX / TICK_TO_METERS /loopDelaySeconds;
             velSetpoint = leftProfile.calculate(loopDelaySeconds, 
@@ -457,7 +464,6 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                                                     TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
 
             double velocity = encoderAVelocityController.Compute(velSetpoint.velocity, profileA.currentVelocity, loopDelaySeconds);
-
             double aVel = headingController.Compute(headingTarget, currentRot*RAD_TO_DEG, loopDelaySeconds);
 
             profileB.currentPosition = currentY / TICK_TO_METERS;
@@ -465,7 +471,6 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             ySetpoint = rightProfile.calculate(loopDelaySeconds, 
                                                     TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
                                                     TrapezoidProfile::State(getRightMotorControl().value, 0.0));
-
             double yVel = encoderBVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds); 
 
             data[0].concat(velocity);
@@ -504,6 +509,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             }
             average[0] = velocity;
             sum += fabs(average[0]);
+            timeMs += loopDelayMs;
             if (sum/50 < 0.01){
                 serialLogln(sum/50,3);
                 serialLogln(runningBS,3);
@@ -513,23 +519,25 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
                 sendActionSuccess("bs done");
 
-                /* print logs
-                serialLog("vel ", 3);
-                serialLog(data[0], 3);
-                serialLog(" yvel ", 3);
-                serialLog(data[1], 3);
-                serialLog(" avel ", 3);
-                serialLogln(data[2], 3);
+                //* print logs
+                for(int x = 0 ; x < data[0].length(); x++){
+                    serialLog("vel ", 3);
+                    serialLog(data[0][x], 3);
+                    serialLog(" yvel ", 3);
+                    serialLog(data[1][x], 3);
+                    serialLog(" avel ", 3);
+                    serialLog(data[2][x], 3);
 
-                serialLog("lpower ", 3);
-                serialLog(data[3], 3);
-                serialLog(" rpower ", 3);
-                serialLogln(data[4], 3);
-                serialLog("xpos ", 3);
-                serialLog(data[5], 3);
-                serialLog(" ypos ", 3);
-                serialLogln(data[6*100, 3);
-                */
+                    serialLog(" lpower ", 3);
+                    serialLog(data[3][x], 3);
+                    serialLog(" rpower ", 3);
+                    serialLog(data[4][x], 3);
+                    serialLog(" xpos ", 3);
+                    serialLog(data[5][x], 3);
+                    serialLog(" ypos ", 3);
+                    serialLogln(data[6][x], 3);
+                }
+                //*/
 
             } else {
                 runningBS = true;
