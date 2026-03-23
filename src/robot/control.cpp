@@ -37,6 +37,7 @@ TrapezoidProfile rightProfile(profileConstraints);
 TrapezoidProfile::State leftSetpoint, rightSetpoint, velSetpoint, ySetpoint;
 PIDController encoderAVelocityController(0.000009, 0.000035, 0.000000000001, -1, +1, 10); // blue on graph // input ticks per second, output duty cycle
 PIDController encoderBVelocityController(0.0000005, 0.000035, 0.000000000001, -1, +1, 10); // red on graph // input ticks per second, output duty cycle
+PIDController encoderRVelocityController(0.000012, 0.00000, 0.0000000000000, -1, +1, 10); 
 ContinuousPIDController headingController(0.21, 0.000001, 0.000000000001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
@@ -72,6 +73,7 @@ double goalX = 0;
 double goalY = 0;
 double goalRot;
 bool runningBS = false;
+bool runningTurn = false;
 double average[50];
 
 //when moving to a different target, this is the encoder position we started from
@@ -167,6 +169,8 @@ void newSetPointBS(float distance){
     timeMs = 0;
     for (int x = 0; x < 50; x++) average[x] = 100;
 }
+
+
 
 //crit range is basically getting distance we go until we are halfway to target. By the end of this range,
 //we're at our max speed and are sure we aren't at a low speed just cause we're speeding up
@@ -416,9 +420,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
     //setLeftPower(1);
     //setRightPower(1);
     if (DO_BS){
+        double trackWidth = TRACK_WIDTH_INCHES/39.37;
         if(runningBS){
-
-            double trackWidth = TRACK_WIDTH_INCHES/39.37;
 
             double lDist = (double)(readLeftEncoder()-prevPositionA)/TICKS_PER_ROTATION*2*PI;
             double rDist = (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
@@ -517,6 +520,98 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             } else {
                 runningBS = true;
+            }
+        }
+        if(runningTurn){
+
+
+            double lDist = (double)(readLeftEncoder()-prevPositionA)/TICKS_PER_ROTATION*2*PI;
+            double rDist = (double)(readRightEncoder()-prevPositionB)/TICKS_PER_ROTATION*2*PI;
+
+            prevPositionA = readLeftEncoder();
+            prevPositionB = readRightEncoder();
+
+            double angleDist = (rDist - lDist)*TIRE_RADIUS/trackWidth;
+
+            double currentRot = prevRotation + angleDist;
+
+            double currentX;
+            double deltaX;
+            double currentY;
+            double deltaY;
+            if(angleDist != 0){
+                double temp = (trackWidth*(rDist+lDist))/(2*(rDist-lDist));
+                deltaX = temp * (sin(currentRot) - sin(prevRotation));
+                deltaY = temp * (cos(prevRotation) - cos(currentRot));
+                currentX = prevX + deltaX;
+                currentY = prevY + deltaY;
+                
+            } else {
+                double totalDist = TIRE_RADIUS*(lDist + rDist)/2;
+                deltaX = totalDist * cos(currentRot);
+                deltaY = totalDist * sin(currentRot);
+                currentX = prevX + deltaX;
+                currentY = prevY + deltaY;
+            }
+            prevX = currentX;
+            prevY = currentY;
+
+            prevRotation = currentRot;
+
+
+
+
+
+            double loopDelaySeconds = ((double) timeMs) / 1000;
+            profileB.currentPosition = currentRot*10 / TICK_TO_METERS;
+            profileB.currentVelocity = angleDist==0?0:angleDist*10 / TICK_TO_METERS /loopDelaySeconds;
+            ySetpoint = leftProfile.calculate(loopDelaySeconds, 
+                                                    TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
+                                                    TrapezoidProfile::State(getHeadingTarget()*10/TICK_TO_METERS, 0.0));
+
+            double velocity = encoderRVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds);
+
+            double lMotorPower = fmap((-8*velocity*trackWidth/2)/TIRE_RADIUS, -11, 11, -1, 1);
+            double rMotorPower = fmap((8*velocity*trackWidth/2)/TIRE_RADIUS, -11, 11, -1, 1);
+
+            if (fabs(lMotorPower) < MIN_MOTOR_POWER) lMotorPower = 0;
+            if (fabs(rMotorPower) < MIN_MOTOR_POWER) rMotorPower = 0;
+
+            setLeftPower(lMotorPower);
+            setRightPower(rMotorPower);
+
+            serialLog("vels ", 3);
+            serialLog(velSetpoint.velocity, 3);
+            serialLog("vel ", 3);
+            serialLog(velocity, 3);
+            serialLog(" lpower ", 3);
+            serialLog(lMotorPower, 3);
+            serialLog(" rpower ", 3);
+            serialLog(rMotorPower, 3);
+            serialLog(" angle ", 3);
+            serialLogln(currentRot*10, 3);
+    
+
+            double sum = 0;
+            for(int x = 49; x >= 0; x--) {
+                average[x+1] = average[x];
+                sum += fabs(average[x+1]);
+            }
+            average[0] = lMotorPower;
+            sum += fabs(average[0]);
+            timeMs += loopDelayMs;
+            if (sum/50 < 0.01){
+                serialLogln(sum/50,3);
+                serialLogln(runningBS,3);
+                runningBS = false;
+                setLeftPower(0);
+                setRightPower(0);
+
+                sendActionSuccess("turn done");
+
+
+            } else {
+                runningTurn = true;
             }
         }
     }
@@ -759,8 +854,23 @@ void drive(float leftPower, float rightPower, std::string id) {
 //turns the given amount in radians, CCW
 void turn(float angleRadians, std::string id) {
 
+    
     serialLogln("Turning", 3);
     serialLogln(angleRadians, 3);
+
+    prevPositionA = readLeftEncoder();
+    prevPositionB = readRightEncoder();
+    prevX = 0;
+    prevY = 0;
+    prevRotation = 0;
+    setLeftMotorControl({POSITION, 0});
+    setRightMotorControl({POSITION, 0});
+    updateCritRange();
+    setHeadingTarget(angleRadians*0.95);
+    runningTurn = true;
+    timeMs = 0;
+    for (int x = 0; x < 50; x++) average[x] = 100;
+    /*
     int offsetTicks = radiansToTicks(angleRadians);
 
     if (getLeftMotorControl().mode == POSITION) {
@@ -779,6 +889,7 @@ void turn(float angleRadians, std::string id) {
     {
         sendPacketOnPidComplete(id);
     }
+    */
 }
 
 // Stops the bot in its tracks
