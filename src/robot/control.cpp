@@ -73,7 +73,6 @@ double goalY = 0;
 double goalRot;
 bool runningBS = false;
 double average[50];
-String data[7];
 
 //when moving to a different target, this is the encoder position we started from
 int startEncoderAPos = -1;
@@ -167,7 +166,6 @@ void newSetPointBS(float distance){
     runningBS = true;
     timeMs = 0;
     for (int x = 0; x < 50; x++) average[x] = 100;
-    for (int x = 0; x < 7; x++) data[x] = "";
 }
 
 //crit range is basically getting distance we go until we are halfway to target. By the end of this range,
@@ -454,11 +452,9 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             prevY = currentY;
             prevRotation = currentRot;
 
-
-
             double loopDelaySeconds = ((double) timeMs) / 1000;
             profileA.currentPosition = currentX / TICK_TO_METERS;
-            profileA.currentVelocity = deltaX / TICK_TO_METERS /loopDelaySeconds;
+            profileA.currentVelocity = deltaX==0?0:deltaX / TICK_TO_METERS /loopDelaySeconds;
             velSetpoint = leftProfile.calculate(loopDelaySeconds, 
                                                     TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
                                                     TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
@@ -467,37 +463,36 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             double aVel = headingController.Compute(headingTarget, currentRot*RAD_TO_DEG, loopDelaySeconds);
 
             profileB.currentPosition = currentY / TICK_TO_METERS;
-            profileB.currentVelocity = deltaY / TICK_TO_METERS /loopDelaySeconds;
-            ySetpoint = rightProfile.calculate(loopDelaySeconds, 
+            profileB.currentVelocity = deltaY==0?0:deltaY / TICK_TO_METERS /loopDelaySeconds;
+            ySetpoint = rightProfile.calculate(loopDelayMs/1000, 
                                                     TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
                                                     TrapezoidProfile::State(getRightMotorControl().value, 0.0));
             double yVel = encoderBVelocityController.Compute(ySetpoint.velocity, profileB.currentVelocity, loopDelaySeconds); 
 
-            data[0].concat(velocity);
-            data[0].concat(",");
-            data[1].concat(yVel);
-            data[1].concat(",");
-            data[2].concat(aVel);
-            data[2].concat(",");
-
             aVel += yVel;
 
-            double lMotorPower = fmap((velocity-8*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
-            double rMotorPower = fmap((velocity+8*aVel*trackWidth/2)/TIRE_RADIUS, -28, 28, -1, 1);
+            double lMotorPower = fmap((velocity-8*aVel*trackWidth/2)/TIRE_RADIUS, -25, 25, -1, 1);
+            double rMotorPower = fmap((velocity+8*aVel*trackWidth/2)/TIRE_RADIUS, -25, 25, -1, 1);
 
             if (fabs(lMotorPower) < MIN_MOTOR_POWER) lMotorPower = 0;
             if (fabs(rMotorPower) < MIN_MOTOR_POWER) rMotorPower = 0;
-            
 
-            data[3].concat(lMotorPower);
-            data[3].concat(",");
-            data[4].concat(rMotorPower);
-            data[4].concat(",");   
-            data[5].concat(currentX);
-            data[5].concat(",");
-            data[6].concat(currentY*100);
-            data[6].concat(",");
 
+            serialLog("vel ", 3);
+            serialLog(velocity, 3);
+            serialLog(" yvel ", 3);
+            serialLog(yVel, 3);
+            serialLog(" avel ", 3);
+            serialLog(aVel, 3);
+
+            serialLog(" lpower ", 3);
+            serialLog(lMotorPower, 3);
+            serialLog(" rpower ", 3);
+            serialLog(rMotorPower, 3);
+            serialLog(" xpos ", 3);
+            serialLog(currentX, 3);
+            serialLog(" ypos ", 3);
+            serialLogln(currentY, 3);
 
             setLeftPower(lMotorPower);
             setRightPower(rMotorPower);
@@ -507,7 +502,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                 average[x+1] = average[x];
                 sum += fabs(average[x+1]);
             }
-            average[0] = velocity;
+            average[0] = lMotorPower;
             sum += fabs(average[0]);
             timeMs += loopDelayMs;
             if (sum/50 < 0.01){
@@ -519,25 +514,6 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
                 sendActionSuccess("bs done");
 
-                //* print logs
-                for(int x = 0 ; x < data[0].length(); x++){
-                    serialLog("vel ", 3);
-                    serialLog(data[0][x], 3);
-                    serialLog(" yvel ", 3);
-                    serialLog(data[1][x], 3);
-                    serialLog(" avel ", 3);
-                    serialLog(data[2][x], 3);
-
-                    serialLog(" lpower ", 3);
-                    serialLog(data[3][x], 3);
-                    serialLog(" rpower ", 3);
-                    serialLog(data[4][x], 3);
-                    serialLog(" xpos ", 3);
-                    serialLog(data[5][x], 3);
-                    serialLog(" ypos ", 3);
-                    serialLogln(data[6][x], 3);
-                }
-                //*/
 
             } else {
                 runningBS = true;
