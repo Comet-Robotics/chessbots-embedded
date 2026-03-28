@@ -42,7 +42,7 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     double accelDist = (pow(m_constraints.maxVelocity,2) - pow(m_current.velocity,2)) / (2*m_constraints.maxAcceleration); //dist to/from max vel
     double fastDist = dist - 2*accelDist;
 
-    if(m_current.position < accelDist){
+    if((m_current.position < accelDist) && (dist > 2*accelDist)){
         result.velocity += t * m_constraints.maxAcceleration;
        
     }
@@ -51,7 +51,7 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         result.velocity = m_constraints.maxVelocity;
         serialLogln(result.velocity,3);
     }
-    else if (dist > 10){
+    else if (dist > 100){
         result.velocity = m_current.velocity - min(sqrt(m_constraints.maxAcceleration*fabs(accelDist-dist))*.250,m_current.velocity*0.99);
         serialLog("slowing ", 3);
         serialLogln(result.velocity,3);
@@ -99,7 +99,7 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         result = goalDir;
     }
     */
-    if (abs(result.position - goalDir.position) <= 10) {
+    if (abs(result.position - goalDir.position) <= 100) {
         result.velocity = 0;
     }
 

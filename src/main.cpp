@@ -47,6 +47,8 @@ void setup() {
     if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
 
     previousTime = millis() - loopDelayMilliseconds;
+
+    //drive(1,"NULL");
 }
 
 // After setup gets run, loop is run over and over as fast ass possible

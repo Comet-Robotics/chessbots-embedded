@@ -62,6 +62,7 @@ boolean testEncoderPID_value = false;
 int prevPositionL = 0;
 int prevPositionR = 0;
 int timeMs = 0;
+std::string packetId = "NULL";
 
 //robot rotation in radians
 double prevRotation = 0;
@@ -164,6 +165,7 @@ void resetPID(){
     prevRotation = 0;
     timeMs = 0;
     for (int x = 0; x < 50; x++) average[x] = 100;
+    packetId = "NULL";
 }
 
 
@@ -283,6 +285,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
     }
 
     if (DO_ENCODER_TEST) encoderLoop();
+
     
     if (DO_PID){
         double trackWidth = TRACK_WIDTH_INCHES/39.37;
@@ -380,7 +383,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                 setLeftPower(0);
                 setRightPower(0);
 
-                sendActionSuccess("move done");
+                sendActionSuccess(packetId);
                 resetPID();
 
             } else {
@@ -442,7 +445,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             setRightPower(rMotorPower);
 
             serialLog("vels ", 3);
-            serialLog(xSetpoint.velocity, 3);
+            serialLog(aSetpoint.velocity, 3);
             serialLog("vel ", 3);
             serialLog(velocity, 3);
             serialLog(" lpower ", 3);
@@ -464,11 +467,11 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             if (sum/50 < 0.01){
                 serialLogln(sum/50,3);
                 serialLogln(runningPID,3);
-                runningPID = false;
+                runningTurn = false;
                 setLeftPower(0);
                 setRightPower(0);
 
-                sendActionSuccess("turn done");
+                sendActionSuccess(packetId);
                 resetPID();
 
             } else {
@@ -686,11 +689,10 @@ void driveTicks(int tickDistance, std::string id)
         setXControl({POSITION, (float)tickDistance});
         setYControl({POSITION, 0});
         updateCritRange();
+        setHeadingTarget(0);
         runningPID = true;
-
-        if (id != "NULL") {
-            sendPacketOnPidComplete(id);
-        }
+        runningTurn = false;
+        packetId = id;
     }
 }
 
@@ -709,7 +711,7 @@ void drive(float leftPower, float rightPower, std::string id) {
 
         //we only send null as id during our test drive. The only other time this drive method is called will be
         //when the server sends it, meaning it will have an id to send back.
-        if (id != "NULL") { sendActionSuccess(id); }
+        //if (id != "NULL") { sendActionSuccess(id); }
     }
 }
 
@@ -725,11 +727,8 @@ void turn(float angleRadians, std::string id) {
     updateCritRange();
     setHeadingTarget(angleRadians*0.95);
     runningTurn = true;
-
-    if (id != "NULL")
-    {
-        sendPacketOnPidComplete(id);
-    }
+    runningPID = false;
+    packetId = id;
 }
 
 // Stops the bot in its tracks
