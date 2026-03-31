@@ -3,7 +3,7 @@
 
 #include "robot/splines.h"
 #include "utils/logging.h"
-#include "robot/control.h"
+#include "robot/control/robot.h"
 #include "robot/trapezoidalProfile.h"
 #include "utils/timer.h"
 #include "wifi/connection.h"
@@ -11,7 +11,6 @@
 #include "utils/functions.h"
 #include <tuple>
 #include <queue>
-#include "robot/encoder.h"
 #include <tuple>
 #include <cmath>
 
@@ -241,8 +240,8 @@ void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfi
     customProfileB.currentPosition = currentPositionEncoderB;
     customProfileB.currentVelocity = currentVelocityB;
 
-    float desiredVelocityLeft = updateTrapezoidalProfile(customProfileA, dt, 0);
-    float desiredVelocityRight = updateTrapezoidalProfile(customProfileB, dt, 0);
+    float desiredVelocityLeft = updateTrapezoidalProfile(customProfileA, dt);
+    float desiredVelocityRight = updateTrapezoidalProfile(customProfileB, dt);
 
     setXControl({VELOCITY, desiredVelocityLeft});
     setYControl({VELOCITY, desiredVelocityRight});

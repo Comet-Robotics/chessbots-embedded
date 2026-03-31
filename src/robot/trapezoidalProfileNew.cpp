@@ -40,7 +40,7 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     double dist = fabs(m_current.position - goalDir.position);
 
     double accelDist = (pow(m_constraints.maxVelocity,2) - pow(m_current.velocity,2)) / (2*m_constraints.maxAcceleration); //dist to/from max vel
-    double fastDist = dist - 2*accelDist;
+    //Unused double fastDist = dist - 2*accelDist;
 
     if(m_current.position < accelDist){
         result.velocity += t * m_constraints.maxAcceleration;

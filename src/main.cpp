@@ -12,16 +12,17 @@
 #include "utils/status.h"
 #include "wifi/wireless.h"
 #include "wifi/connection.h"
-#include "robot/control.h"
-#include "robot/encoder.h"
+#include "robot/control/robot.h"
 #include "../env.h"
 #include "robot/pidController.h"
-#include "robot/magnet.h"
+#include "robot/control/magnet.h"
 
 //alright SCREW YOU serial monitor i won't print every frame then if you wanna play that game
 const int8_t PRINT_INTERVAL = 60;
-int8_t framesUntilPrint = 60;
+unsigned long frame = 0;
 unsigned long previousTime = 0; // For loop timing
+
+Robot robot = Robot();
 
 // Setup gets run at startup
 void setup() {
@@ -37,14 +38,7 @@ void setup() {
     // Create a WiFi network for the laptop to connect to
     if (!RUN_OFFLINE) connectWiFI();
 
-    if (DO_DRIVE_TEST) startDriveTest();
 
-    delay(2000);
-
-    //start reading the light
-    if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
-
-    if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
 
     previousTime = millis() - loopDelayMilliseconds;
 }
@@ -63,27 +57,20 @@ void loop() {
 
         // If the bot is connected to the server, check for received data, and accept it if available
         if (getServerConnectionStatus()) acceptData();
-        // Checks whether bot is still connected to the server. Reconnect if not
-        if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
-
-        // If the bot is connected to the server, check for received data, and accept it if available
-        if (getServerConnectionStatus()) acceptData();
     }
 
     // Run control loop
     // TODO change time parameter to be actual delta time, not just delay between loops
     unsigned long deltaTime = millis() - previousTime;
     previousTime = millis();
-    controlLoop(deltaTime, framesUntilPrint);
+
+    controlLoop(deltaTime);
 
     // This delay determines how often the code in loop is run
     // (Forcefully pauses the thread for about the amount of milliseconds passed in)
   	delay(loopDelayMilliseconds);
-    framesUntilPrint--;
-    if(framesUntilPrint < 0)
-    {
-        framesUntilPrint = PRINT_INTERVAL;
-    }
+
+    frame++;
 }
 
 // This is used at the end of each file due to the name definition at the beginning

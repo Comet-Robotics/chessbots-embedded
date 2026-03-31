@@ -13,7 +13,7 @@
 #include "utils/timer.h"
 #include "utils/status.h"
 #include "wifi/connection.h"
-#include "../env.h"
+#include "../../env.h"
 
 bool wifiConnecting = false;
 

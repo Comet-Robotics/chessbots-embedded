@@ -13,7 +13,7 @@ struct MotionProfile {
     double criticalRange;
 };
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilPrint);
+double updateTrapezoidalProfile(MotionProfile &profile, double dt);
 
 template <typename T>
 T clamp(T value, T minValue, T maxValue) {

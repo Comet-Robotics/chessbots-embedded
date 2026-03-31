@@ -8,6 +8,7 @@
 #include <ArduinoJson.h>
 
 extern int loopDelayMilliseconds;
+extern unsigned long frame;
 
 // These variables are declared here, and defined in config.cpp
 // config.cpp is the only file that should be modifying these values. Everything else is read-only
@@ -28,6 +29,8 @@ extern gpio_num_t PHOTODIODE_C_PIN;
 extern gpio_num_t PHOTODIODE_D_PIN;
 
 extern gpio_num_t BATTERY_VOLTAGE_PIN;
+extern int BATTERY_VOLTAGE_OFFSET;
+
 extern gpio_num_t ONBOARD_LED_PIN;
 
 extern int TICKS_PER_ROTATION;

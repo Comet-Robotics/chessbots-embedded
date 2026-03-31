@@ -16,9 +16,9 @@
 #include "utils/logging.h"
 #include "utils/timer.h"
 #include "utils/status.h"
-#include "robot/control.h"
+#include "robot/control/robot.h"
 
-#include "../env.h"
+#include "../../env.h"
 
 bool serverConnecting = false;
 bool pinging = false;
@@ -78,7 +78,8 @@ void initiateHandshake() {
 
 // The buffer size is 500 characters. If there are issues right after
 // accepting a packet, the buffer size may be the culprit
-void acceptData() {
+JsonDocument acceptData() {
+    JsonDocument packet;
     if (client.available()) {
         // Allocates a buffer to hold the incoming packet
         char rawPacket[500];
@@ -87,7 +88,7 @@ void acceptData() {
         while (client.available() || !packetDone) {
             // Reads in a single character
             char data = client.read();
-            if (data == ';') {
+            if (data == ';' || len > 499) {
                 // If the delimiter character is encountered, the packet is done
                 packetDone = true;
             } else {
@@ -98,17 +99,16 @@ void acceptData() {
         }
 
         // The packet is in the form of a JSON. We use a library to handle them
-        JsonDocument packet;
+        
         // This turns the character buffer into a fully formed JSON object
         deserializeJson(packet, rawPacket);
         serialLog("Received Packet: ", 2);
         // This takes that JSON object and prints it to Serial (the console) for debugging purposes
         if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
         serialLog("\n", 2);
-
-        // Actually does something with the received packet
-        handlePacket(packet);
     }
+
+    return packet;
 }
 
 // Sends a packet to the server
@@ -144,7 +144,7 @@ void pingTimeout() {
         serialLogln((char*)" missed ping!", 2);
         if (missedPings >= PING_MAX_MISSES) {
             serialLogln((char*)"SERVER TIMED OUT!", 2);
-            stop();
+            // TODO: stop();
             pinging = false;
         } else {
             pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);

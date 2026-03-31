@@ -16,9 +16,8 @@
 #include "utils/status.h"
 #include "utils/functions.h"
 #include "utils/config.h"
-#include "robot/control.h"
+#include "robot/control/robot.h"
 #include "robot/splines.h"
-#include "robot/battery.h"
 #include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
@@ -42,7 +41,7 @@ const char* SPIN_RADIANS = "SPIN_RADIANS";
 const char* BS_MOVE = "BS_MOVE";
 
 // Takes a packet a does specific things based on the type
-void handlePacket(JsonDocument packet) {
+void handlePacket(Robot& r, JsonDocument packet) {
     // Sadly a switch case can't be used due to the packet type being a string.
     // We do this to allow the packets to be more readable when serialLogged
     if (packet["type"] == SERVER_HELLO) {
@@ -51,35 +50,42 @@ void handlePacket(JsonDocument packet) {
         setConfig(packet["config"].as<JsonObject>());
     } else if (packet["type"] == DRIVE_TANK) {
         // This is received when the bot is being manually controlled via the debug page
-        drive(packet["left"], packet["right"], packet["packetId"]);
+        r.drive(packet["left"], packet["right"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TICKS){
-        driveTicks(packet["tickDistance"], packet["packetId"]);
+        r.driveTicks(packet["tickDistance"], packet["packetId"]);
     } else if (packet["type"] == ESTOP) {
-        stop();
+        r.stop();
     } else if (packet["type"] == CUBIC) {
-        Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
-        Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
-        Point controlPositionA = {(float)packet["controlPositionA"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionA"]["y"]*TILES_TO_TICKS};
-        Point controlPositionB = {(float)packet["controlPositionB"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionB"]["y"]*TILES_TO_TICKS};
-        danceMonkeyCubic(packet["packetId"], startPosition, controlPositionA, controlPositionB, endPosition, packet["timeDeltaMs"]);
+        // Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
+        // Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
+        // Point controlPositionA = {(float)packet["controlPositionA"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionA"]["y"]*TILES_TO_TICKS};
+        // Point controlPositionB = {(float)packet["controlPositionB"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionB"]["y"]*TILES_TO_TICKS};
+        // danceMonkeyCubic(packet["packetId"], startPosition, controlPositionA, controlPositionB, endPosition, packet["timeDeltaMs"]);
     } else if (packet["type"] == QUADRATIC) {
-        serialLog("I have arrived!! at Quadratic", 3);
-        Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
-        Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
-        Point controlPosition = {(float)packet["controlPosition"]["x"]*TILES_TO_TICKS, (float)packet["controlPosition"]["y"]*TILES_TO_TICKS};
-        danceMonkeyQuadratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
+        // serialLog("I have arrived!! at Quadratic", 3);
+        // Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
+        // Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
+        // Point controlPosition = {(float)packet["controlPosition"]["x"]*TILES_TO_TICKS, (float)packet["controlPosition"]["y"]*TILES_TO_TICKS};
+        // danceMonkeyQuadratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
     } else if (packet["type"] == SPIN_RADIANS) {
-        serialLog("Going to spin!", 3);
-        int offsetTicks = radiansToTicks((float)packet["radians"]);
-        startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
+        // serialLog("Going to spin!", 3);
+        // int offsetTicks = radiansToTicks((float)packet["radians"]);
+        // startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
     } else if (packet["type"] == TURN_BY_ANGLE) {
-        turn(packet["deltaHeadingRadians"], packet["packetId"]);
+        r.turn(packet["deltaHeadingRadians"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TILES) {
-        drive(packet["tiles"], packet["packetId"]);
+        r.drive(packet["tiles"], packet["packetId"]);
     } else if (packet["type"] == PING_SEND) {
         sendPingResponse();
     } 
 }
+
+enum ResponsePacketType {
+    Ping,
+    Hello,
+    Success,
+    Fail,
+};
 
 // This creates the handshake packet sent to the server when this bot connects to it
 void constructHelloPacket(JsonDocument& packet) {
@@ -107,7 +113,7 @@ void constructFailPacket(JsonDocument& packet, std::string messageId) {
 
 void constructPingPacket(JsonDocument& packet) {
     packet["type"] = PING_RESPONSE;
-    packet["batteryLevel"] = getBatteryLevel();
+    packet["batteryLevel"] = Robot::batteryLevel();
 }
 
 #endif

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t framesUntilPrint) {
+double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
     // distanceToGo = positive, you're still behind the target. || distanceToGo = negative, you're ahead.
     double distanceToGo = profile.targetPosition - profile.currentPosition;
 
@@ -84,26 +84,23 @@ double updateTrapezoidalProfile(MotionProfile &profile, double dt, int8_t frames
 
     //use macros so that if we're not even logging, we won't even upload the code
 #if LOGGING_LEVEL >= 3
-    if(framesUntilPrint == 0)
-    {
-        serialLog("Change in velocity was: ", 3);
-        serialLog(float(changeInVelocity), 3);
-        serialLog(", ", 3);
-        
-        serialLog("Motion profile is outputting: ", 3);
-        serialLog(float(profile.targetVelocity), 3);
-        serialLog(", ", 3);
+    serialLog("Change in velocity was: ", 3);
+    serialLog(float(changeInVelocity), 3);
+    serialLog(", ", 3);
+    
+    serialLog("Motion profile is outputting: ", 3);
+    serialLog(float(profile.targetVelocity), 3);
+    serialLog(", ", 3);
 
-        serialLog("Current Position: ", 3);
-        serialLog(float(profile.currentPosition), 3);
-        serialLog(", ", 3);
+    serialLog("Current Position: ", 3);
+    serialLog(float(profile.currentPosition), 3);
+    serialLog(", ", 3);
 
-        serialLog("Target Position: ", 3);
-        serialLogln(float(profile.targetPosition), 3);
+    serialLog("Target Position: ", 3);
+    serialLogln(float(profile.targetPosition), 3);
 
-        // serialLog("Stopping position: ", 3);
-        // serialLogln(float(stoppingDistance), 3);
-    }
+    // serialLog("Stopping position: ", 3);
+    // serialLogln(float(stoppingDistance), 3);
 #endif
 
     return profile.targetVelocity;

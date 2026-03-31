@@ -35,6 +35,7 @@ public:
 
         bool operator==(const State& rhs) const
         {
+            // Don't use equals for floats?
             return position == rhs.position && velocity == rhs.velocity;
         }
     };

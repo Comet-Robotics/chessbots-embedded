@@ -1,5 +1,6 @@
 #include "DFRobot_BMM350.h"
-#include "robot/magnet.h"
+
+#include "robot/control/magnet.h"
 #include "utils/logging.h"
 
 #define SDA_PIN 8  

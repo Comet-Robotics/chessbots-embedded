@@ -10,7 +10,7 @@ void reconnectServer();
 bool checkServerConnection();
 void initiateHandshake();
 
-void acceptData();
+JsonDocument acceptData();
 void sendPacket(JsonDocument& packet);
 void sendActionSuccess(std::string messageId);
 void sendActionFail(std::string messageId);
