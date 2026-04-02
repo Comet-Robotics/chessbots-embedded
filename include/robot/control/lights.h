@@ -6,13 +6,23 @@
 
 class Light {
     public:
+        Light(gpio_num_t pin);
+
         void tick();
-        short value();
+        
+        short raw_value();
+        bool value();
+        bool held_value();
+        void reset();
+
+        bool changed_this_tick();
         unsigned long last_changed_time();
 
     private:
-        int pin;
-        short _value;
+        gpio_num_t pin;
+        short _raw_value;
+        bool _held_value;
+        bool _changed_this_tick;
         unsigned long _last_changed_time;
 };
 

@@ -16,27 +16,24 @@
 // Prints a value or message through Serial. (The console)
 // ln means it sends a new newline character
 
-enum DebugLevel {
-    NONE,
-    INFO,
-    DEBUG,
-    TRACE,
-    RIDICULOUS, // Use if insane
-};
-
 void serial_printf(enum DebugLevel level, const char* fmt, ...) {
-    char buf[256];
+    char buf[1024];
     
-    if level > LOGGING_LEVEL {
+    if (level > LOGGING_LEVEL) {
         return;
     }
 
     va_list args;
+
     va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
 
-    vsnprintf(buf, sizeof(buf) fmt, args)
+    Serial.print(buf);
+}
 
-    Serial.print(buf)
+void serial_clear() {
+    serial_printf(DebugLevel::NONE, "\033[3J\033[H\033[2J");
 }
 
 void serialLog(const char *message, int serialLoggingLevel)

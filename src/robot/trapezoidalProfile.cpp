@@ -1,109 +1,107 @@
-#ifndef CHESSBOT_TRAPEZOIDAL_PROFILE_CPP
-#define CHESSBOT_TRAPEZOIDAL_PROFILE_CPP
-
 #include "robot/trapezoidalProfile.h"
+#include "utils/config.h"
 #include "utils/logging.h"
-#include <iostream>
 #include <cmath>
-#include <algorithm>
-#include <cstdint>
-#include "../env.h"
 
-using namespace std;
+TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &current, const State &goal)
+{
+    int m_direction = shouldFlipAcceleration(current, goal) ? -1 : 1;
+    State m_current = direct(current, m_direction);
+    State goalDir = direct(goal, m_direction);
 
-double updateTrapezoidalProfile(MotionProfile &profile, double dt) {
-    // distanceToGo = positive, you're still behind the target. || distanceToGo = negative, you're ahead.
-    double distanceToGo = profile.targetPosition - profile.currentPosition;
-
-    double changeInVelocity = 0;
-    double stoppingDistance;
-
-    //store all the absolute value versions so that we don't waste more computation calculating them when we already have before
-    double absVelocity = fabs(profile.currentVelocity);
-    double absDistanceToGo = fabs(distanceToGo);
-    double absCurrentPos = fabs(profile.currentPosition);
-    double absTargetVelocity = fabs(profile.targetVelocity);
-    double absTargetPos = fabs(profile.targetPosition);
-    
-    // Formula is v^2 / 2a
-    stoppingDistance = (profile.currentVelocity * profile.currentVelocity) / (2.0 * profile.maxAcceleration);
-    
-    // Acceleration phase. If we aren't already at max and we still have distance left to go, add a bit more velocity on.
-    if (absVelocity < profile.maxVelocity && absDistanceToGo > 0)
-        changeInVelocity = profile.maxAcceleration * dt * (distanceToGo > 0 ? 1 : -1);
-
-    // Deceleration if we’re getting close to target. See first if we stop right now, will we overshoot our target? If so, begin decelerating
-    if (absDistanceToGo <= stoppingDistance){
-        float fraction;
-        //if they're the same sign (or one is 0)
-        if(profile.targetPosition * profile.currentPosition >= 0)
-        {
-            //no matter if theyr'e either both positive or both negative, it'll be between 0 and 1. You can verify this to make sure.
-            if(absTargetPos > absCurrentPos)
-            {
-                
-                fraction = profile.currentPosition / profile.targetPosition;
-            }
-            else
-            {
-                fraction = profile.targetPosition / profile.currentPosition;
-            }
-        }
-        //either the target or start position is negative, the other is positive
-        else
-        {
-            //going to have it as target / range. So liike if going from 50 to -150, that'd be 150/200. It's not really right, but it's kinda
-            //finnicky how we should be handling it. Should check with people smarter than me to make sure
-            float range = absTargetPos + absCurrentPos;
-            fraction = profile.targetPosition / range;
-        }
-        //making it dependent on leftover distance/dt instead of maxAcceleration*dt
-        changeInVelocity = -(fabs(fraction)) * profile.maxAcceleration * dt * (profile.currentVelocity > 0 ? 1 : -1);
-
-        //want to make sure that we're not going to be decelerating so hard that we just reverse ourselves and don't reach our target. So if our
-        //change in velocity causes use to reverse direction, just set it so we will change our velocity to 0.
-        if(fabs(changeInVelocity) > absTargetVelocity)
-        {
-            changeInVelocity = profile.targetVelocity * -1;
-        }
-    }
-
-    profile.targetVelocity += changeInVelocity;
-
-    //clip off velocity if it's too high
-    if (absTargetVelocity > profile.maxVelocity)
-        profile.targetVelocity = profile.maxVelocity * (profile.targetVelocity > 0 ? 1 : -1);
-
-    //if we're getting close to our target, may as well just stop it. Note that the reason we have the min function
-    //is because sometimes critRange will be an even smaller number when we're moving very smaller distances (like when
-    //we turn for edge alignment)
-    if(absDistanceToGo < min(profile.criticalRange, 75.0))
+    if (m_current.velocity > m_constraints.maxVelocity)
     {
-        profile.targetVelocity = 0;
+        m_current.velocity = m_constraints.maxVelocity;
+    }
+    else if (m_current.velocity < -m_constraints.maxVelocity)
+    {
+        m_current.velocity = -m_constraints.maxVelocity;
     }
 
-    //use macros so that if we're not even logging, we won't even upload the code
-#if LOGGING_LEVEL >= 3
-    serialLog("Change in velocity was: ", 3);
-    serialLog(float(changeInVelocity), 3);
-    serialLog(", ", 3);
+    double cutoffBegin = m_current.velocity / m_constraints.maxAcceleration;
+    double cutoffDistBegin = cutoffBegin * cutoffBegin * m_constraints.maxAcceleration / 2.0;
+
+    double cutoffEnd = max((goalDir.velocity - MIN_MOTOR_VELOCITY_TPS), 0.0)  / m_constraints.maxAcceleration;
+    double cutoffDistEnd = cutoffEnd * cutoffEnd * m_constraints.maxAcceleration / 2.0;
+
+    double fullTrapezoidDist = cutoffDistBegin + (goalDir.position - m_current.position) + cutoffDistEnd;
+    double accelerationTime = m_constraints.maxVelocity / m_constraints.maxAcceleration;
+
+    double fullSpeedDist = fullTrapezoidDist - accelerationTime * accelerationTime * m_constraints.maxAcceleration;
+
+    if (fullSpeedDist < 0)
+    {
+        accelerationTime = std::sqrt(fullTrapezoidDist / m_constraints.maxAcceleration);
+        fullSpeedDist = 0;
+    }
+
+    State result(m_current.position, m_current.velocity);
+
+    double dist = fabs(m_current.position - goalDir.position);
+
+    double accelDist = (pow(m_constraints.maxVelocity,2) - pow(m_current.velocity,2)) / (2*m_constraints.maxAcceleration); //dist to/from max vel
+    //Unused double fastDist = dist - 2*accelDist;
+
+    if(m_current.position < accelDist){
+        result.velocity += t * m_constraints.maxAcceleration;
+       
+    }
+
+    else if(dist > accelDist+100){
+        result.velocity = m_constraints.maxVelocity;
+        serialLogln(result.velocity,3);
+    }
+    else if (dist > 10){
+        result.velocity = m_current.velocity - min(sqrt(m_constraints.maxAcceleration*fabs(accelDist-dist))*.250,m_current.velocity*0.99);
+        serialLog("slowing ", 3);
+        serialLogln(result.velocity,3);
+    }
+    else
+    {
+        result = goalDir;
+    }
+
+    /*
+    double m_endAccel = accelerationTime - cutoffBegin;
+    double m_endFullSpeed = m_endAccel + fullSpeedDist / m_constraints.maxVelocity;
+    double m_endDecel = m_endFullSpeed + accelerationTime - cutoffEnd;
+    State result(m_current.position, m_current.velocity);
     
-    serialLog("Motion profile is outputting: ", 3);
-    serialLog(float(profile.targetVelocity), 3);
-    serialLog(", ", 3);
+    if (t < m_endAccel)
+    {
+        result.velocity += t * m_constraints.maxAcceleration;
+        if (abs(result.velocity) < MIN_MOTOR_VELOCITY_TPS) {
+            result.velocity = MIN_MOTOR_VELOCITY_TPS;
+        }
+        result.position += (m_current.velocity + t * m_constraints.maxAcceleration / 2.0) * t;
+        serialLog("accelerating ", 3);
+        serialLogln(result.velocity,3);
+    }
+    else if (t < m_endFullSpeed)
+    {
+        result.velocity = m_constraints.maxVelocity;
+        result.position +=
+            (m_current.velocity + m_endAccel * m_constraints.maxAcceleration / 2.0) * m_endAccel +
+            m_constraints.maxVelocity * (t - m_endAccel);
+        serialLog("holding ", 3);
+        serialLogln(result.velocity,3);
+    }
+    else if (t <= m_endDecel)
+    {
+        double timeLeft = m_endDecel - t;
+        result.velocity = goalDir.velocity + timeLeft * m_constraints.maxAcceleration;
+        result.position = goalDir.position - (goalDir.velocity * timeLeft) - (timeLeft * timeLeft * m_constraints.maxAcceleration / 2.0);
+        serialLog("slowing ", 3);
+        serialLogln(result.velocity,3);
+    }
+    else
+    {
+        result = goalDir;
+    }
+    */
+    if (abs(result.position - goalDir.position) <= 10) {
+        result.velocity = 0;
+    }
 
-    serialLog("Current Position: ", 3);
-    serialLog(float(profile.currentPosition), 3);
-    serialLog(", ", 3);
-
-    serialLog("Target Position: ", 3);
-    serialLogln(float(profile.targetPosition), 3);
-
-    // serialLog("Stopping position: ", 3);
-    // serialLogln(float(stoppingDistance), 3);
-#endif
-
-    return profile.targetVelocity;
+    return direct(result, m_direction);
 }
-
-#endif

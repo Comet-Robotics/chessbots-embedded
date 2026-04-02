@@ -12,18 +12,46 @@
 #include "utils/logging.h"
 #include "utils/config.h"
 
+static short LIGHT_RAW_VALUE_CUTOFF = 7600;
+bool is_light_value_on(short value) {
+    return value < LIGHT_RAW_VALUE_CUTOFF;
+}
+
+Light::Light(gpio_num_t _pin) {
+    pin = _pin;
+}
+
 void Light::tick() {
-    short prev = _value;
+    short prev = _raw_value;
 
-    _value = analogRead(pin);
+    _changed_this_tick = false;
+    _raw_value = analogRead(pin);
+    _held_value = _held_value || is_light_value_on(_raw_value);
 
-    if (prev != _value) {
+    if (prev != _raw_value) {
+        _changed_this_tick = true;
         _last_changed_time = millis();
     }
 }
 
-short Light::value() {
-    return _value;
+short Light::raw_value() {
+    return _raw_value;
+}
+
+bool Light::value() {
+    return is_light_value_on(_raw_value);
+}
+
+bool Light::held_value() {
+    return _held_value;
+}
+
+void Light::reset() {
+    _held_value = false;
+}
+
+bool Light::changed_this_tick() {
+    return _changed_this_tick;
 }
 
 unsigned long Light::last_changed_time() {
@@ -52,12 +80,12 @@ void activateIR() {
 
 // Turns off the IR Blaster
 void deactivateIR() {
-    if (!IR_activated) {
-        return;
-    }
+    // if (!IR_activated) {
+    //     return;
+    // }
 
-    digitalWrite(RELAY_IR_LED_PIN, LOW);
-    IR_activated = false;
+    // digitalWrite(RELAY_IR_LED_PIN, LOW);
+    // IR_activated = false;
 }
 
 #endif

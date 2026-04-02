@@ -35,7 +35,9 @@ extern gpio_num_t ONBOARD_LED_PIN;
 
 extern int TICKS_PER_ROTATION;
 extern float TRACK_WIDTH_INCHES;
+extern float TRACK_WIDTH_CM;
 extern float WHEEL_DIAMETER_INCHES;
+extern float WHEEL_RADIUS_CM;
 extern float THEORETICAL_MAX_VELOCITY_TPS;
 extern float VELOCITY_LIMIT_TPS;
 extern float THEORETICAL_MAX_ACCELERATION_TPSPS;

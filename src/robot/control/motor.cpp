@@ -12,46 +12,77 @@
 #include "utils/config.h"
 #include "utils/logging.h"
 
-Motor::Motor(int motor_pin_a, int motor_pin_b, int enc_pin_a, int enc_pin_b) {
-    pin_a = _pin_a;
-    pin_b = _pin_b;
+Motor::Motor(bool _inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a, uint8_t enc_pin_b)
+    : inverted(_inverted), encoder(enc_pin_a, enc_pin_b)
+    {
+    pin_a = motor_pin_a;
+    pin_b = motor_pin_b;
     
     setupPWM(pin_a);
     setupPWM(pin_b);
-
-    encoder(enc_pin_a, enc_pin_b);
 }
 
 void Motor::tick() {
     // Read from encoder and save its previous value
+    prev_raw_enc_value = raw_enc_value;
+    raw_enc_value = raw_dist();
+}
+
+// Returns the current power of the motor
+float Motor::power() {
+    if (inverted) {
+        return -_power;
+    }
+    
+    return _power;
 }
 
 // This will set how fast and what direction left motor will spin
 // Value between [-1, 1]
 // Negative is backwards, Positive is forwards
-void Motor::power(float power) {
-    if (power > 0) {
-        writePWM(MOTOR_A_PIN2, 0);
-        writePWM(MOTOR_A_PIN1, mapPowerToDuty(power));
+void Motor::power(float __power) {
+    if (inverted) {
+        __power = -__power;    
+    }
+
+    _power = __power;
+
+    if (abs(_power) < MIN_MOTOR_POWER) {
+        _power = 0;
+    }
+
+    
+    if (_power > 0) {
+        writePWM(pin_b, 0);
+        writePWM(pin_a, mapPowerToDuty(_power));
     } else {
-        writePWM(MOTOR_A_PIN1, 0);
-        writePWM(MOTOR_A_PIN2, mapPowerToDuty(-power));
+        writePWM(pin_a, 0);
+        writePWM(pin_b, mapPowerToDuty(-_power));
     }
 
     serialLog("Motor Power: ", 4);
-    serialLogln(power, 4);
+    serialLogln(_power, 4);
 }
 
 void Motor::encoder_reset() {
     encoder.readAndReset();
 }
 
-float Motor::dist_raw() {
+int32_t Motor::raw_dist() {
+    if (inverted) {
+        return -encoder.read();
+    }
+    
     return encoder.read();
 }
 
-float Motor::dist() {
-    return dist_raw() * TIRE_CIRCUMFERENCE;
+double Motor::dist() {
+    return ((double)raw_enc_value / TICKS_PER_ROTATION) * TIRE_CIRCUMFERENCE;
+}
+
+double Motor::tick_dist() {
+    int32_t dist = raw_enc_value - prev_raw_enc_value;
+    return ((double)dist / TICKS_PER_ROTATION) * TIRE_CIRCUMFERENCE;
 }
 
 #endif

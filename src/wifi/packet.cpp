@@ -50,7 +50,7 @@ void handlePacket(Robot& r, JsonDocument packet) {
         setConfig(packet["config"].as<JsonObject>());
     } else if (packet["type"] == DRIVE_TANK) {
         // This is received when the bot is being manually controlled via the debug page
-        r.drive(packet["left"], packet["right"], packet["packetId"]);
+        // r.drive(packet["left"], packet["right"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TICKS){
         r.driveTicks(packet["tickDistance"], packet["packetId"]);
     } else if (packet["type"] == ESTOP) {
@@ -74,7 +74,7 @@ void handlePacket(Robot& r, JsonDocument packet) {
     } else if (packet["type"] == TURN_BY_ANGLE) {
         r.turn(packet["deltaHeadingRadians"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TILES) {
-        r.drive(packet["tiles"], packet["packetId"]);
+        // r.drive(packet["tiles"], packet["packetId"]);
     } else if (packet["type"] == PING_SEND) {
         sendPingResponse();
     } 

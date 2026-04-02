@@ -1,35 +1,42 @@
 #ifndef CHESSBOT_MOTOR_H
 #define CHESSBOT_MOTOR_H
 
-#include "config.h"
+#include <stdint.h>
+
+#include "utils/config.h"
 #include "Encoder.h"
 
-//just measured, its 5.9 centimeters, or .059 meters
-const float TIRE_RADIUS = 0.059;
-//circumference equals pi * diameter. In meters
+const float TIRE_RADIUS = 5.9;
 const float TIRE_CIRCUMFERENCE = M_PI * 2 * TIRE_RADIUS;
 
 class Motor {
     public:
-        Motor(int pin_a, int pin_b);
+        Motor(bool inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a, uint8_t enc_pin_b);
 
         void tick();
         
         // Sets the motor power
         // power is a float between [-1, 1]
+        float power();
         void power(float power);
         void encoder_reset();
 
-        // The distance of the tire in cm
-        float dist();
+        double dist(); // Total distance in cm
+        double tick_dist(); // Distance this tick in cm
+        int32_t raw_dist(); // Read the raw encoder value in ticks
     private:
         int pin_a;
         int pin_b;
 
+        bool inverted;
+
+        float _power;
+        
+        int32_t raw_enc_value;
+        int32_t prev_raw_enc_value;
         Encoder encoder;
 
-        // The raw encoder value
-        float dist_raw();
+
         
 };
 

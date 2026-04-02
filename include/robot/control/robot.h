@@ -3,9 +3,11 @@
 
 #include "Arduino.h"
 #include "utils/config.h"
+#include "utils/geometry.h"
 #include "robot/trapezoidalProfile.h"
 #include "robot/control/lights.h"
 #include "robot/control/motor.h"
+#include "robot/pidController.h"
 
 enum OperatingMode
 {
@@ -29,30 +31,41 @@ enum CenteringStatus {
     // The robot has started centering
     STARTED,
 
-    // The robot has finished centering along axis 1, and is moving to an edge
-    EDGE,
+    // Has hit the first edge, and is now aligning to it
+    ALIGNING_EDGE_1,
 
-    // The robot is moving by itself
-    MOVING
+    ALIGNED_EDGE_1,
+
+    CENTERED_Y_AXIS,
+
+    ALIGNED_EDGE_2,
 };
 
-struct ControlSetting
-{
-    OperatingMode mode;
-    float value;
+class MotionController {
+    public:
+        enum MotionPhase {
+            // Traveling to the destination
+            TRAVELLING,
+
+            // Aligning to the correct rotation
+            ALIGNING
+        };
+
+        MotionController();
+
+        void set_goal(Coordinate2D goal_destination, double goal_angle);
+        std::tuple<double, double> update_speeds(Coordinate2D position, double angle, double dt);
+        void print_status();
+        void reset();
+    private:
+        PIDController DistVelocityController; 
+        PIDController AVelocityController;
+
+        MotionPhase phase;
+        
+        double goal_angle;
+        Coordinate2D goal_position;
 };
-
-// Unused?
-// static ControlSetting leftMotorControl;
-// static ControlSetting rightMotorControl;
-// static double headingTarget = 0.0;
-
-void setXControl(ControlSetting control);
-void setYControl(ControlSetting control);
-void setHeadingTarget(double target);
-ControlSetting getLeftMotorControl();
-ControlSetting getRightMotorControl();
-double getHeadingTarget();
 
 class Robot {
     public:
@@ -61,60 +74,42 @@ class Robot {
         static int batteryLevel();
 
         // Runs all the necessary processing for each tick of the global event loop
-        void tick();
+        void tick(unsigned long frame, uint32_t delay);
         
         void center();
         void drive(float tiles, std::string id);
-        void drive(float leftPower, float rightPower, std::string id);
+        void drive(Coordinate2D goal_pos, double goal_angle);
+        void drive(std::tuple<double, double>& powers, std::string id);
         void driveTicks(int tickDistance, std::string id);
         enum DriveStatus driveUntilNewTile();
 
         void turn(float angleRadians, std::string id);
         
         void stop();
+
+        void test();
     
     private:
+        // Components
         Motor left;
         Motor right;
 
-        Light left_light;
-        Light right_light;
+        Light front_left_light;
+        Light front_right_light;
+        Light back_left_light;
+        Light back_right_light;
 
-        boolean stopped;
+        // State
+        double rotation;
+        Coordinate2D position;
+        MotionController motion_controller;
         
         CenteringStatus centeringStatus;
-
-        MotionProfile profileX = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
-        MotionProfile profileY = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
-        MotionProfile profileA = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
         
-        void center_tick();
-        void turn_tick();
-        void pid_tick();
-        // void setLeftPower(leftPower);
-        // void setRightPower(rightPower);
+        void center_tick(uint32_t delay);
+        void pid_tick(uint32_t delay);
 
+        void print_status();
 };
-
-void setupBot();
-
-void sendPacketOnPidComplete(std::string id);
-void readLight(int loopDelayMs);
-bool checkMoveFinished();
-void startCentering();
-bool checkIfCanUpdateMovement();
-void resetSpeed();
-void createDriveUntilNewTile();
-void determineNextChoice();
-uint8_t driveUntilNewTile();
-boolean isRobotPidAtTarget();
-void updateCritRange();
-void controlLoop(int loopDelayMs);
-void updateCentering();
-void updateToNextDistance();
-
-void startDriveTest();
-void driveTestOff();
-void startMotorAndEncoderTest();
 
 #endif

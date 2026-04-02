@@ -1,9 +1,4 @@
-// Sets file name into memory (usually to avoid duplicate imports)
-#ifndef CHESSBOT_MAIN_CPP
-#define CHESSBOT_MAIN_CPP
-
-// Built-In Libraries
-#include <Arduino.h>
+#include "Arduino.h"
 
 // Custom Libraries
 #include "utils/config.h"
@@ -17,8 +12,8 @@
 #include "robot/pidController.h"
 #include "robot/control/magnet.h"
 
-//alright SCREW YOU serial monitor i won't print every frame then if you wanna play that game
-const int8_t PRINT_INTERVAL = 60;
+void loop_test();
+
 unsigned long frame = 0;
 unsigned long previousTime = 0; // For loop timing
 
@@ -32,15 +27,12 @@ void setup() {
     delay(STARTUP_DELAY);
     serialLogln("Finished Delay!", 2);
 
-    // Any setup needed to get bot ready
-    setupBot();
-
     // Create a WiFi network for the laptop to connect to
     if (!RUN_OFFLINE) connectWiFI();
 
-
-
     previousTime = millis() - loopDelayMilliseconds;
+
+    // robot.center();
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
@@ -64,14 +56,29 @@ void loop() {
     unsigned long deltaTime = millis() - previousTime;
     previousTime = millis();
 
-    controlLoop(deltaTime);
-
-    // This delay determines how often the code in loop is run
-    // (Forcefully pauses the thread for about the amount of milliseconds passed in)
-  	delay(loopDelayMilliseconds);
+    loop_test();
+    robot.tick(frame, (uint32_t)deltaTime);
 
     frame++;
 }
 
-// This is used at the end of each file due to the name definition at the beginning
-#endif
+void loop_test() {
+    unsigned long time_seconds = millis() / 1000;
+
+    Coordinate2D goal;
+    double rotation = 0;
+
+    if (time_seconds > 10) {
+        goal = Coordinate2D(100, 100);
+    }
+
+    if (time_seconds > 20) {
+        goal = Coordinate2D(0, 0);
+    }
+
+    if (time_seconds > 30) {
+        goal = Coordinate2D(500, 200);
+    }
+
+    robot.drive(goal, rotation);
+}

@@ -2,7 +2,7 @@
 #define PROFILED_PID_CONTROLLER_H
 
 #include "robot/pidController.h"
-#include "robot/trapezoidalProfileNew.h"
+#include "robot/trapezoidalProfile.h"
 
 class ProfiledPIDController {
 public:

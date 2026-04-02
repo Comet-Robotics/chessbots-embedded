@@ -7,6 +7,14 @@
 #include <cmath>
 #include <algorithm>
 
+PIDController::PIDController(double kp, double ki, double kd, double min, double max, double _errorTolerance)
+    : kp(kp), ki(ki), kd(kd),
+      minOutput(min), maxOutput(max),
+      prev_error(0),
+      errorTolerance(_errorTolerance),
+      integral(0)
+{}
+
 double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Calculate error
     double error = this->getError(setpoint, actual_value);
