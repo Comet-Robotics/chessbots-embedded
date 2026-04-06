@@ -1,11 +1,11 @@
-#ifndef PID_CONTROLLER_CPP
-#define PID_CONTROLLER_CPP
-
-#include "robot/pidController.h"
-#include "utils/logging.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+
+#include "robot/pidController.h"
+
+#include "utils/logging.h"
+
 
 PIDController::PIDController(double kp, double ki, double kd, double min, double max, double _errorTolerance)
     : kp(kp), ki(ki), kd(kd),
@@ -48,18 +48,9 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Clamp output
     output = std::max(minOutput, std::min(maxOutput, output));
 
-    // serialLog("PID is outputting: ", 3);
-    // serialLog(float(output), 3);
-    // serialLogln(",", 3);
-    // if (abs(output) < 0.2) {
-    //     output = 0;
-    // }
-
     return (output);
 }
 
 void PIDController::Reset(){
     integral = 0;
 }
-
-#endif

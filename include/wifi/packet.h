@@ -1,7 +1,6 @@
-#ifndef CHESSBOT_PACKET_H
-#define CHESSBOT_PACKET_H
+#pragma once
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <ArduinoJson.h>
 
 
@@ -12,4 +11,3 @@ void constructHelloPacket(JsonDocument& packet);
 void constructSuccessPacket(JsonDocument& packet, std::string messageId);
 void constructFailPacket(JsonDocument& packet, std::string messageId);
 void constructPingPacket(JsonDocument& packet);
-#endif

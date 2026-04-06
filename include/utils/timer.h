@@ -1,7 +1,5 @@
-#ifndef CHESSBOT_TIMER_H
-#define CHESSBOT_TIMER_H
+#pragma once
 
-// Built-In Libraries
 #include <vector>
 //we're gonna need this if we need to use delays which require functions
 #include <functional>
@@ -31,5 +29,3 @@ void timerCancel(unsigned long id);
 void timerCancelAll();
 
 void timerStep();
-
-#endif

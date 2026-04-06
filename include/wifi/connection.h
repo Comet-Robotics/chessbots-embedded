@@ -1,7 +1,6 @@
-#ifndef CHESSBOT_CONNECTION_H
-#define CHESSBOT_CONNECTION_H
+#pragma once
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <ArduinoJson.h>
 
 void connectServer();
@@ -15,5 +14,3 @@ void sendPacket(JsonDocument& packet);
 void sendActionSuccess(std::string messageId);
 void sendActionFail(std::string messageId);
 void sendPingResponse();
-
-#endif

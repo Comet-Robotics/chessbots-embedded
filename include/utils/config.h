@@ -1,14 +1,10 @@
-#ifndef CHESSBOT_CONFIG_H
-#define CHESSBOT_CONFIG_H
+#pragma once
 
-// Built-In Libraries
-#include "Arduino.h"
-
-// external Libraries
+#include <Arduino.h>
 #include <ArduinoJson.h>
 
 extern int loopDelayMilliseconds;
-extern unsigned long frame;
+extern uint32_t frame;
 
 // These variables are declared here, and defined in config.cpp
 // config.cpp is the only file that should be modifying these values. Everything else is read-only
@@ -52,5 +48,3 @@ extern float PID_POSITION_TOLERANCE;
 extern float PID_VELOCITY_TOLERANCE;
 
 void setConfig(JsonObject config);
-
-#endif

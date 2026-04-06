@@ -1,30 +1,26 @@
-// Associated Header File
-#include "robot/control/robot.h"
-
-// Built-In Libraries
-#include "Arduino.h"
+#include <Arduino.h>
 #include <queue>
 #include <tuple>
-
-// Custom Libraries
-#include "utils/logging.h"
-#include "utils/timer.h"
-#include "utils/config.h"
-#include "utils/logging.h"
-#include "utils/geometry.h"
-#include "utils/status.h"
-#include "robot/control/motor.h"
-#include "robot/control/lights.h"
-#include "wifi/connection.h"
-#include "robot/pidController.h"
-#include "robot/driveTest.h"
-#include "../../../env.h"
 #include <algorithm>
+
+#include "robot/control/robot.h"
+
+#include "../../../env.h"
+#include "robot/control/lights.h"
+#include "robot/control/motor.h"
+#include "robot/pidController.h"
+#include "utils/config.h"
 #include "utils/functions.h"
+#include "utils/geometry.h"
+#include "utils/logging.h"
+#include "utils/logging.h"
+#include "utils/status.h"
+#include "utils/timer.h"
+#include "wifi/connection.h"
 
 MotionController::MotionController()
-    :   DistVelocityController(0.5, 0.01, 0.15, -1, +1, 0.0),
-        AVelocityController(0.5, 0.1, 0.15, -1, +1, 0.0)
+    :   DistVelocityController(0.1, 0.2, 0.05, -1, +1, 0.0),
+        AVelocityController(.1, 0.2, 0.05, -1, +1, 0.0)
 {}
 
 void MotionController::set_goal(Coordinate2D _goal_destination, double _goal_angle) {
@@ -41,7 +37,7 @@ std::tuple<double, double> MotionController::update_speeds(Coordinate2D position
         dist_err = -dist_err;
     }
     
-    if (abs(dist_err) < 1) {
+    if (abs(dist_err) < 3) {
         if (phase == TRAVELLING) {
             DistVelocityController.Reset();
             AVelocityController.Reset();
@@ -92,12 +88,16 @@ Robot::Robot()
         back_right_light(PHOTODIODE_D_PIN)
 {}
 
-void Robot::print_status() {
+void Robot::print_status(uint32_t delay) {
     serial_clear();
     activateIR();
+
+    uint32_t fps = delay == 0 ? 0 : 1000000 / delay;
     serial_printf(
         DebugLevel::INFO,
-        "position: (%fcm, %fcm) rotation: %frad \n"
+        "FPS: %lu (%luus)\n"
+
+        "Position: (%fcm, %fcm) rotation: %frad \n"
         "Centering status: %d\n\n"
 
         "left power: %f right power: %f \n"
@@ -106,6 +106,8 @@ void Robot::print_status() {
 
         "front lights -- left: %hd discrete %d right: %hd discrete %d\n"
         "back lights -- left: %hd discrete %d right: %hd discrete %d\n\n",
+
+        fps, delay,
 
         position.x, position.y, rotation,
         centeringStatus,
@@ -127,7 +129,7 @@ int Robot::batteryLevel() {
     return analogRead(BATTERY_VOLTAGE_PIN) - BATTERY_VOLTAGE_OFFSET;
 }
 
-void Robot::tick(unsigned long frame, uint32_t delay) {
+void Robot::tick(uint32_t frame, uint32_t delay) {
     // Pass through tick, update all sensors / motors
     left.tick();
     right.tick();
@@ -161,12 +163,12 @@ void Robot::tick(unsigned long frame, uint32_t delay) {
 
     
     if (frame % 64 == 0) {
-        print_status();
+        print_status(delay);
     }
 }
 
 void Robot::pid_tick(uint32_t delay) {    
-    std::tuple<double, double> motor_speeds = motion_controller.update_speeds(position, rotation, (double)delay/1000);
+    std::tuple<double, double> motor_speeds = motion_controller.update_speeds(position, rotation, (double)delay / 1000000);
 
     drive(motor_speeds, "NULL");
 }
@@ -245,5 +247,5 @@ void Robot::stop() {
     // Set the goal to where we are right now, so the robot doesn't move
     motion_controller.set_goal(position, rotation);
     
-    serialLogln("Bot Stopped!", 2);
+    serial_printf(DebugLevel::DEBUG, "Bot Stopped!\n");
 }

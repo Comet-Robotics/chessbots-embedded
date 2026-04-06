@@ -1,16 +1,10 @@
-#ifndef CHESSBOT_LIGHT_SENSOR_CPP
-#define CHESSBOT_LIGHT_SENSOR_CPP
+#include <Arduino.h>
 
-// Associated Header File
 #include "robot/control/lights.h"
+
 #include "../../../env.h"
-
-// Built-In Libraries
-#include "Arduino.h"
-
-// Custom Libraries
-#include "utils/logging.h"
 #include "utils/config.h"
+#include "utils/logging.h"
 
 static short LIGHT_RAW_VALUE_CUTOFF = 7600;
 bool is_light_value_on(short value) {
@@ -62,9 +56,9 @@ bool IR_activated = false;
 
 // Sets the IR (Infrared) Blaster to be able to output
 void setupIR() {
-    serialLogln("Setting Up Light Sensors...", 2);
+    serial_printf(DebugLevel::DEBUG, "Setting Up Light Sensors...\n");
     pinMode(RELAY_IR_LED_PIN, OUTPUT);
-    serialLogln("Light Sensors Setup!", 2);
+    serial_printf(DebugLevel::DEBUG, "Light Sensors Setup!\n");
 }
 
 // Turns on the IR Blaster
@@ -87,5 +81,3 @@ void deactivateIR() {
     // digitalWrite(RELAY_IR_LED_PIN, LOW);
     // IR_activated = false;
 }
-
-#endif

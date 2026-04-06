@@ -1,4 +1,5 @@
 #include <math.h>
+
 #include "utils/geometry.h"
 
 Coordinate2D::Coordinate2D() {

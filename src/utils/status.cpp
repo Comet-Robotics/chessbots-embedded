@@ -1,7 +1,3 @@
-#ifndef CHESSBOT_STATUS_CPP
-#define CHESSBOT_STATUS_CPP
-
-// Associated Header File
 #include "utils/status.h"
 
 bool wifiConnected = false;
@@ -21,13 +17,3 @@ bool getServerConnectionStatus() {
 void setServerConnectionStatus(bool value) {
     serverConnected = value;
 }
-
-bool getStoppedStatus() {
-    return botStopped;
-}
-
-void setStoppedStatus(bool value) {
-    botStopped = value;
-}
-
-#endif

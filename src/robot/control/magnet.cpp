@@ -1,6 +1,7 @@
-#include "DFRobot_BMM350.h"
+#include <DFRobot_BMM350.h>
 
 #include "robot/control/magnet.h"
+
 #include "utils/logging.h"
 
 #define SDA_PIN 8  
@@ -15,15 +16,13 @@ Magnet::Magnet()
     while (maxTries-- > 0 && (errorCode=bmm350.begin()))
     {
         delay(500);
-        serialLog("Retrying BMM350 connection... (error code ", 1);
-        serialLog(errorCode, 1);
-        serialLogln(")", 1);
+        serial_printf(DebugLevel::INFO, "Retrying BMM350 connection... (error code %d)\n", errorCode);
     }
     if (errorCode > 0) {
-        serialLogln("BMM350 not detected at default I2C address. Check wiring.", 1);
+        serial_printf(DebugLevel::INFO, "BMM350 not detected at default I2C address. Check wiring.\n");
         return;
     } else {
-        serialLogln("BMM350 detected.", 1);
+        serial_printf(DebugLevel::INFO, "BMM350 detected.\n");
     }
     bmm350.setOperationMode(eBmm350NormalMode);
     bmm350.setPresetMode(BMM350_PRESETMODE_HIGHACCURACY, BMM350_DATA_RATE_25HZ);

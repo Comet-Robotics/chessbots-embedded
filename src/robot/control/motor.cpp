@@ -1,15 +1,9 @@
-#ifndef CHESSBOT_MOTOR_CPP
-#define CHESSBOT_MOTOR_CPP
+#include <Arduino.h>
 
-// Associated Header File
 #include "robot/control/motor.h"
 
-// Built-In Libraries
-#include "Arduino.h"
-
-// Custom Libraries
-#include "robot/pwm.h"
 #include "utils/config.h"
+#include "utils/functions.h"
 #include "utils/logging.h"
 
 Motor::Motor(bool _inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a, uint8_t enc_pin_b)
@@ -18,8 +12,8 @@ Motor::Motor(bool _inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a
     pin_a = motor_pin_a;
     pin_b = motor_pin_b;
     
-    setupPWM(pin_a);
-    setupPWM(pin_b);
+    pinMode(pin_a, OUTPUT);
+    pinMode(pin_b, OUTPUT);
 }
 
 void Motor::tick() {
@@ -29,7 +23,7 @@ void Motor::tick() {
 }
 
 // Returns the current power of the motor
-float Motor::power() {
+double Motor::power() {
     if (inverted) {
         return -_power;
     }
@@ -40,7 +34,7 @@ float Motor::power() {
 // This will set how fast and what direction left motor will spin
 // Value between [-1, 1]
 // Negative is backwards, Positive is forwards
-void Motor::power(float __power) {
+void Motor::power(double __power) {
     if (inverted) {
         __power = -__power;    
     }
@@ -53,15 +47,14 @@ void Motor::power(float __power) {
 
     
     if (_power > 0) {
-        writePWM(pin_b, 0);
-        writePWM(pin_a, mapPowerToDuty(_power));
+        analogWrite(pin_b, 0);
+        analogWrite(pin_a, power_to_duty(_power));
     } else {
-        writePWM(pin_a, 0);
-        writePWM(pin_b, mapPowerToDuty(-_power));
+        analogWrite(pin_a, 0);
+        analogWrite(pin_b, power_to_duty(-_power));
     }
 
-    serialLog("Motor Power: ", 4);
-    serialLogln(_power, 4);
+    serial_printf(DebugLevel::RIDICULOUS, "Motor Power: %f\n", _power);
 }
 
 void Motor::encoder_reset() {
@@ -85,4 +78,11 @@ double Motor::tick_dist() {
     return ((double)dist / TICKS_PER_ROTATION) * TIRE_CIRCUMFERENCE;
 }
 
-#endif
+// Takes in a power between [0, 1]
+// We use this to change a double power between 0-1 to an int duty cycle between 0-4096
+int power_to_duty(double power) {
+    int value = fmap(power, 0.0, 1.0, 0.0, 4096);
+    serial_printf(DebugLevel::RIDICULOUS, "Mapped Duty: %d\n", value);
+
+    return value;
+}

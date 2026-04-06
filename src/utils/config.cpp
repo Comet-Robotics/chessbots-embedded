@@ -1,17 +1,12 @@
-#ifndef CHESSBOT_CONFIG_CPP
-#define CHESSBOT_CONFIG_CPP
+#include <Arduino.h>
+#include <ArduinoJson.h>
 
-// Associated Header File
 #include "utils/config.h"
 
-// Built-In Libraries
-#include "Arduino.h"
-
-// Custom Libraries
 #include "utils/logging.h"
 
 // External Libraries
-#include <ArduinoJson.h>
+
 
 int loopDelayMilliseconds = 20;
 
@@ -54,7 +49,7 @@ float PID_POSITION_TOLERANCE = 100;
 float PID_VELOCITY_TOLERANCE = 6000;
 
 void setConfig(JsonObject config) {
-    serialLogln("Setting Config...", 2);
+    serial_printf(DebugLevel::DEBUG, "Setting Config...\n");
 
     // The is<x>() method checks the type of the variable. If the type isn't none, then
     // we know this variable exists in the config and has a value
@@ -84,7 +79,5 @@ void setConfig(JsonObject config) {
 
     if (config["MAGNET_CCW_IS_POSITIVE"].is<int>()) MAGNET_CCW_IS_POSITIVE = config["MAGNET_CCW_IS_POSITIVE"];
 
-    serialLogln("Config Set!", 2);
+    serial_printf(DebugLevel::DEBUG, "Config Set!\n");
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef PID_CONTROLLER_H
-#define PID_CONTROLLER_H
+#pragma once
 
 class PIDController
 {
@@ -45,5 +44,3 @@ protected:
 private:
     double minInput, maxInput; // Input range for continuous wrapping
 };
-
-#endif // PID_CONTROLLER_H

@@ -1,21 +1,20 @@
-#include "Arduino.h"
+#include <Arduino.h>
 
-// Custom Libraries
+#include "../env.h"
+#include "robot/control/magnet.h"
+#include "robot/control/robot.h"
+#include "robot/pidController.h"
+#include "tests.h"
 #include "utils/config.h"
 #include "utils/logging.h"
-#include "utils/timer.h"
 #include "utils/status.h"
-#include "wifi/wireless.h"
+#include "utils/timer.h"
 #include "wifi/connection.h"
-#include "robot/control/robot.h"
-#include "../env.h"
-#include "robot/pidController.h"
-#include "robot/control/magnet.h"
+#include "wifi/wireless.h"
 
-void loop_test();
+uint32_t frame = 0;
 
-unsigned long frame = 0;
-unsigned long previousTime = 0; // For loop timing
+uint32_t previous_time = 0;
 
 Robot robot = Robot();
 
@@ -25,13 +24,12 @@ void setup() {
     if (LOGGING_LEVEL > 0) Serial.begin(115200);
 
     delay(STARTUP_DELAY);
-    serialLogln("Finished Delay!", 2);
+    serial_printf(DebugLevel::DEBUG, "Finished Delay!\n");
 
     // Create a WiFi network for the laptop to connect to
     if (!RUN_OFFLINE) connectWiFI();
 
-    previousTime = millis() - loopDelayMilliseconds;
-
+    previous_time = micros();
     // robot.center();
 }
 
@@ -51,34 +49,11 @@ void loop() {
         if (getServerConnectionStatus()) acceptData();
     }
 
-    // Run control loop
-    // TODO change time parameter to be actual delta time, not just delay between loops
-    unsigned long deltaTime = millis() - previousTime;
-    previousTime = millis();
+    uint32_t delta = micros() - previous_time;
+    previous_time = micros();
 
-    loop_test();
-    robot.tick(frame, (uint32_t)deltaTime);
+    square_test(robot);
+    robot.tick(frame, delta);
 
     frame++;
-}
-
-void loop_test() {
-    unsigned long time_seconds = millis() / 1000;
-
-    Coordinate2D goal;
-    double rotation = 0;
-
-    if (time_seconds > 10) {
-        goal = Coordinate2D(100, 100);
-    }
-
-    if (time_seconds > 20) {
-        goal = Coordinate2D(0, 0);
-    }
-
-    if (time_seconds > 30) {
-        goal = Coordinate2D(500, 200);
-    }
-
-    robot.drive(goal, rotation);
 }

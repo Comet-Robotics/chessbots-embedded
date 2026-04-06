@@ -1,8 +1,6 @@
-#ifndef CHESSBOT_LIGHT_SENSOR_H
-#define CHESSBOT_LIGHT_SENSOR_H
+#pragma once
 
-// Built-In Libraries
-#include "Arduino.h"
+#include <Arduino.h>
 
 class Light {
     public:
@@ -29,5 +27,3 @@ class Light {
 void setupIR();
 void activateIR();
 void deactivateIR();
-
-#endif

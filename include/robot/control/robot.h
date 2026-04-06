@@ -1,13 +1,12 @@
-#ifndef CHESSBOT_CONTROL_H
-#define CHESSBOT_CONTROL_H
+#pragma once
 
-#include "Arduino.h"
-#include "utils/config.h"
-#include "utils/geometry.h"
-#include "robot/trapezoidalProfile.h"
+#include <Arduino.h>
+
 #include "robot/control/lights.h"
 #include "robot/control/motor.h"
 #include "robot/pidController.h"
+#include "utils/config.h"
+#include "utils/geometry.h"
 
 enum OperatingMode
 {
@@ -74,7 +73,7 @@ class Robot {
         static int batteryLevel();
 
         // Runs all the necessary processing for each tick of the global event loop
-        void tick(unsigned long frame, uint32_t delay);
+        void tick(uint32_t frame, uint32_t delay);
         
         void center();
         void drive(float tiles, std::string id);
@@ -109,7 +108,5 @@ class Robot {
         void center_tick(uint32_t delay);
         void pid_tick(uint32_t delay);
 
-        void print_status();
+        void print_status(uint32_t delay);
 };
-
-#endif

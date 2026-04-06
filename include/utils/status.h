@@ -1,5 +1,4 @@
-#ifndef CHESSBOT_STATUS_H
-#define CHESSBOT_STATUS_H
+#pragma once
 
 bool getServerConnectionStatus();
 void setServerConnectionStatus(bool value);
@@ -9,5 +8,3 @@ void setWiFiConnectionStatus(bool value);
 
 bool getStoppedStatus();
 void setStoppedStatus(bool value);
-
-#endif

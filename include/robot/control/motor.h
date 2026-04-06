@@ -1,13 +1,13 @@
-#ifndef CHESSBOT_MOTOR_H
-#define CHESSBOT_MOTOR_H
+#pragma once
 
+#include <Encoder.h>
 #include <stdint.h>
 
 #include "utils/config.h"
-#include "Encoder.h"
 
-const float TIRE_RADIUS = 5.9;
-const float TIRE_CIRCUMFERENCE = M_PI * 2 * TIRE_RADIUS;
+
+const double TIRE_RADIUS = 5.9;
+const double TIRE_CIRCUMFERENCE = M_PI * 2 * TIRE_RADIUS;
 
 class Motor {
     public:
@@ -16,9 +16,9 @@ class Motor {
         void tick();
         
         // Sets the motor power
-        // power is a float between [-1, 1]
-        float power();
-        void power(float power);
+        // power is a double between [-1, 1]
+        double power();
+        void power(double power);
         void encoder_reset();
 
         double dist(); // Total distance in cm
@@ -30,19 +30,11 @@ class Motor {
 
         bool inverted;
 
-        float _power;
+        double _power;
         
         int32_t raw_enc_value;
         int32_t prev_raw_enc_value;
         Encoder encoder;
-
-
-        
 };
 
-// Encoder EncoderA(ENCODER_A_PIN1, ENCODER_A_PIN2);
-// void setupMotors();
-// void setLeftPower(float power);
-// void setRightPower(float power);
-
-#endif
+int power_to_duty(double power);

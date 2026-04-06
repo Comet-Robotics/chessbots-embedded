@@ -1,7 +1,6 @@
-#ifndef MAGNET_H
-#define MAGNET_H
+#pragma once
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include "DFRobot_BMM350.h"
 
 struct MagnetReading {
@@ -33,5 +32,3 @@ class Magnet {
         float previousReading = -1.0;
         bool activeFlag = false;
 };
-
-#endif // MAGNET_H

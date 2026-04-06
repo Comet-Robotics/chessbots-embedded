@@ -1,5 +1,4 @@
-#ifndef CHESSBOT_WIRELESS_H
-#define CHESSBOT_WIRELESS_H
+#pragma once
 
 const char* getWifiStatus(int status);
 bool checkWiFiConnection();
@@ -8,5 +7,3 @@ void connectWiFI();
 void reconnectWiFI();
 void disconnectWiFI();
 void createWiFi();
-
-#endif

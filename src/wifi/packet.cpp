@@ -1,23 +1,14 @@
-#ifndef CHESSBOT_PACKET_CPP
-#define CHESSBOT_PACKET_CPP
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <esp_mac.h>
 
-// Associated Header File
 #include "wifi/packet.h"
 
-// Built-In Libraries
-#include "Arduino.h"
-#include "esp_mac.h"
-
-// External Libraries
-#include <ArduinoJson.h>
-
-// Custom Libraries
+#include "robot/control/robot.h"
+#include "utils/config.h"
+#include "utils/functions.h"
 #include "utils/logging.h"
 #include "utils/status.h"
-#include "utils/functions.h"
-#include "utils/config.h"
-#include "robot/control/robot.h"
-#include "robot/splines.h"
 #include "wifi/connection.h"
 
 // These are the various different supported message types that can be sent over TCP
@@ -43,7 +34,7 @@ const char* BS_MOVE = "BS_MOVE";
 // Takes a packet a does specific things based on the type
 void handlePacket(Robot& r, JsonDocument packet) {
     // Sadly a switch case can't be used due to the packet type being a string.
-    // We do this to allow the packets to be more readable when serialLogged
+    // We do this to allow the packets to be more readable when serial_printf(DebugLevel::ged
     if (packet["type"] == SERVER_HELLO) {
         // When we initiate a handshake, the server sends a handshake back. This server handshake
         // contains any variable that should be changed in this bot's config
@@ -62,13 +53,13 @@ void handlePacket(Robot& r, JsonDocument packet) {
         // Point controlPositionB = {(float)packet["controlPositionB"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionB"]["y"]*TILES_TO_TICKS};
         // danceMonkeyCubic(packet["packetId"], startPosition, controlPositionA, controlPositionB, endPosition, packet["timeDeltaMs"]);
     } else if (packet["type"] == QUADRATIC) {
-        // serialLog("I have arrived!! at Quadratic", 3);
+        // serial_printf(DebugLevel::("I have arrived!! at Quadratic", 3);
         // Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
         // Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
         // Point controlPosition = {(float)packet["controlPosition"]["x"]*TILES_TO_TICKS, (float)packet["controlPosition"]["y"]*TILES_TO_TICKS};
         // danceMonkeyQuadratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
     } else if (packet["type"] == SPIN_RADIANS) {
-        // serialLog("Going to spin!", 3);
+        // serial_printf(DebugLevel::("Going to spin!", 3);
         // int offsetTicks = radiansToTicks((float)packet["radians"]);
         // startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
     } else if (packet["type"] == TURN_BY_ANGLE) {
@@ -115,5 +106,3 @@ void constructPingPacket(JsonDocument& packet) {
     packet["type"] = PING_RESPONSE;
     packet["batteryLevel"] = Robot::batteryLevel();
 }
-
-#endif

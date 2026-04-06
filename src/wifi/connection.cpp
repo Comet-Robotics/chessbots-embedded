@@ -1,24 +1,15 @@
-#ifndef CHESSBOT_CONNECTION_CPP
-#define CHESSBOT_CONNECTION_CPP
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <WiFi.h>
 
-// Associated Header File
 #include "wifi/connection.h"
 
-// Built-In Libraries
-#include "Arduino.h"
-#include "WiFi.h"
-
-// External Libraries
-#include <ArduinoJson.h>
-
-// Custom Libraries
-#include "wifi/packet.h"
-#include "utils/logging.h"
-#include "utils/timer.h"
-#include "utils/status.h"
-#include "robot/control/robot.h"
-
 #include "../../env.h"
+#include "robot/control/robot.h"
+#include "utils/logging.h"
+#include "utils/status.h"
+#include "utils/timer.h"
+#include "wifi/packet.h"
 
 bool serverConnecting = false;
 bool pinging = false;
@@ -29,19 +20,19 @@ WiFiClient client;
 
 // Called to connect to the server whose info is stored in env.h
 void connectServer() {
-    serialLogln("Connecting to Server...", 2);
+    serial_printf(DebugLevel::DEBUG, "Connecting to Server...\n");
     if (client.connect(SERVER_IP, SERVER_PORT)) {
         // If successful, sets the connection status and stops trying to connect to the server
         setServerConnectionStatus(true);
         serverConnecting = false;
-        serialLogln("Connected to Server!", 2);
+        serial_printf(DebugLevel::DEBUG, "Connected to Server!\n");
 
         // A handshake is an initial exchange of information, and a confirmation of a connection
         if (DO_HANDSHAKE) { initiateHandshake(); }
     } else {
         serverConnecting = true;
         // If unsuccessful, tries again in 5 seconds
-        serialLogln("Connection To Server Failed! Retrying...", 2);
+        serial_printf(DebugLevel::DEBUG, "Connection To Server Failed! Retrying...\n");
 
         timerDelay(HANDSHAKE_INTERVAL, &connectServer);
     }
@@ -51,14 +42,14 @@ void connectServer() {
 void disconnectServer() {
     setServerConnectionStatus(false);
     client.stop();
-    serialLogln("Disconnected From Server!", 2);
+    serial_printf(DebugLevel::DEBUG, "Disconnected From Server!\n");
 }
 
 // If not connected to the server (whether by disconnect or by lost connection), reconnects
 void reconnectServer() {
     if (!serverConnecting) {
         setServerConnectionStatus(false);
-        serialLogln("Disconnected From Server! Reconnecting...", 2);
+        serial_printf(DebugLevel::DEBUG, "Disconnected From Server! Reconnecting...\n");
         connectServer();
     }
 }
@@ -72,7 +63,7 @@ bool checkServerConnection() {
 void initiateHandshake() {
     JsonDocument packet;
     constructHelloPacket(packet);
-    serialLogln((char*)"Sending Handshake...", 2);
+    serial_printf(DebugLevel::DEBUG, "Sending Handshake...\n");
     sendPacket(packet);
 }
 
@@ -102,10 +93,6 @@ JsonDocument acceptData() {
         
         // This turns the character buffer into a fully formed JSON object
         deserializeJson(packet, rawPacket);
-        serialLog("Received Packet: ", 2);
-        // This takes that JSON object and prints it to Serial (the console) for debugging purposes
-        if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-        serialLog("\n", 2);
     }
 
     return packet;
@@ -117,33 +104,29 @@ void sendPacket(JsonDocument& packet) {
     serializeJson(packet, client);
     // Sends a delimiter character to mark the end of the packet
     client.write(';');
-    serialLogln("Sent Packet: ", 2);
-    // This takes that JSON object and prints it to Serial (the console) for debugging purposes
-    if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-    serialLog("\n", 2);
 }
 
 void sendActionSuccess(std::string messageId) {
     JsonDocument packet;
     constructSuccessPacket(packet, messageId);
-    serialLogln((char*)"Sending Action Success...", 2);
+    serial_printf(DebugLevel::DEBUG, "Sending Action Success...\n");
     sendPacket(packet);
 }
 
 void sendActionFail(std::string messageId) {
     JsonDocument packet;
     constructFailPacket(packet, messageId);
-    serialLogln((char*)"Sending Action Success...", 2);
+    serial_printf(DebugLevel::DEBUG, "Sending Action Success...\n");
     sendPacket(packet);
 }
 
 void pingTimeout() {
     if (DO_PINGING) {
         missedPings++;
-        serialLog(missedPings, 2);
-        serialLogln((char*)" missed ping!", 2);
+        serial_printf(DebugLevel::DEBUG, "%u missed pings!\n", missedPings);
+
         if (missedPings >= PING_MAX_MISSES) {
-            serialLogln((char*)"SERVER TIMED OUT!", 2);
+            serial_printf(DebugLevel::DEBUG, "SERVER TIMED OUT!\n");
             // TODO: stop();
             pinging = false;
         } else {
@@ -156,17 +139,15 @@ void sendPingResponse() {
     if (DO_PINGING) {
         JsonDocument packet;
         constructPingPacket(packet);
-        serialLogln((char*)"Sending Ping Response...", 2);
+        serial_printf(DebugLevel::DEBUG, "Sending Ping Response...\n");
         sendPacket(packet);
         if (pinging) {
             timerReset(pingTimeoutTimer);
         } else {
             pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
-            serialLogln((char*)"Started Ping Timeout Timer", 2);
+            serial_printf(DebugLevel::DEBUG, "Started Ping Timeout Timer\n");
             pinging = true;
         }
         missedPings = 0;
     }
 }
-
-#endif
