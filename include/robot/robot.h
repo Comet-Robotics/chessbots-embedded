@@ -2,8 +2,8 @@
 
 #include <Arduino.h>
 
-#include "robot/control/lights.h"
-#include "robot/control/motor.h"
+#include "robot/lights.h"
+#include "robot/motor.h"
 #include "robot/pidController.h"
 #include "utils/config.h"
 #include "utils/geometry.h"
@@ -47,20 +47,23 @@ class MotionController {
             TRAVELLING,
 
             // Aligning to the correct rotation
-            ALIGNING
+            ALIGNING,
+            ARRIVED
         };
 
         MotionController();
 
+        MotionPhase phase();
         void set_goal(Coordinate2D goal_destination, double goal_angle);
         std::tuple<double, double> update_speeds(Coordinate2D position, double angle, double dt);
+        
         void print_status();
         void reset();
     private:
         PIDController DistVelocityController; 
         PIDController AVelocityController;
 
-        MotionPhase phase;
+        MotionPhase _phase;
         
         double goal_angle;
         Coordinate2D goal_position;
@@ -76,14 +79,15 @@ class Robot {
         void tick(uint32_t frame, uint32_t delay);
         
         void center();
-        void drive(float tiles, std::string id);
+        void drive(double tiles, std::string id);
         void drive(Coordinate2D goal_pos, double goal_angle);
         void drive(std::tuple<double, double>& powers, std::string id);
         void driveTicks(int tickDistance, std::string id);
         enum DriveStatus driveUntilNewTile();
 
-        void turn(float angleRadians, std::string id);
+        void turn(double angleRadians, std::string id);
         
+        void start();
         void stop();
 
         void test();
@@ -99,6 +103,7 @@ class Robot {
         Light back_right_light;
 
         // State
+        bool stopped;
         double rotation;
         Coordinate2D position;
         MotionController motion_controller;

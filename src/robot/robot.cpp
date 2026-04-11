@@ -3,25 +3,27 @@
 #include <tuple>
 #include <algorithm>
 
-#include "robot/control/robot.h"
+#include "robot/robot.h"
 
-#include "../../../env.h"
-#include "robot/control/lights.h"
-#include "robot/control/motor.h"
+#include "../../env.h"
+#include "robot/lights.h"
+#include "robot/motor.h"
 #include "robot/pidController.h"
 #include "utils/config.h"
 #include "utils/functions.h"
 #include "utils/geometry.h"
 #include "utils/logging.h"
 #include "utils/logging.h"
-#include "utils/status.h"
-#include "utils/timer.h"
 #include "wifi/connection.h"
 
 MotionController::MotionController()
     :   DistVelocityController(0.1, 0.2, 0.05, -1, +1, 0.0),
         AVelocityController(.1, 0.2, 0.05, -1, +1, 0.0)
 {}
+
+MotionController::MotionPhase MotionController::phase() {
+    return _phase;
+}
 
 void MotionController::set_goal(Coordinate2D _goal_destination, double _goal_angle) {
     goal_angle = _goal_angle;
@@ -30,6 +32,7 @@ void MotionController::set_goal(Coordinate2D _goal_destination, double _goal_ang
 
 std::tuple<double, double> MotionController::update_speeds(Coordinate2D position, double angle, double dt) {
     double dist_err = position.distance_to(goal_position);
+    double angle_err = angle - goal_angle;
 
     // So that the robot will not back up from a point in front of it infinitely
     bool is_behind = position.is_behind(angle, goal_position);
@@ -37,24 +40,30 @@ std::tuple<double, double> MotionController::update_speeds(Coordinate2D position
         dist_err = -dist_err;
     }
     
-    if (abs(dist_err) < 3) {
-        if (phase == TRAVELLING) {
+    if (abs(dist_err) < 3 && abs(angle_err) < M_PI / 16) {
+        _phase = ARRIVED;
+
+        // C++ let me compile without this return statement
+        // While on -Wall and -Wextra.
+        return std::make_tuple(0.0, 0.0);
+    } else if (abs(dist_err) < 3) {
+        if (_phase != ALIGNING) {
             DistVelocityController.Reset();
             AVelocityController.Reset();
         }
 
-        phase = ALIGNING;
+        _phase = ALIGNING;
 
         double angular_vel = AVelocityController.Compute(goal_angle, angle, dt);
 
        return std::make_tuple(-angular_vel, angular_vel);
     } else {
-        if (phase == ALIGNING) {
+        if (_phase != TRAVELLING) {
             DistVelocityController.Reset();
             AVelocityController.Reset();
         }
 
-        phase = TRAVELLING;
+        _phase = TRAVELLING;
 
         double temp_goal_angle = position.angle_to(goal_position);
 
@@ -70,7 +79,7 @@ std::tuple<double, double> MotionController::update_speeds(Coordinate2D position
 }
 
 void MotionController::print_status() {
-    serial_printf(DebugLevel::NONE, "MotionController status: %d -- goal_position: (%f, %f), goal_angle: %f\n", phase, goal_position.x, goal_position.y, goal_angle);
+    serial_printf(DebugLevel::NONE, "MotionController status: %d -- goal_position: (%f, %f), goal_angle: %f\n", _phase, goal_position.x, goal_position.y, goal_angle);
 }
 
 void MotionController::reset() {
@@ -85,8 +94,19 @@ Robot::Robot()
         front_left_light(PHOTODIODE_A_PIN),
         front_right_light(PHOTODIODE_B_PIN),
         back_left_light(PHOTODIODE_C_PIN),
-        back_right_light(PHOTODIODE_D_PIN)
-{}
+        back_right_light(PHOTODIODE_D_PIN),
+
+        stopped(false)
+
+{
+
+    // Turn IR blasters on
+    pinMode(RELAY_IR_LED_PIN, OUTPUT);
+    
+    // Turn the ESP LED on
+    pinMode(ONBOARD_LED_PIN, OUTPUT);
+    digitalWrite(ONBOARD_LED_PIN, HIGH);
+}
 
 void Robot::print_status(uint32_t delay) {
     serial_clear();
@@ -159,18 +179,17 @@ void Robot::tick(uint32_t frame, uint32_t delay) {
     rotation = rotation + d_angle;
 
     center_tick(delay);
-    pid_tick(delay);
 
+    auto motor_speeds = std::make_tuple(0.0, 0.0);
+    if (!stopped) {
+        motor_speeds = motion_controller.update_speeds(position, rotation, (double)delay / 1000000);
+    }
+
+    drive(motor_speeds, "NULL");
     
     if (frame % 64 == 0) {
         print_status(delay);
     }
-}
-
-void Robot::pid_tick(uint32_t delay) {    
-    std::tuple<double, double> motor_speeds = motion_controller.update_speeds(position, rotation, (double)delay / 1000000);
-
-    drive(motor_speeds, "NULL");
 }
 
 void Robot::center_tick(uint32_t delay) {
@@ -180,10 +199,13 @@ void Robot::center_tick(uint32_t delay) {
 
     if (centeringStatus == STARTED) {
         // Set the goal position to a unit vector ahead of the robot
-        motion_controller.set_goal(position.transform(Coordinate2D(rotation)), 0);
+        motion_controller.set_goal(position.transform(Coordinate2D(rotation).scale(10.0)), 0);
 
         // The two front sensors crossed at the same time, skip aligning step
         if (front_left_light.held_value() && front_right_light.held_value()) {
+            rotation = M_PI / 2;
+            position = Coordinate2D(0.0, 0.0);
+
             centeringStatus = ALIGNED_EDGE_1;
         }
 
@@ -192,14 +214,15 @@ void Robot::center_tick(uint32_t delay) {
         }
     }
 
-    if (centeringStatus == ALIGNING_EDGE_1) {        
+    if (centeringStatus == ALIGNING_EDGE_1) {    
         if (front_left_light.held_value() && front_right_light.held_value()) {
             rotation = M_PI / 2;
-            position.y = -3;
+            position = Coordinate2D(0.0, 0.0);
+
             centeringStatus = ALIGNED_EDGE_1;
         }
 
-        // If the left one crossed latest
+        // If the left one crossed latest, that's the first one that hit the line
         if (front_left_light.last_changed_time() > front_right_light.last_changed_time()) {
             // Turn left
             motion_controller.set_goal(position, rotation + 1);
@@ -210,7 +233,26 @@ void Robot::center_tick(uint32_t delay) {
     }
 
     if (centeringStatus == ALIGNED_EDGE_1) {
-        motion_controller.set_goal(position.transform(Coordinate2D(rotation)), 0);
+        motion_controller.set_goal(Coordinate2D(0.0, 10.0), 0);
+
+        if (motion_controller.phase() == MotionController::MotionPhase::ARRIVED) {
+            centeringStatus = CENTERED_Y_AXIS;
+        }
+    }
+
+    // Similar to the STARTING status
+    if (centeringStatus == CENTERED_Y_AXIS) {
+        // Set the goal position to a unit vector ahead of the robot
+        motion_controller.set_goal(position.transform(Coordinate2D(rotation).scale(10.0)), 0);
+
+        // We trust that our first alignment was good and we are at 0 radians rotation.
+        // Once both sensors pass we're good
+        if (front_left_light.held_value() && front_right_light.held_value()) {
+            position.x = 3;
+
+            motion_controller.set_goal(Coordinate2D(0.0, 0.0), M_PI / 2);
+            centeringStatus = NOT_CENTERING;
+        }
     }
 }
 
@@ -224,7 +266,7 @@ void Robot::drive(Coordinate2D goal_pos, double goal_angle) {
     motion_controller.set_goal(goal_pos, goal_angle);
 }
 
-void Robot::drive(float tiles, std::string id) {
+void Robot::drive(double tiles, std::string id) {
     const float TILE_SIZE_CM = 24 * 2.54;
     motion_controller.set_goal(Coordinate2D(rotation).scale(TILE_SIZE_CM), rotation);
 }
@@ -233,19 +275,20 @@ void Robot::drive(float tiles, std::string id) {
 void Robot::drive(std::tuple<double, double>& powers, std::string id) {
     left.power(std::get<0>(powers));
     right.power(std::get<1>(powers));
-
-    //we only send null as id during our test drive. The only other time this drive method is called will be
-    //when the server sends it, meaning it will have an id to send back.
-    if (id != "NULL") { sendActionSuccess(id); }
 }
 
 //turns the given amount in radians, CCW
-void Robot::turn(float angleRadians, std::string id) {
+void Robot::turn(double angleRadians, std::string id) {
+}
+
+void Robot::start() {
+    stopped = false;
+    
+    serial_printf(DebugLevel::DEBUG, "Bot Started!\n");
 }
 
 void Robot::stop() {
-    // Set the goal to where we are right now, so the robot doesn't move
-    motion_controller.set_goal(position, rotation);
+    stopped = true;
     
     serial_printf(DebugLevel::DEBUG, "Bot Stopped!\n");
 }

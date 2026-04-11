@@ -2,15 +2,8 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <WiFi.h>
 
-void connectServer();
-void disconnectServer();
-void reconnectServer();
-bool checkServerConnection();
-void initiateHandshake();
-
-JsonDocument acceptData();
-void sendPacket(JsonDocument& packet);
-void sendActionSuccess(std::string messageId);
-void sendActionFail(std::string messageId);
-void sendPingResponse();
+JsonDocument recv_packet(WiFiClient& client);
+void send_packet(JsonDocument packet);
+void send_ping();

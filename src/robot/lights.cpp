@@ -1,14 +1,14 @@
 #include <Arduino.h>
 
-#include "robot/control/lights.h"
+#include "robot/lights.h"
 
-#include "../../../env.h"
+#include "../../env.h"
 #include "utils/config.h"
 #include "utils/logging.h"
 
-static short LIGHT_RAW_VALUE_CUTOFF = 7600;
+static short LIGHT_RAW_VALUE_CUTOFF = 3000;
 bool is_light_value_on(short value) {
-    return value < LIGHT_RAW_VALUE_CUTOFF;
+    return value > LIGHT_RAW_VALUE_CUTOFF;
 }
 
 Light::Light(gpio_num_t _pin) {
@@ -16,13 +16,15 @@ Light::Light(gpio_num_t _pin) {
 }
 
 void Light::tick() {
-    short prev = _raw_value;
-
+    bool previous_value = _value;
     _changed_this_tick = false;
-    _raw_value = analogRead(pin);
-    _held_value = _held_value || is_light_value_on(_raw_value);
 
-    if (prev != _raw_value) {
+    _raw_value = analogRead(pin);
+    
+    _value = is_light_value_on(_raw_value);
+    _held_value = _value || _held_value;
+    
+    if (_value != previous_value) {
         _changed_this_tick = true;
         _last_changed_time = millis();
     }

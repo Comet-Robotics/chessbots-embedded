@@ -2,8 +2,13 @@
 
 #include "tests.h"
 
-#include "robot/control/robot.h"
+#include "robot/robot.h"
 #include "utils/geometry.h"
+
+// Turns off the motion controller on the robot
+void sleepy_test(Robot& r) {
+    r.stop();
+}
 
 // Test the distance PID controller
 void line_test(Robot& r) {

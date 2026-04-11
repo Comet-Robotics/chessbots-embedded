@@ -1,4 +1,7 @@
-#include "robot/control/robot.h"
+#include "robot/robot.h"
+
+// Turns off the motors, so we can easily read data
+void sleepy_test(Robot& r);
 
 // Moves to 0 -> 2PI -> 0 -> 4PI -> 0 on a clock to test angular PID
 void circle_test(Robot& r);

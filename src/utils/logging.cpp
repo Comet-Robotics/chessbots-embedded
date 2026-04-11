@@ -3,7 +3,6 @@
 
 #include "../env.h"
 #include "utils/logging.h"
-#include "utils/status.h"
 
 // Prints a value or message through Serial. (The console)
 // ln means it sends a new newline character

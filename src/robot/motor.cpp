@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "robot/control/motor.h"
+#include "robot/motor.h"
 
 #include "utils/config.h"
 #include "utils/functions.h"
@@ -81,7 +81,7 @@ double Motor::tick_dist() {
 // Takes in a power between [0, 1]
 // We use this to change a double power between 0-1 to an int duty cycle between 0-4096
 int power_to_duty(double power) {
-    int value = fmap(power, 0.0, 1.0, 0.0, 4096);
+    int value = fmap(power, 0.0, 1.0, 0.0, 1024);
     serial_printf(DebugLevel::RIDICULOUS, "Mapped Duty: %d\n", value);
 
     return value;

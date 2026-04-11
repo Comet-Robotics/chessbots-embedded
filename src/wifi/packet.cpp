@@ -1,108 +1,98 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <esp_mac.h>
+#include <string>
 
 #include "wifi/packet.h"
 
-#include "robot/control/robot.h"
+#include "robot/robot.h"
 #include "utils/config.h"
 #include "utils/functions.h"
 #include "utils/logging.h"
-#include "utils/status.h"
 #include "wifi/connection.h"
 
-// These are the various different supported message types that can be sent over TCP
-const char* CLIENT_HELLO = "CLIENT_HELLO";
-const char* SERVER_HELLO = "SERVER_HELLO";
-const char* PING_SEND = "PING_SEND";
-const char* PING_RESPONSE = "PING_RESPONSE";
-const char* QUERY_VAR = "QUERY_VAR";
-const char* QUERY_RESPONSE = "QUERY_RESPONSE";
-const char* SET_VAR = "SET_VAR";
-const char* TURN_BY_ANGLE = "TURN_BY_ANGLE";
-const char* DRIVE_TILES = "DRIVE_TILES";
-const char* DRIVE_TICKS = "DRIVE_TICKS";
-const char* ACTION_SUCCESS = "ACTION_SUCCESS";
-const char* ACTION_FAIL = "ACTION_FAIL";
-const char* DRIVE_TANK = "DRIVE_TANK";
-const char* ESTOP = "ESTOP";
-const char* CUBIC = "DRIVE_CUBIC_SPLINE";
-const char* QUADRATIC = "DRIVE_QUADRATIC_SPLINE";
-const char* SPIN_RADIANS = "SPIN_RADIANS";
-const char* BS_MOVE = "BS_MOVE";
+PacketType parse_packet_type(std::string type) {
+    if (type == "CLIENT_HELLO") {
+        return CLIENT_HELLO;
+    }
+    if (type == "SERVER_HELLO") {
+        return SERVER_HELLO;
+    }
+    if (type == "PING_SEND") {
+        return PING_SEND;
+    }
+    if (type == "PING_RESPONSE") {
+        return PING_RESPONSE;
+    }
+    if (type == "TURN_BY_ANGLE") {
+        return TURN_BY_ANGLE;
+    }
+    if (type == "DRIVE_TILES") {
+        return DRIVE_TILES;
+    }
+    if (type == "DRIVE_TICKS") {
+        return DRIVE_TICKS;
+    }
+    if (type == "ACTION_SUCCESS") {
+        return ACTION_SUCCESS;
+    }
+    if (type == "ACTION_FAIL") {
+        return ACTION_FAIL;
+    }
+    if (type == "DRIVE_TANK") {
+        return DRIVE_TANK;
+    }
+    if (type == "ESTOP") {
+        return ESTOP;
+    }
+    if (type == "SPIN_RADIANS") {
+        return SPIN_RADIANS;
+    }
+    if (type == "BS_MOVE") {
+        return BS_MOVE;
+    }
+
+    return ERROR;
+}
 
 // Takes a packet a does specific things based on the type
-void handlePacket(Robot& r, JsonDocument packet) {
-    // Sadly a switch case can't be used due to the packet type being a string.
-    // We do this to allow the packets to be more readable when serial_printf(DebugLevel::ged
-    if (packet["type"] == SERVER_HELLO) {
+bool handle_packet(Robot& r, JsonDocument packet) {
+    ASSERT_FIELD(packet, "type", const char *)
+
+    PacketType type = parse_packet_type(packet["type"].as<std::string>());
+    if (type == SERVER_HELLO) {
         // When we initiate a handshake, the server sends a handshake back. This server handshake
         // contains any variable that should be changed in this bot's config
+        ASSERT_FIELD(packet, "config", JsonObject)
+
         setConfig(packet["config"].as<JsonObject>());
-    } else if (packet["type"] == DRIVE_TANK) {
-        // This is received when the bot is being manually controlled via the debug page
-        // r.drive(packet["left"], packet["right"], packet["packetId"]);
-    } else if (packet["type"] == DRIVE_TICKS){
-        r.driveTicks(packet["tickDistance"], packet["packetId"]);
-    } else if (packet["type"] == ESTOP) {
+    } else if (type == DRIVE_TANK) {
+        // Manual control of the robot
+
+        ASSERT_FIELD(packet, "left", double)
+        ASSERT_FIELD(packet, "left", double)
+        ASSERT_FIELD(packet, "packetId", const char *)
+
+        std::tuple<double, double> power = std::make_tuple(
+            packet["left"].as<double>(), packet["right"].as<double>()
+        );
+
+        r.drive(power, packet["packetId"].as<std::string>());
+    } else if (type == ESTOP) {
         r.stop();
-    } else if (packet["type"] == CUBIC) {
-        // Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
-        // Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
-        // Point controlPositionA = {(float)packet["controlPositionA"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionA"]["y"]*TILES_TO_TICKS};
-        // Point controlPositionB = {(float)packet["controlPositionB"]["x"]*TILES_TO_TICKS, (float)packet["controlPositionB"]["y"]*TILES_TO_TICKS};
-        // danceMonkeyCubic(packet["packetId"], startPosition, controlPositionA, controlPositionB, endPosition, packet["timeDeltaMs"]);
-    } else if (packet["type"] == QUADRATIC) {
-        // serial_printf(DebugLevel::("I have arrived!! at Quadratic", 3);
-        // Point startPosition = {(float)packet["startPosition"]["x"]*TILES_TO_TICKS, (float)packet["startPosition"]["y"]*TILES_TO_TICKS};
-        // Point endPosition = {(float)packet["endPosition"]["x"]*TILES_TO_TICKS, (float)packet["endPosition"]["y"]*TILES_TO_TICKS};
-        // Point controlPosition = {(float)packet["controlPosition"]["x"]*TILES_TO_TICKS, (float)packet["controlPosition"]["y"]*TILES_TO_TICKS};
-        // danceMonkeyQuadratic(packet["packetId"], startPosition, controlPosition, endPosition, packet["timeDeltaMs"]);
-    } else if (packet["type"] == SPIN_RADIANS) {
-        // serial_printf(DebugLevel::("Going to spin!", 3);
-        // int offsetTicks = radiansToTicks((float)packet["radians"]);
-        // startCustomMotionProfileTimer(-offsetTicks, offsetTicks, (double)packet["timeDeltaMs"]/1000, packet["packetId"]);
-    } else if (packet["type"] == TURN_BY_ANGLE) {
-        r.turn(packet["deltaHeadingRadians"], packet["packetId"]);
-    } else if (packet["type"] == DRIVE_TILES) {
-        // r.drive(packet["tiles"], packet["packetId"]);
-    } else if (packet["type"] == PING_SEND) {
-        sendPingResponse();
-    } 
-}
+    } else if (type == TURN_BY_ANGLE) {
+        ASSERT_FIELD(packet, "deltaHeadingRadians", double)
+        ASSERT_FIELD(packet, "packetId", const char *)
 
-enum ResponsePacketType {
-    Ping,
-    Hello,
-    Success,
-    Fail,
-};
+        r.turn(packet["deltaHeadingRadians"].as<double>(), packet["packetId"]);
+    } else if (type == DRIVE_TILES) {
+        ASSERT_FIELD(packet, "tiles", double)
+        ASSERT_FIELD(packet, "packetId", const char *)
 
-// This creates the handshake packet sent to the server when this bot connects to it
-void constructHelloPacket(JsonDocument& packet) {
-    packet["type"] = CLIENT_HELLO;
-    uint8_t mac[8];
-    // Gets the mac address of this esp
-    esp_efuse_mac_get_default(mac);
-    // Converts the mac address into the form the server is expecting
-    std::string stringMac = unint8ArrayToHexString(mac, 6);
-    packet["macAddress"] = stringMac;
-}
+        r.drive(packet["tiles"].as<double>(), packet["packetId"].as<std::string>());
+    } else if (type == PING_SEND) {
+        send_ping();
+    }
 
-//Note that the assigning of the messageId to the packetId happens in all the methods. One way to better
-//streamline this might be to make a general method "constructPacket" that just handles that. For now I
-//thought it wouldn't be necessary. As we get more types of messages this may be needed.
-void constructSuccessPacket(JsonDocument& packet, std::string messageId) {
-    packet["type"] = ACTION_SUCCESS;
-    packet["packetId"] = messageId;
-}
-
-void constructFailPacket(JsonDocument& packet, std::string messageId) {
-    packet["type"] = ACTION_FAIL;
-    packet["packetId"] = messageId;
-}
-
-void constructPingPacket(JsonDocument& packet) {
-    packet["type"] = PING_RESPONSE;
-    packet["batteryLevel"] = Robot::batteryLevel();
+    return false;
 }
