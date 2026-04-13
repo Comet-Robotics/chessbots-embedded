@@ -78,9 +78,7 @@ void handlePacket(JsonDocument packet) {
         drive(packet["tiles"], packet["packetId"]);
     } else if (packet["type"] == PING_SEND) {
         sendPingResponse();
-    } else if (packet["type"] == BS_MOVE){
-        newSetPointBS((float)packet["distance"]);
-    }
+    } 
 }
 
 // This creates the handshake packet sent to the server when this bot connects to it
