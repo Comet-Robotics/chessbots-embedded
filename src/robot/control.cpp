@@ -276,10 +276,10 @@ void setupBot() {
         timerInterval(8000, &testEncoderPID);
     }
 
-    if (DO_BS_TEST) {
-        bsSetTest();
-        timerInterval(10000, &bsSetTest);
-    }
+    // if (DO_BS_TEST) {
+    //     bsSetTest();
+    //     timerInterval(10000, &bsSetTest);
+    // }
 
     if (DO_TURN_TEST) {
         angle = 90;
@@ -330,135 +330,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
     if (DO_ENCODER_TEST) encoderLoop();
 
-    if (DO_PID) {
-        double loopDelaySeconds = ((double) loopDelayMs) / 1000;
 
-        int currentPositionEncoderA = leftEncoder;
-        int currentPositionEncoderB = rightEncoder;
-        double currentVelocityA = (currentPositionEncoderA - prevPositionA) / loopDelaySeconds;
-        double currentVelocityB = (currentPositionEncoderB - prevPositionB) / loopDelaySeconds;
-
-        profileA.currentPosition = currentPositionEncoderA;
-        profileA.currentVelocity = currentVelocityA;
-        profileB.currentPosition = currentPositionEncoderB;
-        profileB.currentVelocity = currentVelocityB;
-
-        // Generate trapezoidal profile setpoints
-        if (getLeftMotorControl().mode == POSITION) {
-            leftSetpoint = leftProfile.calculate(loopDelaySeconds, 
-                                                TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
-                                                TrapezoidProfile::State(getLeftMotorControl().value, 0.0));
-        } else {
-            leftSetpoint = TrapezoidProfile::State(currentPositionEncoderA, getLeftMotorControl().value);
-        }
-        if (getRightMotorControl().mode == POSITION) {
-            rightSetpoint = rightProfile.calculate(loopDelaySeconds, 
-                                                TrapezoidProfile::State(profileB.currentPosition, profileB.currentVelocity),
-                                                TrapezoidProfile::State(getRightMotorControl().value, 0.0));
-        } else {
-            rightSetpoint = TrapezoidProfile::State(currentPositionEncoderB, getRightMotorControl().value);
-        }
-
-        prevPositionA = currentPositionEncoderA;
-        prevPositionB = currentPositionEncoderB;
-
-        // double currentHeading = magnet->readDegrees();
-        // double currentHeading = getHeadingTarget();
-        // double controllerOutput = headingController.Compute(headingTarget, currentHeading, loopDelaySeconds);
-        double controllerOutput = 0; // TODO fix magnet calibration, then re-enable heading correction
-        double velocityOffsetFromHeading = controllerOutput * THEORETICAL_MAX_VELOCITY_TPS * MAGNET_CCW_IS_POSITIVE;
-        // if error is positive, then assume we need to turn CCW, so slow left and speed up right
-        double desiredVelocityLeft = leftSetpoint.velocity - velocityOffsetFromHeading;
-        double desiredVelocityRight = rightSetpoint.velocity + velocityOffsetFromHeading;
-
-        double leftFeedForward = desiredVelocityLeft / THEORETICAL_MAX_VELOCITY_TPS;
-        double rightFeedForward = desiredVelocityRight / THEORETICAL_MAX_VELOCITY_TPS;
-
-        double leftMotorPower = encoderAVelocityController.Compute(desiredVelocityLeft, currentVelocityA, loopDelaySeconds) + leftFeedForward;
-        double rightMotorPower = encoderBVelocityController.Compute(desiredVelocityRight, currentVelocityB, loopDelaySeconds) + rightFeedForward;
-
-        if (leftMotorPower > 1) leftMotorPower = 1;
-        if (leftMotorPower < -1) leftMotorPower = -1;
-        if (rightMotorPower > 1) rightMotorPower = 1;
-        if (rightMotorPower < -1) rightMotorPower = -1;
-
-        //using macros this code isn't uploaded if not proper loging levels
-        #if LOGGING_LEVEL >= 3
-        
-        if(framesUntilPrint == 0)
-        {
-            // serialLog("Current encoder A pos: ", 2);
-            // serialLog(currentPositionEncoderA, 2);
-            // serialLog(", ", 2);
-            // serialLog("Current encoder B pos: ", 2);
-            // serialLog(currentPositionEncoderB, 2);
-            // serialLog(", ", 2);
-            // serialLog("Desired encoder A speed: ", 2);
-            // serialLog(leftSetpoint.velocity, 2);
-            // serialLog(", ", 2);
-            // serialLog("Desired encoder B speed: ", 2);
-            // serialLog(rightSetpoint.velocity, 2);
-            // serialLog(", ", 2);
-            // serialLog("current encoder a speed: ", 2);
-            // serialLog(currentVelocityA, 2);
-            // serialLog(", ", 2);
-            // serialLog("current encoder b speed: ", 2);
-            // serialLog(currentVelocityB, 2);
-            // serialLog(", ", 2);
-            // serialLog("current left motor power: ", 2);
-            // serialLog(leftMotorPower, 2);
-            // serialLog(", ", 2);
-            // serialLog("current right motor power: ", 2);
-            // serialLog(rightMotorPower, 2);
-            // serialLog(", ", 2);
-            // serialLog("current encoder a target: ", 2);
-            // serialLog(leftMotorControl.mode == POSITION ? leftMotorControl.value : 0, 2);
-            // serialLog(", ", 2);
-            // serialLog("current encoder b target: ", 2);
-            // serialLog(rightMotorControl.mode == POSITION ? rightMotorControl.value : 0, 2); // TODO log results of trapezoidal profile into csv (on motor value graph)
-            // serialLog(", ", 2);
-            // serialLog("is robot pid at target? ", 2);
-            // serialLog(isRobotPidAtTarget(), 2);
-            // serialLog(", ", 2);
-            // serialLogln(loopDelaySeconds, 2);
-        }
-    
-        // serialLog(leftSetpoint.velocity, 3);
-        // serialLog(",", 3);
-        // serialLog(currentVelocityA, 3);
-        // serialLog(",", 3);
-        // serialLog(leftSetpoint.velocity - currentVelocityA, 3);
-        // serialLog(",", 3);
-        // serialLog(rightSetpoint.velocity, 3);
-        // serialLog(",", 3);
-        // serialLog(currentVelocityB, 3);
-        // serialLog(",", 3);
-        // serialLog(rightSetpoint.velocity - currentVelocityB, 3);
-        // serialLog(",", 3);
-        // // test magnet data
-        // serialLog(velocityOffsetFromHeading, 3);
-        // serialLog(",", 3);
-        // serialLog(headingTarget, 3);
-        // serialLog(",", 3);
-        // serialLog(currentHeading, 3);
-        // serialLogln("", 3);
-
-        #endif
-
-        drive(
-            leftMotorPower, // leftMotorPower,
-            rightMotorPower, // rightMotorPower,
-            "NULL"
-        );
-
-        // serialLogln(leftMotorPower, 3);
-
-        // turn(M_PI / 2, "NULL");
-    }
-    // serialLogln(readLeftEncoder(),2);
-    // serialLogln(readRightEncoder(),2);
-
-    if (DO_BS){
+    if (DO_PID){
         if(runningBS){
 
             double trackWidth = TRACK_WIDTH_INCHES/39.37;
@@ -841,11 +714,11 @@ void driveTicks(int tickDistance, std::string id)
 void drive(float leftPower, float rightPower, std::string id) {
     if (!getStoppedStatus()) {
         // TODO: maybe move to motor.cpp?
-        if (leftPower < MIN_MOTOR_POWER && leftPower > -MIN_MOTOR_POWER) {
-            leftPower = 0;
-        } if (rightPower < MIN_MOTOR_POWER && rightPower > -MIN_MOTOR_POWER) {
-            rightPower = 0;
-        }
+        // if (leftPower < MIN_MOTOR_POWER && leftPower > -MIN_MOTOR_POWER) {
+        //     leftPower = 0;
+        // } if (rightPower < MIN_MOTOR_POWER && rightPower > -MIN_MOTOR_POWER) {
+        //     rightPower = 0;
+        // }
 
         setLeftPower(leftPower);
         setRightPower(rightPower);
@@ -973,7 +846,7 @@ void startMotorAndEncoderTest() {
 
 // Tests the motors. This turns the motors on.
 void startDriveTest() {
-    drive(0.5f, 0.5f, "NULL");
+    drive(0.1f, 0.1f, "NULL");
     //timerDelay(2000, &driveTestOff);
 }
 

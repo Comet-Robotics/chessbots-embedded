@@ -48,7 +48,7 @@ void setup() {
 
     previousTime = millis() - loopDelayMilliseconds;
 
-    // newSetPointBS(1);
+    newSetPointBS(1);
 }
 
 // After setup gets run, loop is run over and over as fast ass possible
