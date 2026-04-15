@@ -193,7 +193,7 @@ void updateCritRange()
 void testTurn()
 {
     resetSpeed();
-    runningBS = true;
+    runningPID = true;
     turning = true;
     
     serialLog("Changing destination angle to ", 2);
@@ -213,9 +213,8 @@ void testTurn()
     //compute the new crit range now that target and start encoder have changed
     updateCritRange();
     // setHeadingTarget(0);
-    runningBS = true;
+    runningPID = true;
     for (int x = 0; x < 50; x++) average[x] = 100;
-    for (int x = 0; x < 7; x++) data[x] = "";
 
     // angle += 30;
 }
@@ -564,8 +563,7 @@ void determineNextAction()
     else if(forwardAligning)
     {
         //if going forward, store the current encoder value so we can see the full encoder length of the tiles
-        encoderAHalfwayDist = profileX.currentPosition;
-        encoderBHalfwayDist = profileY.currentPosition;
+        encoderHalfwayDist = profileX.currentPosition;
         //swap to going back
         forwardAligning = !forwardAligning;
         //set that new drive
@@ -590,11 +588,10 @@ void determineNextAction()
         //since we always go forward first and then backwards, the current value of encoderHalfwayDist > currentEncoder always
         //what we're doing is currently, "encoderAHalfwayDist" just stores the value of the other edge in encoder ticks, now we're
         //finding the difference between them. And of course divide by 2 as want half that distance
-        encoderAHalfwayDist = (encoderAHalfwayDist - profileX.currentPosition) / 2;
-        encoderBHalfwayDist = (encoderBHalfwayDist - profileY.currentPosition) / 2;
+        encoderHalfwayDist = (encoderHalfwayDist - profileX.currentPosition) / 2;
 
         //decide that we take average of encoder A and B's distances, since ideally we want both to travel the same amount
-        newSetPointBS(encoderHalfwayDist * TICK_TO_METERS);
+        driveTicks(encoderHalfwayDist, "NULL");
         centeringStatus = 'M';
         //now we moving to da center
         movingCenter = true;
@@ -637,7 +634,7 @@ void updateCentering()
         }
         case 'M':
             //check if we're the moving we're doing is finished. If so, determine what we do next.
-            if(!runningBS)
+            if(!runningPID)
             {
                 determineNextAction();
             }
@@ -650,19 +647,19 @@ bool checkMoveFinished()
 {
     //first, checks like "fabs(profileX.currentVelocity) < 2" see if we're slowing down or not.
 
-//     //then, something like "fabs(currentEncoderA - encoderATarget) < criticalRangeA" is making sure
-//     //the reason our speed is slow is specifically because we're slowing down and not because we're
-//     //beginning to speed up.
-//     //do this by seeing if the distance remaining is less than the midpoint distance from start to end, as by then we're at our max speed.
+    //then, something like "fabs(currentEncoderA - encoderATarget) < criticalRangeA" is making sure
+    //the reason our speed is slow is specifically because we're slowing down and not because we're
+    //beginning to speed up.
+    //do this by seeing if the distance remaining is less than the midpoint distance from start to end, as by then we're at our max speed.
 
-    bool encoderAChecks = fabs(profileX.currentPosition - profileX.targetPosition) < profileX.criticalRange && fabs(profileX.currentVelocity) < 3;
-    bool encoderBChecks = fabs(profileY.currentPosition - profileY.targetPosition) < profileY.criticalRange  && fabs(profileY.currentVelocity) < 3;
+    bool encoderChecks = fabs(profileX.currentPosition - profileX.targetPosition) < profileX.criticalRange && fabs(profileX.currentVelocity) < 3;
+    bool encoderYChecks = fabs(profileY.currentPosition - profileY.targetPosition) < profileY.criticalRange  && fabs(profileY.currentVelocity) < 3;
 
-//     //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, and means we should declare the movement finished.
-//     bool timerCheck = millis() - timeSinceTurn > 8000;
+    //check if we've been stalling too long, for 8 seconds. If we're over time, that's bad, and means we should declare the movement finished.
+    bool timerCheck = millis() - timeSinceTurn > 8000;
     
-//     return ((encoderAChecks && encoderBChecks) || timerCheck);
-// }
+    return (encoderChecks || timerCheck);
+}
 
 //like the one above but just seeing if we can keep moving or not
 bool checkIfCanUpdateMovement()
@@ -670,7 +667,8 @@ bool checkIfCanUpdateMovement()
     return fabs(profileX.currentPosition - profileX.targetPosition) < profileX.criticalRange && fabs(profileY.currentPosition - profileY.targetPosition) < profileY.criticalRange;
 }
 
-void setXControl(ControlSetting control) {
+void setXControl(ControlSetting control) 
+{
     leftMotorControl = control;
     xSetpoint = TrapezoidProfile::State(readLeftEncoder(), profileX.currentVelocity);
     if (control.mode == POSITION)
