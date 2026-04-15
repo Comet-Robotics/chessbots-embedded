@@ -32,6 +32,7 @@ enum PacketType : uint8_t {
 // If it doesn't contain the correct field, returns false
 #define ASSERT_FIELD(packet, key, _type) \
   if (!packet[key].is<_type>()) { \
+    serial_printf(DebugLevel::NONE, "Received a packet that did not contain field %s\n", key); \
     return false; \
   }
 

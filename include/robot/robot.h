@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <optional>
 
 #include "robot/lights.h"
 #include "robot/motor.h"
@@ -8,20 +9,11 @@
 #include "utils/config.h"
 #include "utils/geometry.h"
 
-enum OperatingMode
+enum DriveType
 {
-    POSITION,
-    VELOCITY
-};
-
-enum DriveStatus {
-    ONGOING,
-
-    // The robot has reached its destination and is now reversing
-    REACHED_REVERSING,
-
-    // The robot has reached its destination, and reversing is not necessary
-    REACHED
+    STOPPED,
+    MANUAL,
+    MOTION_CONTROL,
 };
 
 enum CenteringStatus {
@@ -54,12 +46,14 @@ class MotionController {
         MotionController();
 
         MotionPhase phase();
-        void set_goal(Coordinate2D goal_destination, double goal_angle);
+        void set_goal(Coordinate2D goal_destination, double goal_angle, std::optional<std::string> id);
         std::tuple<double, double> update_speeds(Coordinate2D position, double angle, double dt);
         
         void print_status();
         void reset();
     private:
+        std::optional<std::string> actionID;
+
         PIDController DistVelocityController; 
         PIDController AVelocityController;
 
@@ -74,6 +68,7 @@ class Robot {
         Robot();
 
         static int batteryLevel();
+        MotionController::MotionPhase motion_status();
 
         // Runs all the necessary processing for each tick of the global event loop
         void tick(uint32_t frame, uint32_t delay);
@@ -82,16 +77,11 @@ class Robot {
         void drive(double tiles, std::string id);
         void drive(Coordinate2D goal_pos, double goal_angle);
         void drive(std::tuple<double, double>& powers, std::string id);
-        void driveTicks(int tickDistance, std::string id);
-        enum DriveStatus driveUntilNewTile();
 
         void turn(double angleRadians, std::string id);
         
         void start();
         void stop();
-
-        void test();
-    
     private:
         // Components
         Motor left;
@@ -103,11 +93,11 @@ class Robot {
         Light back_right_light;
 
         // State
-        bool stopped;
         double rotation;
         Coordinate2D position;
         MotionController motion_controller;
         
+        DriveType drive_mode;
         CenteringStatus centeringStatus;
         
         void center_tick(uint32_t delay);

@@ -22,6 +22,10 @@ void Motor::tick() {
     raw_enc_value = raw_dist();
 }
 
+int Motor::duty() {
+    return power_to_duty(_power);
+}
+
 // Returns the current power of the motor
 double Motor::power() {
     if (inverted) {
@@ -40,21 +44,15 @@ void Motor::power(double __power) {
     }
 
     _power = __power;
-
-    if (abs(_power) < MIN_MOTOR_POWER) {
-        _power = 0;
-    }
-
     
+    analogWriteResolution(12);
     if (_power > 0) {
-        analogWrite(pin_b, 0);
         analogWrite(pin_a, power_to_duty(_power));
+        analogWrite(pin_b, 0);
     } else {
         analogWrite(pin_a, 0);
-        analogWrite(pin_b, power_to_duty(-_power));
+        analogWrite(pin_b, power_to_duty(_power));
     }
-
-    serial_printf(DebugLevel::RIDICULOUS, "Motor Power: %f\n", _power);
 }
 
 void Motor::encoder_reset() {
@@ -81,8 +79,6 @@ double Motor::tick_dist() {
 // Takes in a power between [0, 1]
 // We use this to change a double power between 0-1 to an int duty cycle between 0-4096
 int power_to_duty(double power) {
-    int value = fmap(power, 0.0, 1.0, 0.0, 1024);
-    serial_printf(DebugLevel::RIDICULOUS, "Mapped Duty: %d\n", value);
-
-    return value;
+    power = abs(power);
+    return fmap(power, 0.0, 1.0, 0.0, 4096.0);
 }

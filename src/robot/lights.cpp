@@ -6,7 +6,7 @@
 #include "utils/config.h"
 #include "utils/logging.h"
 
-static short LIGHT_RAW_VALUE_CUTOFF = 3000;
+static short LIGHT_RAW_VALUE_CUTOFF = 5000;
 bool is_light_value_on(short value) {
     return value > LIGHT_RAW_VALUE_CUTOFF;
 }

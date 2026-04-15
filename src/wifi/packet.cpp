@@ -60,12 +60,19 @@ bool handle_packet(Robot& r, JsonDocument packet) {
     ASSERT_FIELD(packet, "type", const char *)
 
     PacketType type = parse_packet_type(packet["type"].as<std::string>());
+    serial_printf(DebugLevel::INFO, "Received a packet of type %d\n", type);
+
+    if (type == ERROR) {
+        return false;
+    }
+
     if (type == SERVER_HELLO) {
         // When we initiate a handshake, the server sends a handshake back. This server handshake
         // contains any variable that should be changed in this bot's config
         ASSERT_FIELD(packet, "config", JsonObject)
 
         setConfig(packet["config"].as<JsonObject>());
+
     } else if (type == DRIVE_TANK) {
         // Manual control of the robot
 
@@ -78,21 +85,30 @@ bool handle_packet(Robot& r, JsonDocument packet) {
         );
 
         r.drive(power, packet["packetId"].as<std::string>());
+
     } else if (type == ESTOP) {
         r.stop();
+
     } else if (type == TURN_BY_ANGLE) {
         ASSERT_FIELD(packet, "deltaHeadingRadians", double)
         ASSERT_FIELD(packet, "packetId", const char *)
 
-        r.turn(packet["deltaHeadingRadians"].as<double>(), packet["packetId"]);
+        double delta_angle = packet["deltaHeadingRadians"].as<double>();
+        const char *id = packet["packetId"];
+
+        r.turn(delta_angle, packet["packetId"].as<std::string>());
+
     } else if (type == DRIVE_TILES) {
-        ASSERT_FIELD(packet, "tiles", double)
+        ASSERT_FIELD(packet, "tileDistance", double)
         ASSERT_FIELD(packet, "packetId", const char *)
 
-        r.drive(packet["tiles"].as<double>(), packet["packetId"].as<std::string>());
+        double tiles = packet["tileDistance"].as<double>();
+
+        r.drive(tiles, packet["packetId"].as<std::string>());
+
     } else if (type == PING_SEND) {
         send_ping();
     }
 
-    return false;
+    return true;
 }

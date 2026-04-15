@@ -15,9 +15,12 @@ class Motor {
 
         void tick();
         
+
+        int duty();
+        double power();
+
         // Sets the motor power
         // power is a double between [-1, 1]
-        double power();
         void power(double power);
         void encoder_reset();
 

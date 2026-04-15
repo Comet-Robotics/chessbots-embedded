@@ -22,7 +22,3 @@ void serial_printf(enum DebugLevel level, const char* fmt, ...) {
 
     Serial.print(buf);
 }
-
-void serial_clear() {
-    serial_printf(DebugLevel::NONE, "\033[3J\033[H\033[2J");
-}

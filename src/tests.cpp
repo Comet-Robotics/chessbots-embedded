@@ -10,6 +10,14 @@ void sleepy_test(Robot& r) {
     r.stop();
 }
 
+void center_test(Robot& r) {
+    unsigned long time_seconds = millis() / 1000;
+
+    if (time_seconds > 10 && time_seconds < 12) {
+        r.center();
+    }
+}
+
 // Test the distance PID controller
 void line_test(Robot& r) {
     unsigned long time_seconds = millis() / 1000;
@@ -21,15 +29,7 @@ void line_test(Robot& r) {
         goal = Coordinate2D(100, 0);
     }
 
-    if (time_seconds > 10) {
-        goal = Coordinate2D(100, 100);
-    }
-
     if (time_seconds > 15) {
-        goal = Coordinate2D(0, 100);
-    }
-
-    if (time_seconds > 20) {
         goal = Coordinate2D(0, 0);
     }
 
@@ -67,21 +67,31 @@ void square_test(Robot& r) {
     unsigned long time_seconds = millis() / 1000;
 
     Coordinate2D goal;
-    double rotation = 0;
+    double rotation;
 
     if (time_seconds > 5) {
-        goal = Coordinate2D(100, 0);
-    }
-
-    if (time_seconds > 10) {
-        goal = Coordinate2D(100, 100);
-    }
-
-    if (time_seconds > 15) {
         goal = Coordinate2D(0, 100);
+        rotation = M_PI / 2;
     }
 
     if (time_seconds > 20) {
+        goal = Coordinate2D(0, 0);
+        rotation = 0;
+    }
+
+    if (time_seconds > 35) {
+        goal = Coordinate2D(100, 0);
+    }
+    
+    if (time_seconds > 50) {
+        goal = Coordinate2D(100, 100);
+    }
+
+    if (time_seconds > 65) {
+        goal = Coordinate2D(0, 100);
+    }
+
+    if (time_seconds > 80) {
         goal = Coordinate2D(0, 0);
     }
 
