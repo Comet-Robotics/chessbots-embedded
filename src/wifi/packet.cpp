@@ -75,7 +75,7 @@ void handlePacket(JsonDocument packet) {
     } else if (packet["type"] == TURN_BY_ANGLE) {
         turn(packet["deltaHeadingRadians"], packet["packetId"]);
     } else if (packet["type"] == DRIVE_TILES) {
-        drive(packet["tiles"], packet["packetId"]);
+        drive(packet["tileDistance"], packet["packetId"]);
     } else if (packet["type"] == PING_SEND) {
         sendPingResponse();
     } 
