@@ -40,6 +40,30 @@ PIDController XVelocityController(0.000009, 0.000035, 0.000000000001, -1, +1, 10
 PIDController YVelocityController(0.0000005, 0.000035, 0.000000000001, -1, +1, 10); 
 PIDController AVelocityController(0.000012, 0.00000, 0.0000000000000, -1, +1, 10); //angular velocity used for turns
 ContinuousPIDController headingController(0.21, 0.000001, 0.000000000001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
+typedef struct { 
+    bool isTurn;
+    double dist;
+    std::string id;
+ } Command;
+int point = -1;
+Command queue[5] = {};
+
+void pushQueue(Command command){
+    queue[point+1] = command;
+    point = point+1;
+    serialLog("length ",3);
+    serialLogln(point,3);
+}
+
+Command popQueue(){
+    Command temp = queue[0];
+    queue[0] = {};
+    for(int x = 1; x < point; x++){
+        queue[x-1]=queue[x];
+    }
+    point = point-1;
+    return temp;
+}
 
 //put this in manually for each bot. Dist between the two front encoders, or the two back encoders. In meters.
 const float lightDist = 0.07;
@@ -390,7 +414,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                 runningPID = true;
             }
         }
-        if(runningTurn){
+        else if(runningTurn){
 
 
             double lDist = (double)(readLeftEncoder()-prevPositionL)/TICKS_PER_ROTATION*2*PI;
@@ -427,11 +451,11 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             prevRotation = currentRot;
 
             double loopDelaySeconds = ((double) timeMs) / 1000;
-            profileA.currentPosition = currentRot*10 / TICK_TO_METERS;
-            profileA.currentVelocity = angleDist==0?0:angleDist*10 / TICK_TO_METERS /loopDelaySeconds;
+            profileA.currentPosition = currentRot*trackWidth*M_PI / TICK_TO_METERS;
+            profileA.currentVelocity = angleDist==0?0:angleDist*trackWidth*M_PI / TICK_TO_METERS /loopDelaySeconds;
             aSetpoint = aProfile.calculate(loopDelaySeconds, 
                                                     TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
-                                                    TrapezoidProfile::State(getHeadingTarget()*10/TICK_TO_METERS, 0.0));
+                                                    TrapezoidProfile::State(getHeadingTarget()*trackWidth*M_PI/TICK_TO_METERS, 0.0));
 
             double velocity = AVelocityController.Compute(aSetpoint.velocity, profileA.currentVelocity, loopDelaySeconds);
 
@@ -448,6 +472,8 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             serialLog(aSetpoint.velocity, 3);
             serialLog("vel ", 3);
             serialLog(velocity, 3);
+            serialLog("currentVel ", 3);
+            serialLog(profileA.currentVelocity, 3);
             serialLog(" lpower ", 3);
             serialLog(lMotorPower, 3);
             serialLog(" rpower ", 3);
@@ -476,6 +502,29 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
 
             } else {
                 runningTurn = true;
+            }
+        } else {
+            if(!getStoppedStatus() && point != -1){
+                Command next = popQueue();
+                serialLogln(next.dist,3);
+                resetSpeed();
+                if(next.isTurn){
+                    setXControl({POSITION, 0});
+                    setYControl({POSITION, 0});
+                    
+                    setHeadingTarget(next.dist*0.95);
+                    runningTurn = true;
+                    runningPID = false;
+                } else {
+                    setXControl({POSITION, (float)next.dist});
+                    setYControl({POSITION, 0});
+                    updateCritRange();
+                    setHeadingTarget(0);
+                    runningTurn = false;
+                    runningPID = true;
+                }
+                updateCritRange();
+                packetId = next.id;
             }
         }
     }
@@ -684,16 +733,7 @@ void drive(float tiles, std::string id) {
 //drives the given amount of ticks
 void driveTicks(int tickDistance, std::string id)
 {
-    if (!getStoppedStatus()) {
-        resetSpeed();
-        setXControl({POSITION, (float)tickDistance});
-        setYControl({POSITION, 0});
-        updateCritRange();
-        setHeadingTarget(0);
-        runningPID = true;
-        runningTurn = false;
-        packetId = id;
-    }
+    pushQueue({false, (double)tickDistance, id});
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
@@ -717,18 +757,7 @@ void drive(float leftPower, float rightPower, std::string id) {
 
 //turns the given amount in radians, CCW
 void turn(float angleRadians, std::string id) {
-
-    
-    serialLogln("Turning", 3);
-    serialLogln(angleRadians, 3);
-
-    setXControl({POSITION, 0});
-    setYControl({POSITION, 0});
-    updateCritRange();
-    setHeadingTarget(angleRadians*0.95);
-    runningTurn = true;
-    runningPID = false;
-    packetId = id;
+    pushQueue({true, angleRadians, id});
 }
 
 // Stops the bot in its tracks
