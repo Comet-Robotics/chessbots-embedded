@@ -9,9 +9,9 @@
 
 double PIDController::Compute(double setpoint, double actual_value, double dt) {
     // Calculate error
-    double error = setpoint - actual_value;
+    double error = this->getError(setpoint, actual_value);
 
-    if (abs(error) < 100) {
+    if (abs(error) < errorTolerance) {
         return 0;
     }
 

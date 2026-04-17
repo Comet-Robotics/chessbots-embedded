@@ -12,6 +12,7 @@ private:
     int startEncoderB;
     int prevEncA;
     int prevEncB;
+    unsigned long prevTime;
     float maxEncoderVelocity = 0;
     float prevEncVelA;
     float prevEncVelB;

@@ -19,14 +19,19 @@ struct ControlSetting
 
 static ControlSetting leftMotorControl;
 static ControlSetting rightMotorControl;
+static double headingTarget = 0.0;
 
+static MotionProfile profileX = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
+static MotionProfile profileY = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 static MotionProfile profileA = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
-static MotionProfile profileB = {THEORETICAL_MAX_VELOCITY_TPS, THEORETICAL_MAX_ACCELERATION_TPSPS, 0, 0, 0, 0, 75.0}; // maxVelocity, maxAcceleration, currentPosition, currentVelocity, targetPosition, targetVelocity
 
-void setLeftMotorControl(ControlSetting control);
-void setRightMotorControl(ControlSetting control);
+
+void setXControl(ControlSetting control);
+void setYControl(ControlSetting control);
+void setHeadingTarget(double target);
 ControlSetting getLeftMotorControl();
 ControlSetting getRightMotorControl();
+double getHeadingTarget();
 
 void setupBot();
 void drive(float tiles, std::string id);
@@ -37,7 +42,7 @@ void stop();
 void sendPacketOnPidComplete(std::string id);
 void readLight(int loopDelayMs);
 void startMotorAndEncoderTest();
-bool checkMoveFinished();
+// bool checkMoveFinished();
 void startDriveTest();
 void startCentering();
 bool checkIfCanUpdateMovement();
@@ -51,5 +56,4 @@ void updateCritRange();
 void controlLoop(int loopDelayMs, int8_t framesUntilPrint);
 void updateCentering();
 void updateToNextDistance();
-
 #endif

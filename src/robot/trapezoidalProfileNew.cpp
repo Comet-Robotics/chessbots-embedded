@@ -1,4 +1,7 @@
 #include "robot/trapezoidalProfileNew.h"
+#include "utils/config.h"
+#include "utils/logging.h"
+#include <cmath>
 
 TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &current, const State &goal)
 {
@@ -6,15 +9,19 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
     State m_current = direct(current, m_direction);
     State goalDir = direct(goal, m_direction);
 
-    if (std::abs(m_current.velocity) > m_constraints.maxVelocity)
+    if (m_current.velocity > m_constraints.maxVelocity)
     {
-        m_current.velocity = std::copysign(m_constraints.maxVelocity, m_current.velocity);
+        m_current.velocity = m_constraints.maxVelocity;
+    }
+    else if (m_current.velocity < -m_constraints.maxVelocity)
+    {
+        m_current.velocity = -m_constraints.maxVelocity;
     }
 
     double cutoffBegin = m_current.velocity / m_constraints.maxAcceleration;
     double cutoffDistBegin = cutoffBegin * cutoffBegin * m_constraints.maxAcceleration / 2.0;
 
-    double cutoffEnd = goalDir.velocity / m_constraints.maxAcceleration;
+    double cutoffEnd = max((goalDir.velocity - MIN_MOTOR_VELOCITY_TPS), 0.0)  / m_constraints.maxAcceleration;
     double cutoffDistEnd = cutoffEnd * cutoffEnd * m_constraints.maxAcceleration / 2.0;
 
     double fullTrapezoidDist = cutoffDistBegin + (goalDir.position - m_current.position) + cutoffDistEnd;
@@ -28,15 +35,53 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         fullSpeedDist = 0;
     }
 
+    State result(m_current.position, m_current.velocity);
+
+    double dist = fabs(m_current.position - goalDir.position);
+
+    double accelDist = (pow(m_constraints.maxVelocity,2) - pow(m_current.velocity,2)) / (2*m_constraints.maxAcceleration); //dist to/from max vel
+    double fastDist = dist - 2*accelDist;
+
+    if((m_current.position < accelDist) && (dist > 2*accelDist)){
+        result.velocity += t * m_constraints.maxAcceleration;
+       
+    }
+
+    else if(dist > accelDist+100){
+        result.velocity = m_constraints.maxVelocity;
+        serialLogln(result.velocity,3);
+    }
+    else if (dist > 100){
+        result.velocity = m_current.velocity - min(sqrt(m_constraints.maxAcceleration*fabs(accelDist-dist))*.250,m_current.velocity*0.99);
+        serialLog("slowing ", 3);
+        serialLogln(result.velocity,3);
+    }
+    else
+    {
+        result = goalDir;
+    }
+
+    /*
     double m_endAccel = accelerationTime - cutoffBegin;
     double m_endFullSpeed = m_endAccel + fullSpeedDist / m_constraints.maxVelocity;
     double m_endDecel = m_endFullSpeed + accelerationTime - cutoffEnd;
     State result(m_current.position, m_current.velocity);
-
+    
     if (t < m_endAccel)
     {
         result.velocity += t * m_constraints.maxAcceleration;
+        if (abs(result.velocity) < MIN_MOTOR_VELOCITY_TPS) {
+            result.velocity = MIN_MOTOR_VELOCITY_TPS;
+            serialLogln("UH OH", 2);
+        }
+        else
+        {
+            serialLog("current velocity is: ", 2);
+            serialLogln(result.velocity, 2);
+        }
         result.position += (m_current.velocity + t * m_constraints.maxAcceleration / 2.0) * t;
+        serialLog("accelerating ", 3);
+        serialLogln(result.velocity,3);
     }
     else if (t < m_endFullSpeed)
     {
@@ -44,17 +89,24 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         result.position +=
             (m_current.velocity + m_endAccel * m_constraints.maxAcceleration / 2.0) * m_endAccel +
             m_constraints.maxVelocity * (t - m_endAccel);
+        serialLog("holding ", 3);
+        serialLogln(result.velocity,3);
     }
     else if (t <= m_endDecel)
     {
-        result.velocity = goalDir.velocity + (m_endDecel - t) * m_constraints.maxAcceleration;
         double timeLeft = m_endDecel - t;
-        result.position =
-            goalDir.position - (goalDir.velocity + timeLeft * m_constraints.maxAcceleration / 2.0) * timeLeft;
+        result.velocity = goalDir.velocity + timeLeft * m_constraints.maxAcceleration;
+        result.position = goalDir.position - (goalDir.velocity * timeLeft) - (timeLeft * timeLeft * m_constraints.maxAcceleration / 2.0);
+        serialLog("slowing ", 3);
+        serialLogln(result.velocity,3);
     }
     else
     {
         result = goalDir;
+    }
+    */
+    if (abs(result.position - goalDir.position) <= 100) {
+        result.velocity = 0;
     }
 
     return direct(result, m_direction);

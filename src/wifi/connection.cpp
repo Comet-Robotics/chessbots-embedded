@@ -119,7 +119,7 @@ void sendPacket(JsonDocument& packet) {
     client.write(';');
     serialLogln("Sent Packet: ", 2);
     // This takes that JSON object and prints it to Serial (the console) for debugging purposes
-    if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
+    if (LOGGING_LEVEL >= 2) serializeJson(packet, Serial);
     serialLog("\n", 2);
 }
 

@@ -27,8 +27,8 @@ void velocityUpdateTimerFunction(std::string id)
 
     float desiredVelocityLeft, desiredVelocityRight;
     std::tie(desiredVelocityLeft, desiredVelocityRight) = timeSlicesToExecute.front();
-    setLeftMotorControl({VELOCITY, desiredVelocityLeft});
-    setRightMotorControl({VELOCITY, desiredVelocityRight});
+    setXControl({VELOCITY, desiredVelocityLeft});
+    setYControl({VELOCITY, desiredVelocityRight});
     timeSlicesToExecute.pop();
 
     // 1ms delay ensures the function will run in the next loop
@@ -244,8 +244,8 @@ void customMotionProfileTimerFunction(MotionProfile &customProfileA, MotionProfi
     float desiredVelocityLeft = updateTrapezoidalProfile(customProfileA, dt, 0);
     float desiredVelocityRight = updateTrapezoidalProfile(customProfileB, dt, 0);
 
-    setLeftMotorControl({VELOCITY, desiredVelocityLeft});
-    setRightMotorControl({VELOCITY, desiredVelocityRight});
+    setXControl({VELOCITY, desiredVelocityLeft});
+    setYControl({VELOCITY, desiredVelocityRight});
 
     timerDelay(1, [&customProfileA, &customProfileB, dt, id](){ customMotionProfileTimerFunction(customProfileA, customProfileB, dt, id); });
 }
