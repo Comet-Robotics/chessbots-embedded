@@ -865,10 +865,8 @@ void updateToNextDistance()
 {
     //this way if we're reversing, we're actually subtracting. if going forward was 0, then 0 * 2 - 1 = -1.
     //if going forward was 1, 1 * 2 - 1 = 1.
-    float encTargetA = (float)profileX.currentPosition + 2500 * (forwardAligning * 2 - 1);
-    float encTargetB = (float)profileY.currentPosition + 2500 * (forwardAligning * 2 - 1);
-    setXControl({POSITION, encTargetA});
-    setYControl({POSITION, encTargetB});
+    float encTargetX = (float)profileX.currentPosition + 2500 * (forwardAligning * 2 - 1);
+    setXControl({POSITION, encTargetX});
 #if LOGGING_LEVEL >= 3
     serialLogln("changing direction!", 3);
 #endif
