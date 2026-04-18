@@ -84,7 +84,7 @@ bool handle_packet(Robot& r, JsonDocument packet) {
             packet["left"].as<double>(), packet["right"].as<double>()
         );
 
-        r.drive(power, packet["packetId"].as<std::string>());
+        r.drive(power);
 
     } else if (type == ESTOP) {
         r.stop();
@@ -94,7 +94,6 @@ bool handle_packet(Robot& r, JsonDocument packet) {
         ASSERT_FIELD(packet, "packetId", const char *)
 
         double delta_angle = packet["deltaHeadingRadians"].as<double>();
-        const char *id = packet["packetId"];
 
         r.turn(delta_angle, packet["packetId"].as<std::string>());
 

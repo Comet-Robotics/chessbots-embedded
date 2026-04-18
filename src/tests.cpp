@@ -4,6 +4,7 @@
 
 #include "robot/robot.h"
 #include "utils/geometry.h"
+#include "utils/logging.h"
 
 // Turns off the motion controller on the robot
 void sleepy_test(Robot& r) {
@@ -13,7 +14,7 @@ void sleepy_test(Robot& r) {
 void center_test(Robot& r) {
     unsigned long time_seconds = millis() / 1000;
 
-    if (time_seconds > 10 && time_seconds < 12) {
+    if (time_seconds % 30 == 10) {
         r.center();
     }
 }

@@ -76,6 +76,17 @@ double Motor::tick_dist() {
     return ((double)dist / TICKS_PER_ROTATION) * TIRE_CIRCUMFERENCE;
 }
 
+double Motor::get_saved() {
+    return saved_dist;
+}
+
+double Motor::save_dist() {
+    double old = saved_dist;
+    saved_dist = dist();
+
+    return old;
+}
+
 // Takes in a power between [0, 1]
 // We use this to change a double power between 0-1 to an int duty cycle between 0-4096
 int power_to_duty(double power) {

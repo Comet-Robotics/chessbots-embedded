@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <queue>
 #include <tuple>
+#include <math.h>
 #include <algorithm>
 #include <optional>
 
@@ -9,7 +10,7 @@
 #include "../../env.h"
 #include "robot/lights.h"
 #include "robot/motor.h"
-#include "robot/pidController.h"
+#include "robot/pid.h"
 #include "utils/config.h"
 #include "utils/functions.h"
 #include "utils/geometry.h"
@@ -17,88 +18,7 @@
 #include "utils/logging.h"
 #include "wifi/connection.h"
 
-MotionController::MotionController()
-    :   DistVelocityController(0.1, 0.2, 0.1, -1.5, +1.5, 0.0),
-        AVelocityController(.1, 0.4, 0.1, -.4, +.4, 0.0)
-{}
-
-MotionController::MotionPhase MotionController::phase() {
-    return _phase;
-}
-
-void MotionController::set_goal(Coordinate2D _goal_destination, double _goal_angle, std::optional<std::string> id) {
-    actionID = id;
-    goal_angle = _goal_angle;
-    goal_position = _goal_destination;
-}
-
-std::tuple<double, double> MotionController::update_speeds(Coordinate2D position, double angle, double dt) {
-    double dist_err = position.distance_to(goal_position);
-    double angle_err = angle - goal_angle;
-    
-    if (abs(dist_err) < 4 && abs(angle_err) < .01) {
-        _phase = ARRIVED;
-
-        digitalWrite(ONBOARD_LED_PIN, HIGH);
-
-        if (actionID.has_value()) {
-            send_success(actionID.value());
-            actionID = std::nullopt;
-        }
-
-        // C++ let me compile without this return statement
-        // While on -Wall and -Wextra.
-        return std::make_tuple(0.0, 0.0);
-    } else if (abs(dist_err) < 2) {
-        if (_phase != ALIGNING) {
-            digitalWrite(ONBOARD_LED_PIN, LOW);
-        }
-
-        _phase = ALIGNING;
-
-        double angular_vel = AVelocityController.Compute(goal_angle, angle, dt);
-
-       return std::make_tuple(-angular_vel, angular_vel);
-    } else {
-        if (_phase != TRAVELLING) {
-            DistVelocityController.Reset();
-            AVelocityController.Reset();
-
-            digitalWrite(ONBOARD_LED_PIN, LOW);
-        }
-
-        bool goal_infront = position.is_behind(angle, goal_position);
-
-        double temp_goal_angle;
-
-        if (!goal_infront) {
-            dist_err = -dist_err;
-            temp_goal_angle = position.angle_to(goal_position);
-        } else {
-            temp_goal_angle = goal_position.angle_to(position);
-        }
-
-        _phase = TRAVELLING;
-
-        double vel = DistVelocityController.Compute(0, dist_err, dt);
-        double angular_vel = AVelocityController.Compute(temp_goal_angle, angle, dt);
-
-        // https://aleksandarhaber.com/tutorial-on-simple-position-controller-for-differential-drive-robot-with-simulation-and-animation-in-python/
-        double left_speed = (vel / WHEEL_RADIUS_CM) - ((TRACK_WIDTH_CM * angular_vel) / (2 * WHEEL_RADIUS_CM));
-        double right_speed = (vel / WHEEL_RADIUS_CM) + ((TRACK_WIDTH_CM * angular_vel) / (2 * WHEEL_RADIUS_CM)); 
-
-        return std::make_tuple(left_speed, right_speed);
-    };
-}
-
-void MotionController::print_status() {
-    serial_printf(DebugLevel::DEBUG, "MotionController status: %d\n  goal_angle: %f\n  goal_position: (%f, %f)", _phase, goal_angle, goal_position.x, goal_position.y);
-}
-
-void MotionController::reset() {
-    DistVelocityController.Reset();
-    AVelocityController.Reset();
-}
+Robot robot = Robot();
 
 Robot::Robot()
     :   left(false, MOTOR_A_PIN1, MOTOR_A_PIN2, ENCODER_A_PIN1, ENCODER_A_PIN2),
@@ -126,9 +46,11 @@ void Robot::print_status(uint32_t delay) {
         DebugLevel::DEBUG,
         
         SERIAL_CLEAR
-        "FPS: %lu (%luus) WiFi status: %d -- connected: %d\n"
+        "FPS: %lu (%luus) Voltage: %d\n"
+        "WiFi status: %d Connected: %d\n"
 
-        "Position: (%fcm, %fcm) rotation: %frad \n"
+        "Position: (%fcm, %fcm)\n"
+        "Rotation: %frad (%fdeg)\n"
         "Drive mode: %d Centering status: %d\n"
 
         "\n"
@@ -137,9 +59,11 @@ void Robot::print_status(uint32_t delay) {
         "  Left:\n"
         "    power: %f (%d duty)\n"
         "    distance: %fcm (%d raw)\n"
+        "    saved: %fcm\n"
         "  Right:\n"
         "    power: %f (%d duty)\n"
         "    distance: %fcm (%d raw)\n"
+        "    saved: %fcm\n"
 
         "\n"
 
@@ -151,13 +75,14 @@ void Robot::print_status(uint32_t delay) {
         "    Left: %hd (disc %d), (held %d) (changed %lu)\n"
         "    Right: %hd (disc %d), (held %d) (changed %lu)\n\n",
 
-        fps, delay, WiFi.status(), client.connected(),
+        fps, delay, Robot::batteryLevel(),
+        WiFi.status(), client.connected(),
 
-        position.x, position.y, rotation,
+        position.x, position.y, rotation, RAD_TO_DEG * rotation,
         drive_mode, centeringStatus,
 
-        left.power(), left.duty(), left.dist(), left.raw_dist(),
-        right.power(), right.duty(), right.dist(), right.raw_dist(),
+        left.power(), left.duty(), left.dist(), left.raw_dist(), left.get_saved(),
+        right.power(), right.duty(), right.dist(), right.raw_dist(), right.get_saved(),
 
         front_left_light.raw_value(), front_left_light.value(), front_left_light.held_value(), front_left_light.last_changed_time(),
         front_right_light.raw_value(), front_right_light.value(), front_right_light.held_value(), front_right_light.last_changed_time(),
@@ -171,8 +96,9 @@ void Robot::print_status(uint32_t delay) {
 }
 
 int Robot::batteryLevel() {
-    return analogRead(BATTERY_VOLTAGE_PIN) - BATTERY_VOLTAGE_OFFSET;
+    return analogRead(BATTERY_VOLTAGE_PIN) + BATTERY_VOLTAGE_OFFSET;
 }
+
 MotionController::MotionPhase Robot::motion_status() {
     return motion_controller.phase();
 }
@@ -212,18 +138,19 @@ void Robot::tick(uint32_t frame, uint32_t delay) {
         // Don't do anything, motors are being manually controlled somewhere else
     } else if (drive_mode == DriveType::STOPPED) {
         auto motor_speeds = std::make_tuple(0.0, 0.0);
-        drive(motor_speeds, "NULL");
+        drive(motor_speeds);
     } else if (drive_mode == DriveType::MOTION_CONTROL) {
-        auto motor_speeds = motion_controller.update_speeds(position, rotation, (double)delay / 1000000);
-        drive(motor_speeds, "NULL");
+        motion_controller.tick(delay);
     }
     
-    if (frame % 64 == 0) {
+    if (frame % 32 == 0) {
         print_status(delay);
     }
 }
 
-#define CENTER_MOTOR_SPEED .18
+#define CENTER_MOTOR_SPEED .35
+#define LIGHT_DISTANCE 17 // In CM
+#define BACKUP_DIST 7.0
 void Robot::center_tick(uint32_t delay) {
     if (centeringStatus == NOT_CENTERING) {
         return;
@@ -233,9 +160,12 @@ void Robot::center_tick(uint32_t delay) {
         drive_mode = DriveType::MANUAL;
 
         auto motor_speeds = std::make_tuple(CENTER_MOTOR_SPEED, CENTER_MOTOR_SPEED);
-        drive(motor_speeds, "NULL");
+        drive(motor_speeds);
 
         if (front_left_light.held_value() || front_right_light.held_value()) {
+            left.save_dist();
+            right.save_dist();
+
             centeringStatus = ALIGNING_EDGE_1;
         }
     }
@@ -243,21 +173,24 @@ void Robot::center_tick(uint32_t delay) {
     if (centeringStatus == ALIGNING_EDGE_1) {
         drive_mode = DriveType::MANUAL;
 
-        if (front_left_light.held_value() && front_right_light.held_value()) {
-            rotation = M_PI / 2;
-            position = Coordinate2D(position.x, 15.0);
-            centeringStatus = ALIGNED_EDGE_1;
-        }
+        auto motor_speeds = std::make_tuple(CENTER_MOTOR_SPEED, CENTER_MOTOR_SPEED);
+        drive(motor_speeds);
+        double delta_dist;
 
-        // If the left one crossed latest, that's the first one that hit the line
-        if (front_left_light.last_changed_time() > front_right_light.last_changed_time()) {
-            // Turn left
-            auto motor_speeds = std::make_tuple(0.0, CENTER_MOTOR_SPEED);
-            drive(motor_speeds, "NULL");
-        } else {
-            // Turn right
-            auto motor_speeds = std::make_tuple(CENTER_MOTOR_SPEED, 0.0);
-            drive(motor_speeds, "NULL");
+        if (front_left_light.held_value() && front_right_light.held_value()) {
+            if (front_left_light.last_changed_time() > front_right_light.last_changed_time()) {
+                delta_dist = left.dist() - left.save_dist();
+                rotation = atan(delta_dist / LIGHT_DISTANCE);
+            } else {
+                delta_dist = right.dist() - right.save_dist();
+                rotation = -atan(delta_dist / LIGHT_DISTANCE);
+            }
+
+            serial_printf(DebugLevel::INFO, "ROTATION: %fdeg, delta_dist: %f", rotation * RAD_TO_DEG, delta_dist);
+            position.y = BACKUP_DIST;
+            rotation = rotation + (M_PI /  2);
+
+            centeringStatus = ALIGNED_EDGE_1;
         }
     }
 
@@ -270,21 +203,17 @@ void Robot::center_tick(uint32_t delay) {
             front_left_light.reset();
             front_right_light.reset();
             
+            motion_controller.set_goal(Coordinate2D(position.x + 100.0, 0.0), 0, std::nullopt);
             centeringStatus = CENTERED_Y_AXIS;
         }
     }
 
     // Similar to the STARTING status
     if (centeringStatus == CENTERED_Y_AXIS) {
-        drive_mode = DriveType::MANUAL;
-
-        auto motor_speeds = std::make_tuple(CENTER_MOTOR_SPEED, CENTER_MOTOR_SPEED);
-        drive(motor_speeds, "NULL");
+        drive_mode = DriveType::MOTION_CONTROL;
 
         if (front_left_light.held_value() && front_right_light.held_value()) {
-            drive_mode = DriveType::MOTION_CONTROL;
-
-            position.x = 15.0;
+            position.x = BACKUP_DIST;
  
             motion_controller.set_goal(Coordinate2D(0.0, 0.0), M_PI / 2, std::nullopt);
             centeringStatus = NOT_CENTERING;
@@ -319,7 +248,7 @@ void Robot::drive(double tiles, std::string id) {
 }
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
-void Robot::drive(std::tuple<double, double>& powers, std::string id) {
+void Robot::drive(std::tuple<double, double>& powers) {
     left.power(std::get<0>(powers));
     right.power(std::get<1>(powers));
 }

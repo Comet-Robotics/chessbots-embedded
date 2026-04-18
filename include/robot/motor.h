@@ -27,6 +27,9 @@ class Motor {
         double dist(); // Total distance in cm
         double tick_dist(); // Distance this tick in cm
         int32_t raw_dist(); // Read the raw encoder value in ticks
+        double save_dist();
+        double get_saved();
+
     private:
         int pin_a;
         int pin_b;
@@ -37,6 +40,7 @@ class Motor {
         
         int32_t raw_enc_value;
         int32_t prev_raw_enc_value;
+        double saved_dist;
         Encoder encoder;
 };
 
