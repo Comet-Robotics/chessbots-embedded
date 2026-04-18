@@ -124,6 +124,10 @@ void sendPacket(JsonDocument& packet) {
 }
 
 void sendActionSuccess(std::string messageId) {
+    if(messageId == "NULL")
+    {
+        return;
+    }
     JsonDocument packet;
     constructSuccessPacket(packet, messageId);
     serialLogln((char*)"Sending Action Success...", 2);
@@ -131,6 +135,10 @@ void sendActionSuccess(std::string messageId) {
 }
 
 void sendActionFail(std::string messageId) {
+    if(messageId == "NULL")
+    {
+        return;
+    }
     JsonDocument packet;
     constructFailPacket(packet, messageId);
     serialLogln((char*)"Sending Action Success...", 2);

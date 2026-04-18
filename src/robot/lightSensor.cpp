@@ -15,7 +15,7 @@
 
 short lightArray[4];
 float prevTickVals[4] = {-1, -1, -1, -1};
-const uint8_t DIFF_TICK = 2;
+const uint8_t DIFF_TICK = 1;
 int8_t counter = 0;
 
 const short LIMIT_TO_CHANGE = 600;
@@ -41,11 +41,15 @@ void deactivateIR() {
 bool checkForLightChange(uint8_t i)
 {
     //if difference too great and we're not at the start where prevTick is -1, declare that the encoder has changed color, and assign cooldown.
-    if(fabs(prevTickVals[i] - lightArray[i]) >= LIMIT_TO_CHANGE && (short) prevTickVals[i] != -1)
+    if(fabs(prevTickVals[i] - lightArray[i]) >= LIMIT_TO_CHANGE && (short) prevTickVals[i] >= 0 && (short) prevTickVals[i] <= 8191 && (short) lightArray[i] >= 0 && (short) lightArray[i] <= 8191)
     {
+        serialLog((char*) "THE DIFFERENCE IS BIG SO WE HAVE CHANGED COLOR GRAHH! Sensor: ", 3);
+        serialLog(i, 3);
+        serialLog((char*) " previous had value ", 3);
         serialLog(prevTickVals[i], 3);
-        serialLogln((char*) "", 3);
-        serialLogln((char*) "THE DIFFERENCE IS BIG SO WE HAVE CHANGED COLOR GRAHH", 3);
+        serialLog((char*) " but now has value ", 3);
+        serialLogln(lightArray[i], 3);
+
         return true;
     }
     return false;
@@ -107,15 +111,15 @@ void readLightLevels() {
 
     //Logs the values for debugging purposes. This way, if the logging level doesn't permit it,
     //we don't ever get to this code as it's not flashed, which saved on time.
-#if LOGGING_LEVEL >= 2
+#if LOGGING_LEVEL >= 3
     serialLog("Light Levels: ", 2);
-    serialLog(lightArray[0], 2);
-    serialLog(" ", 2);
-    serialLog(lightArray[1], 2);
-    serialLog(" ", 2);
-    serialLog(lightArray[2], 2);
-    serialLog(" ", 2);
-    serialLogln(lightArray[3], 2);
+    // serialLog(lightArray[0], 2);
+    // serialLog(" ", 2);
+    // serialLog(lightArray[1], 2);
+    // serialLog(" ", 2);
+    serialLogln(lightArray[2], 2);
+    // serialLog(" ", 2);
+    // serialLogln(lightArray[3], 2);
 #endif
 }
 
