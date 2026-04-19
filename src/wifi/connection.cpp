@@ -137,6 +137,13 @@ void sendActionFail(std::string messageId) {
     sendPacket(packet);
 }
 
+void sendRandomPacket(int var, float num) {
+    JsonDocument packet;
+    constructRandomPacket(packet, var, num);
+    serialLogln((char*)"Sending Random Packet...", 2);
+    sendPacket(packet);
+}
+
 void pingTimeout() {
     if (DO_PINGING) {
         missedPings++;

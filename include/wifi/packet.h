@@ -12,4 +12,5 @@ void constructHelloPacket(JsonDocument& packet);
 void constructSuccessPacket(JsonDocument& packet, std::string messageId);
 void constructFailPacket(JsonDocument& packet, std::string messageId);
 void constructPingPacket(JsonDocument& packet);
+void constructRandomPacket(JsonDocument& packet, int var, float num);
 #endif

@@ -52,7 +52,7 @@ TrapezoidProfile::State TrapezoidProfile::calculate(double t, const State &curre
         serialLogln(result.velocity,3);
     }
     else if (dist > 100){
-        result.velocity = m_current.velocity - min(sqrt(m_constraints.maxAcceleration*fabs(accelDist-dist))*.250,m_current.velocity*0.99);
+        result.velocity = m_current.velocity*0.85;
         serialLog("slowing ", 3);
         serialLogln(result.velocity,3);
     }

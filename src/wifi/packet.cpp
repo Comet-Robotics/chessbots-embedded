@@ -110,4 +110,10 @@ void constructPingPacket(JsonDocument& packet) {
     packet["batteryLevel"] = getBatteryLevel();
 }
 
+void constructRandomPacket(JsonDocument& packet, int var, float num) {
+    packet["type"] = QUERY_RESPONSE;
+    packet["var_id"] = var;
+    packet["var_val"] = num;
+}
+
 #endif

@@ -38,7 +38,7 @@ TrapezoidProfile aProfile(profileConstraints);
 TrapezoidProfile::State xSetpoint, ySetpoint, aSetpoint;
 PIDController XVelocityController(0.000009, 0.000035, 0.000000000001, -1, +1, 10); 
 PIDController YVelocityController(0.0000005, 0.000035, 0.000000000001, -1, +1, 10); 
-PIDController AVelocityController(0.000012, 0.00000, 0.0000000000000, -1, +1, 10); //angular velocity used for turns
+PIDController AVelocityController(0.000012, 0.00000000, 0.0000000000000, -1, +1, 10); //angular velocity used for turns
 ContinuousPIDController headingController(0.21, 0.000001, 0.000000000001, -1, +1, 0.1, -180, 180); // input degrees, output duty cycle
 typedef struct { 
     bool isTurn;
@@ -46,7 +46,7 @@ typedef struct {
     std::string id;
  } Command;
 int point = -1;
-Command queue[5] = {};
+Command queue[10] = {};
 
 void pushQueue(Command command){
     queue[point+1] = command;
@@ -58,7 +58,7 @@ void pushQueue(Command command){
 Command popQueue(){
     Command temp = queue[0];
     queue[0] = {};
-    for(int x = 1; x < point; x++){
+    for(int x = 1; x <= point; x++){
         queue[x-1]=queue[x];
     }
     point = point-1;
@@ -408,6 +408,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                 setRightPower(0);
 
                 sendActionSuccess(packetId);
+                sendRandomPacket(0, (currentX / TICK_TO_METERS - getLeftMotorControl().value)*TICK_TO_METERS);
                 resetPID();
 
             } else {
@@ -451,35 +452,40 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
             prevRotation = currentRot;
 
             double loopDelaySeconds = ((double) timeMs) / 1000;
-            profileA.currentPosition = currentRot*trackWidth*M_PI / TICK_TO_METERS;
-            profileA.currentVelocity = angleDist==0?0:angleDist*trackWidth*M_PI / TICK_TO_METERS /loopDelaySeconds;
+            profileA.currentPosition = currentRot*10 / TICK_TO_METERS;
+            profileA.currentVelocity = angleDist==0?0:angleDist*10 / TICK_TO_METERS /loopDelaySeconds;
             aSetpoint = aProfile.calculate(loopDelaySeconds, 
                                                     TrapezoidProfile::State(profileA.currentPosition, profileA.currentVelocity),
-                                                    TrapezoidProfile::State(getHeadingTarget()*trackWidth*M_PI/TICK_TO_METERS, 0.0));
+                                                    TrapezoidProfile::State(getHeadingTarget()*10/TICK_TO_METERS, 0.0));
 
             double velocity = AVelocityController.Compute(aSetpoint.velocity, profileA.currentVelocity, loopDelaySeconds);
 
-            double lMotorPower = fmap((-8*velocity*trackWidth/2)/TIRE_RADIUS, -11, 11, -1, 1);
-            double rMotorPower = fmap((8*velocity*trackWidth/2)/TIRE_RADIUS, -11, 11, -1, 1);
+            double lMotorPower = fmap((-8*velocity*trackWidth/2)/TIRE_RADIUS, -5, 5, -1, 1);
+            double rMotorPower = fmap((8*velocity*trackWidth/2)/TIRE_RADIUS, -5, 5, -1, 1);
 
             if (fabs(lMotorPower) < MIN_MOTOR_POWER) lMotorPower = 0;
+            if (fabs(lMotorPower) > 1) lMotorPower = lMotorPower > 0 ? 1 : -1;
             if (fabs(rMotorPower) < MIN_MOTOR_POWER) rMotorPower = 0;
+            if (fabs(rMotorPower) > 1) rMotorPower = rMotorPower > 0 ? 1 : -1;
 
             setLeftPower(lMotorPower);
             setRightPower(rMotorPower);
 
-            serialLog("vels ", 3);
-            serialLog(aSetpoint.velocity, 3);
             serialLog("vel ", 3);
+            serialLog(0, 3);
+            serialLog(" rot ", 3);
+            serialLog(currentRot*10, 3);
+            serialLog(" avel ", 3);
             serialLog(velocity, 3);
-            serialLog("currentVel ", 3);
-            serialLog(profileA.currentVelocity, 3);
+
             serialLog(" lpower ", 3);
             serialLog(lMotorPower, 3);
             serialLog(" rpower ", 3);
             serialLog(rMotorPower, 3);
-            serialLog(" angle ", 3);
-            serialLogln(currentRot*10, 3);
+            serialLog(" xpos ", 3);
+            serialLog(currentX, 3);
+            serialLog(" ypos ", 3);
+            serialLogln(currentY, 3);
     
 
             double sum = 0;
@@ -498,6 +504,7 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
                 setRightPower(0);
 
                 sendActionSuccess(packetId);
+                sendRandomPacket(1, currentRot - getHeadingTarget());
                 resetPID();
 
             } else {
@@ -506,13 +513,13 @@ void controlLoop(int loopDelayMs, int8_t framesUntilPrint) {
         } else {
             if(!getStoppedStatus() && point != -1){
                 Command next = popQueue();
-                serialLogln(next.dist,3);
+                serialLogln(next.dist*0.9,3);
                 resetSpeed();
                 if(next.isTurn){
                     setXControl({POSITION, 0});
                     setYControl({POSITION, 0});
                     
-                    setHeadingTarget(next.dist*0.95);
+                    setHeadingTarget(next.dist*0.9);
                     runningTurn = true;
                     runningPID = false;
                 } else {
@@ -721,10 +728,7 @@ double getHeadingTarget() {
 
 void drive(float tiles, std::string id) {
     if (!getStoppedStatus()) {
-        const float TILE_SIZE_INCHES = 24;
-        float distanceInches = tiles * TILE_SIZE_INCHES;
-        float ticksPerInch = TICKS_PER_ROTATION / (WHEEL_DIAMETER_INCHES * M_PI);
-        int tickDistance = (int)(distanceInches * ticksPerInch);
+        int tickDistance = (int)(tiles * TILES_TO_TICKS);
         driveTicks(tickDistance, id);
     }    
     
