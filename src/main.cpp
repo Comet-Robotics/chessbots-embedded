@@ -11,6 +11,7 @@
 #include "utils/timer.h"
 #include "utils/status.h"
 #include "wifi/wireless.h"
+#include "wifi/OTA.h"
 #include "wifi/connection.h"
 #include "robot/control.h"
 #include "robot/encoder.h"
@@ -36,6 +37,11 @@ void setup() {
 
     // Create a WiFi network for the laptop to connect to
     if (!RUN_OFFLINE) connectWiFI();
+
+    if (!RUN_OFFLINE && RUN_OTA) {
+        setupOTA("myESP32");
+        startOTATask();
+    }
 
     if (DO_DRIVE_TEST) startDriveTest();
 
