@@ -12,3 +12,5 @@ void circle_test(Robot& r);
 
 // Moves to the points on a 1x1 meter square
 void square_test(Robot& r);
+
+void hardware_test(Robot& r);

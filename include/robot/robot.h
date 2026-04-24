@@ -27,7 +27,7 @@ class Robot {
         // Runs all the necessary processing for each tick of the global event loop
         void tick(uint32_t frame, uint32_t delay);
         
-        void center();
+        void center(std::optional<std::string> id);
         void drive(double tiles, std::string id);
         void drive(Coordinate2D goal_pos, double goal_angle);
         void drive(std::tuple<double, double>& powers);
@@ -56,7 +56,8 @@ class Robot {
         
         DriveType drive_mode;
         CenteringStatus centeringStatus;
-        
+        std::optional<std::string> centeringID;
+
         void center_tick(uint32_t delay);
         void pid_tick(uint32_t delay);
 

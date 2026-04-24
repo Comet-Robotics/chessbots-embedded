@@ -24,6 +24,7 @@ enum PacketType : uint8_t {
     QUADRATIC,
     SPIN_RADIANS,
     BS_MOVE,
+    CENTER_SEND,
 
     ERROR // Not a valid packet type
 };

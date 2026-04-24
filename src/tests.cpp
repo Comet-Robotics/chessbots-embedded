@@ -15,7 +15,7 @@ void center_test(Robot& r) {
     unsigned long time_seconds = millis() / 1000;
 
     if (time_seconds % 30 == 10) {
-        r.center();
+        r.center(std::nullopt);
     }
 }
 
@@ -97,4 +97,14 @@ void square_test(Robot& r) {
     }
 
     r.drive(goal, rotation);
+}
+
+void hardware_test(Robot& r) {
+    auto power = std::make_tuple(.5, 0.0);
+    r.drive(power);
+    delay(1000);
+    
+    power = std::make_tuple(0.0, 0.5);
+    r.drive(power);
+    delay(1000);
 }

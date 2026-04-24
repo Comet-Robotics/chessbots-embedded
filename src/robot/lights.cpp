@@ -8,7 +8,7 @@
 
 static short LIGHT_RAW_VALUE_CUTOFF = 5000;
 bool is_light_value_on(short value) {
-    return value > LIGHT_RAW_VALUE_CUTOFF;
+    return value < LIGHT_RAW_VALUE_CUTOFF;
 }
 
 Light::Light(gpio_num_t _pin) {

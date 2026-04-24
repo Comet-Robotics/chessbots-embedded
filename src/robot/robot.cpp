@@ -150,7 +150,7 @@ void Robot::tick(uint32_t frame, uint32_t delay) {
 
 #define CENTER_MOTOR_SPEED .35
 #define LIGHT_DISTANCE 17 // In CM
-#define BACKUP_DIST 7.0
+#define BACKUP_DIST 20.0
 void Robot::center_tick(uint32_t delay) {
     if (centeringStatus == NOT_CENTERING) {
         return;
@@ -215,15 +215,18 @@ void Robot::center_tick(uint32_t delay) {
         if (front_left_light.held_value() && front_right_light.held_value()) {
             position.x = BACKUP_DIST;
  
-            motion_controller.set_goal(Coordinate2D(0.0, 0.0), M_PI / 2, std::nullopt);
+            motion_controller.set_goal(Coordinate2D(0.0, 0.0), M_PI / 2, centeringID);
+            centeringID = std::nullopt;
             centeringStatus = NOT_CENTERING;
         }
     }
 }
 
-void Robot::center() {
+void Robot::center(std::optional<std::string> id) {
     if (centeringStatus == NOT_CENTERING) {
         centeringStatus = STARTED;
+        centeringID = id;
+
         drive_mode = DriveType::MANUAL;
 
         front_left_light.reset();

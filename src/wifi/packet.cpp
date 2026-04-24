@@ -51,6 +51,9 @@ PacketType parse_packet_type(std::string type) {
     if (type == "BS_MOVE") {
         return BS_MOVE;
     }
+    if (type == "CENTER_SEND") {
+        return CENTER_SEND;
+    }
 
     return ERROR;
 }
@@ -105,6 +108,10 @@ bool handle_packet(Robot& r, JsonDocument packet) {
 
         r.drive(tiles, packet["packetId"].as<std::string>());
 
+    } else if (type == CENTER_SEND) {
+        ASSERT_FIELD(packet, "tileDistance", double)
+
+        r.center(packet["packetId"].as<std::string>());
     } else if (type == PING_SEND) {
         send_ping();
     }

@@ -24,6 +24,7 @@ void setup() {
     };
 
     // sleepy_test(robot);
+    // hardware_test(robot);
 }
 
 void loop() {
@@ -41,9 +42,9 @@ void loop() {
 
     robot.tick(frame, delta);
 
-    center_test(robot);
+    // center_test(robot);
     // line_test(robot);
-    // square_test(robot);
+    square_test(robot);
     // circle_test(robot);
 
     frame++;
