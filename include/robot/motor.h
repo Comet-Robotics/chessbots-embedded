@@ -3,6 +3,7 @@
 #include <Encoder.h>
 #include <stdint.h>
 
+#include "robot/pid.h"
 #include "utils/config.h"
 
 
@@ -13,22 +14,25 @@ class Motor {
     public:
         Motor(bool inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a, uint8_t enc_pin_b);
 
-        void tick();
-        
+        void tick(uint32_t delay);
+
+        /* Read-only stats */ 
 
         int duty();
         double power();
-
-        // Sets the motor power
-        // power is a double between [-1, 1]
-        void power(double power);
-        void encoder_reset();
-
-        double dist(); // Total distance in cm
+        double speed();
+        double target_speed();
+        double dist();      // Total distance in cm
         double tick_dist(); // Distance this tick in cm
         int32_t raw_dist(); // Read the raw encoder value in ticks
-        double save_dist();
         double get_saved();
+
+        /* Affect the motor */
+        
+        double save_dist();
+        void encoder_reset();
+        void set_power(double power);
+        void set_target_speed(double speed);
 
     private:
         int pin_a;
@@ -36,8 +40,11 @@ class Motor {
 
         bool inverted;
 
+        PIDController speed_controller;
         double _power;
-        
+        double _speed;
+        double _target_speed;
+
         int32_t raw_enc_value;
         int32_t prev_raw_enc_value;
         double saved_dist;

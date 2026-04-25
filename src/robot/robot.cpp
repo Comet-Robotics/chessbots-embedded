@@ -105,8 +105,8 @@ MotionController::MotionPhase Robot::motion_status() {
 
 void Robot::tick(uint32_t frame, uint32_t delay) {
     // Pass through tick, update all sensors / motors
-    left.tick();
-    right.tick();
+    left.tick(delay);
+    right.tick(delay);
 
     front_left_light.tick();
     front_right_light.tick();
@@ -252,8 +252,8 @@ void Robot::drive(double tiles, std::string id) {
 
 // Drives the wheels according to the powers set. Negative is backwards, Positive forwards
 void Robot::drive(std::tuple<double, double>& powers) {
-    left.power(std::get<0>(powers));
-    right.power(std::get<1>(powers));
+    left.set_target_speed(std::get<0>(powers));
+    right.set_target_speed(std::get<1>(powers));
 }
 
 //turns the given amount in radians, CCW

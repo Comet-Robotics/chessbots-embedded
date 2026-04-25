@@ -7,7 +7,9 @@
 #include "utils/logging.h"
 
 Motor::Motor(bool _inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a, uint8_t enc_pin_b)
-    : inverted(_inverted), encoder(enc_pin_a, enc_pin_b)
+    :   inverted(_inverted),
+        speed_controller(0.1, 0.2, 0.1, -1, +1, 0.05),
+        encoder(enc_pin_a, enc_pin_b)
     {
     pin_a = motor_pin_a;
     pin_b = motor_pin_b;
@@ -16,10 +18,15 @@ Motor::Motor(bool _inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a
     pinMode(pin_b, OUTPUT);
 }
 
-void Motor::tick() {
+void Motor::tick(uint32_t delta) {
     // Read from encoder and save its previous value
     prev_raw_enc_value = raw_enc_value;
     raw_enc_value = raw_dist();
+
+    _speed = tick_dist() * 1000000 / delta;
+
+    double pid_power = speed_controller.Compute(_target_speed, _speed, (double) delta / 1000000);
+    set_power(pid_power);
 }
 
 int Motor::duty() {
@@ -35,10 +42,12 @@ double Motor::power() {
     return _power;
 }
 
-// This will set how fast and what direction left motor will spin
-// Value between [-1, 1]
-// Negative is backwards, Positive is forwards
-void Motor::power(double __power) {
+double Motor::speed() {
+    return _speed;
+}
+
+
+void Motor::set_power(double __power) {
     if (inverted) {
         __power = -__power;    
     }
@@ -53,6 +62,10 @@ void Motor::power(double __power) {
         analogWrite(pin_a, 0);
         analogWrite(pin_b, power_to_duty(_power));
     }
+}
+
+void Motor::set_target_speed(double target) {
+    _target_speed = target;
 }
 
 void Motor::encoder_reset() {
