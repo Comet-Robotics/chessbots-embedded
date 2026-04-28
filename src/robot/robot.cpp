@@ -46,7 +46,7 @@ void Robot::print_status(uint32_t delay) {
         DebugLevel::DEBUG,
         
         SERIAL_CLEAR
-        "FPS: %lu (%luus) Voltage: %d\n"
+        "FPS: %lu (%luus) Voltage: %dmV\n"
         "WiFi status: %d Connected: %d\n"
 
         "Position: (%fcm, %fcm)\n"
@@ -58,10 +58,14 @@ void Robot::print_status(uint32_t delay) {
         "Motors:\n"
         "  Left:\n"
         "    power: %f (%d duty)\n"
+        "    speed: %fcm/s\n"
+        "    target speed: %fcm/s\n"
         "    distance: %fcm (%d raw)\n"
         "    saved: %fcm\n"
         "  Right:\n"
         "    power: %f (%d duty)\n"
+        "    speed: %fcm/s\n"
+        "    target speed: %fcm/s\n"
         "    distance: %fcm (%d raw)\n"
         "    saved: %fcm\n"
 
@@ -81,8 +85,8 @@ void Robot::print_status(uint32_t delay) {
         position.x, position.y, rotation, RAD_TO_DEG * rotation,
         drive_mode, centeringStatus,
 
-        left.power(), left.duty(), left.dist(), left.raw_dist(), left.get_saved(),
-        right.power(), right.duty(), right.dist(), right.raw_dist(), right.get_saved(),
+        left.power(), left.duty(), left.speed(), left.target_speed(), left.dist(), left.raw_dist(), left.get_saved(),
+        right.power(), right.duty(), right.speed(), right.target_speed(), right.dist(), right.raw_dist(), right.get_saved(),
 
         front_left_light.raw_value(), front_left_light.value(), front_left_light.held_value(), front_left_light.last_changed_time(),
         front_right_light.raw_value(), front_right_light.value(), front_right_light.held_value(), front_right_light.last_changed_time(),

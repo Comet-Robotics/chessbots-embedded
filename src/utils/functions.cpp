@@ -38,3 +38,23 @@ std::string unint8ArrayToHexString(uint8_t* oldArray, int len) {
 
     return result;
 }
+
+RingBuf::RingBuf() {
+    std::fill(buf.begin(), buf.end(), 0);
+}
+
+double RingBuf::insert(double val) {
+    head = head % buf.size();
+    buf[head] = val;
+
+    return average();
+}
+
+double RingBuf::average() {
+    double sum = 0;
+    for (double item : buf) {
+        sum += item;
+    }
+
+    return sum / buf.size();
+}

@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "robot/pid.h"
+#include "utils/functions.h"
 #include "utils/config.h"
 
 
@@ -28,7 +29,7 @@ class Motor {
         double get_saved();
 
         /* Affect the motor */
-        
+
         double save_dist();
         void encoder_reset();
         void set_power(double power);
@@ -42,7 +43,7 @@ class Motor {
 
         PIDController speed_controller;
         double _power;
-        double _speed;
+        RingBuf _speeds;
         double _target_speed;
 
         int32_t raw_enc_value;
