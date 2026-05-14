@@ -8,7 +8,7 @@
 
 static short LIGHT_RAW_VALUE_CUTOFF = 5000;
 bool is_light_value_on(short value) {
-    return value < LIGHT_RAW_VALUE_CUTOFF;
+    return value > LIGHT_RAW_VALUE_CUTOFF;
 }
 
 Light::Light(gpio_num_t _pin) {
@@ -56,13 +56,6 @@ unsigned long Light::last_changed_time() {
 
 bool IR_activated = false;
 
-// Sets the IR (Infrared) Blaster to be able to output
-void setupIR() {
-    serial_printf(DebugLevel::DEBUG, "Setting Up Light Sensors...\n");
-    pinMode(RELAY_IR_LED_PIN, OUTPUT);
-    serial_printf(DebugLevel::DEBUG, "Light Sensors Setup!\n");
-}
-
 // Turns on the IR Blaster
 // Does turning on and off the IR potentially take more energy than just leaving it on?
 void activateIR() {
@@ -76,10 +69,10 @@ void activateIR() {
 
 // Turns off the IR Blaster
 void deactivateIR() {
-    // if (!IR_activated) {
-    //     return;
-    // }
+    if (!IR_activated) {
+        return;
+    }
 
-    // digitalWrite(RELAY_IR_LED_PIN, LOW);
-    // IR_activated = false;
+    digitalWrite(RELAY_IR_LED_PIN, LOW);
+    IR_activated = false;
 }

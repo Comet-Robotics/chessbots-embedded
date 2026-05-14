@@ -1,4 +1,5 @@
 #include <Arduino.h>
+
 #include <queue>
 #include <tuple>
 #include <math.h>
@@ -33,7 +34,7 @@ Robot::Robot()
 
 {
 
-    // Enable ESP and IR blasters
+    // Enable ESP light
     pinMode(RELAY_IR_LED_PIN, OUTPUT);
     pinMode(ONBOARD_LED_PIN, OUTPUT);
 }
@@ -57,17 +58,17 @@ void Robot::print_status(uint32_t delay) {
 
         "Motors:\n"
         "  Left:\n"
-        "    power: %f (%d duty)\n"
-        "    speed: %fcm/s\n"
-        "    target speed: %fcm/s\n"
-        "    distance: %fcm (%d raw)\n"
-        "    saved: %fcm\n"
+        "    power: %+.2f (%d duty)\n"
+        "    speed: %+.2fcm/s\n"
+        "    target speed: %+.2fcm/s\n"
+        "    distance: %+.2fcm (%d raw)\n"
+        "    saved: %+.2fcm\n"
         "  Right:\n"
-        "    power: %f (%d duty)\n"
-        "    speed: %fcm/s\n"
-        "    target speed: %fcm/s\n"
-        "    distance: %fcm (%d raw)\n"
-        "    saved: %fcm\n"
+        "    power: %+.2f (%d duty)\n"
+        "    speed: %+.2fcm/s\n"
+        "    target speed: %+.2fcm/s\n"
+        "    distance: %+.2fcm (%d raw)\n"
+        "    saved: %+.2fcm\n"
 
         "\n"
 
@@ -107,15 +108,18 @@ MotionController::MotionPhase Robot::motion_status() {
     return motion_controller.phase();
 }
 
-void Robot::tick(uint32_t frame, uint32_t delay) {
+void Robot::tick(uint32_t frame, uint32_t delta) {
     // Pass through tick, update all sensors / motors
-    left.tick(delay);
-    right.tick(delay);
+    left.tick(delta);
+    right.tick(delta);
 
-    front_left_light.tick();
-    front_right_light.tick();
-    back_left_light.tick();
-    back_right_light.tick();
+    activateIR();
+        delay(10);
+        front_left_light.tick();
+        front_right_light.tick();
+        back_left_light.tick();
+        back_right_light.tick();
+    deactivateIR();
 
     // Calculate new position and rotation
     double distance_sum = right.tick_dist() + left.tick_dist();
@@ -136,7 +140,7 @@ void Robot::tick(uint32_t frame, uint32_t delay) {
 
     rotation = rotation + d_angle;
 
-    center_tick(delay);
+    center_tick(delta);
 
     if (drive_mode == DriveType::MANUAL) {
         // Don't do anything, motors are being manually controlled somewhere else
@@ -144,15 +148,15 @@ void Robot::tick(uint32_t frame, uint32_t delay) {
         auto motor_speeds = std::make_tuple(0.0, 0.0);
         drive(motor_speeds);
     } else if (drive_mode == DriveType::MOTION_CONTROL) {
-        motion_controller.tick(delay);
+        motion_controller.tick(delta);
     }
     
     if (frame % 32 == 0) {
-        print_status(delay);
+        print_status(delta);
     }
 }
 
-#define CENTER_MOTOR_SPEED .35
+#define CENTER_MOTOR_SPEED .5
 #define LIGHT_DISTANCE 17 // In CM
 #define BACKUP_DIST 20.0
 void Robot::center_tick(uint32_t delay) {
