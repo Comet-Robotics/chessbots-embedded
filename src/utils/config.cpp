@@ -1,17 +1,12 @@
-#ifndef CHESSBOT_CONFIG_CPP
-#define CHESSBOT_CONFIG_CPP
+#include <Arduino.h>
+#include <ArduinoJson.h>
 
-// Associated Header File
 #include "utils/config.h"
 
-// Built-In Libraries
-#include "Arduino.h"
-
-// Custom Libraries
 #include "utils/logging.h"
 
 // External Libraries
-#include <ArduinoJson.h>
+
 
 int loopDelayMilliseconds = 20;
 
@@ -33,22 +28,28 @@ gpio_num_t PHOTODIODE_D_PIN = GPIO_NUM_6;
 
 gpio_num_t ONBOARD_LED_PIN = GPIO_NUM_15;
 gpio_num_t BATTERY_VOLTAGE_PIN = GPIO_NUM_10;
+int BATTERY_VOLTAGE_OFFSET = 100;
 
 int TICKS_PER_ROTATION = 12000;
 float TRACK_WIDTH_INCHES = 8.29;
+float TRACK_WIDTH_CM = TRACK_WIDTH_INCHES * 2.54;
 float WHEEL_DIAMETER_INCHES = 4.75;
-float THEORETICAL_MAX_VELOCITY_TPS = 63000;
-float THEORETICAL_MAX_ACCELERATION_TPSPS = 16000;
-float VELOCITY_LIMIT_TPS = 40000;
-float ACCELERATION_LIMIT_TPSPS = 10000;
-float MIN_MOTOR_POWER = 0.12; // Minimum motor power to elicit motor response, empirically determined
+float WHEEL_RADIUS_CM = (WHEEL_DIAMETER_INCHES / 2) * 2.54;
+float THEORETICAL_MAX_VELOCITY_TPS = 52000;
+float THEORETICAL_MAX_ACCELERATION_TPSPS = 252000;
+float VELOCITY_LIMIT_TPS = 30000;
+float ACCELERATION_LIMIT_TPSPS = 125000;
+float MIN_MOTOR_POWER = 0.15; // Minimum motor power to elicit motor response, empirically determined
+float MIN_MOTOR_VELOCITY_TPS = 5000;
 float TILES_TO_TICKS = 2*12*TICKS_PER_ROTATION/(WHEEL_DIAMETER_INCHES*M_PI);
+
+int MAGNET_CCW_IS_POSITIVE = 1; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
 
 float PID_POSITION_TOLERANCE = 100;
 float PID_VELOCITY_TOLERANCE = 6000;
 
 void setConfig(JsonObject config) {
-    serialLogln("Setting Config...", 2);
+    serial_printf(DebugLevel::DEBUG, "Setting Config...\n");
 
     // The is<x>() method checks the type of the variable. If the type isn't none, then
     // we know this variable exists in the config and has a value
@@ -74,8 +75,9 @@ void setConfig(JsonObject config) {
     if (config["THEORETICAL_MAX_VELOCITY_TPS"].is<float>()) THEORETICAL_MAX_VELOCITY_TPS = config["THEORETICAL_MAX_VELOCITY_TPS"];
     if (config["THEORETICAL_MAX_ACCELERATION_TPSPS"].is<float>()) THEORETICAL_MAX_ACCELERATION_TPSPS = config["THEORETICAL_MAX_ACCELERATION_TPSPS"];
     if (config["MIN_MOTOR_POWER"].is<float>()) MIN_MOTOR_POWER = config["MIN_MOTOR_POWER"];
+    if (config["MIN_MOTOR_VELOCITY_TPS"].is<float>()) MIN_MOTOR_VELOCITY_TPS = config["MIN_MOTOR_VELOCITY_TPS"];
 
-    serialLogln("Config Set!", 2);
+    if (config["MAGNET_CCW_IS_POSITIVE"].is<int>()) MAGNET_CCW_IS_POSITIVE = config["MAGNET_CCW_IS_POSITIVE"];
+
+    serial_printf(DebugLevel::DEBUG, "Config Set!\n");
 }
-
-#endif

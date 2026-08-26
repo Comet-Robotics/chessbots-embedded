@@ -1,19 +1,17 @@
-#ifndef CHESSBOT_CONNECTION_H
-#define CHESSBOT_CONNECTION_H
+#pragma once
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <ArduinoJson.h>
+#include <WiFi.h>
 
-void connectServer();
-void disconnectServer();
-void reconnectServer();
-bool checkServerConnection();
-void initiateHandshake();
+#include <optional>
 
-void acceptData();
-void sendPacket(JsonDocument& packet);
-void sendActionSuccess(std::string messageId);
-void sendActionFail(std::string messageId);
-void sendPingResponse();
+extern WiFiClient client;
 
-#endif
+void connection_check_reconnect();
+std::optional<JsonDocument> recv_packet();
+
+void send_packet(JsonDocument packet);
+void send_handshake();
+void send_success(std::string id);
+void send_ping();

@@ -1,13 +1,10 @@
-#ifndef CHESSBOT_CONFIG_H
-#define CHESSBOT_CONFIG_H
+#pragma once
 
-// Built-In Libraries
-#include "Arduino.h"
-
-// external Libraries
+#include <Arduino.h>
 #include <ArduinoJson.h>
 
 extern int loopDelayMilliseconds;
+extern uint32_t frame;
 
 // These variables are declared here, and defined in config.cpp
 // config.cpp is the only file that should be modifying these values. Everything else is read-only
@@ -28,21 +25,26 @@ extern gpio_num_t PHOTODIODE_C_PIN;
 extern gpio_num_t PHOTODIODE_D_PIN;
 
 extern gpio_num_t BATTERY_VOLTAGE_PIN;
+extern int BATTERY_VOLTAGE_OFFSET;
+
 extern gpio_num_t ONBOARD_LED_PIN;
 
 extern int TICKS_PER_ROTATION;
 extern float TRACK_WIDTH_INCHES;
+extern float TRACK_WIDTH_CM;
 extern float WHEEL_DIAMETER_INCHES;
+extern float WHEEL_RADIUS_CM;
 extern float THEORETICAL_MAX_VELOCITY_TPS;
 extern float VELOCITY_LIMIT_TPS;
 extern float THEORETICAL_MAX_ACCELERATION_TPSPS;
 extern float ACCELERATION_LIMIT_TPSPS;
 extern float MIN_MOTOR_POWER;
+extern float MIN_MOTOR_VELOCITY_TPS;
 extern float TILES_TO_TICKS;
+
+extern int MAGNET_CCW_IS_POSITIVE; // Set to 1 if counterclockwise rotation is positive, -1 if clockwise rotation is positive
 
 extern float PID_POSITION_TOLERANCE;
 extern float PID_VELOCITY_TOLERANCE;
 
 void setConfig(JsonObject config);
-
-#endif

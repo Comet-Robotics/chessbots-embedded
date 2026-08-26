@@ -1,172 +1,99 @@
-#ifndef CHESSBOT_CONNECTION_CPP
-#define CHESSBOT_CONNECTION_CPP
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <WiFi.h>
 
-// Associated Header File
 #include "wifi/connection.h"
 
-// Built-In Libraries
-#include "Arduino.h"
-#include "WiFi.h"
-
-// External Libraries
-#include <ArduinoJson.h>
-
-// Custom Libraries
-#include "wifi/packet.h"
+#include "../../env.h"
+#include "robot/robot.h"
 #include "utils/logging.h"
-#include "utils/timer.h"
-#include "utils/status.h"
-#include "robot/control.h"
+#include "wifi/packet.h"
 
-#include "../env.h"
-
-bool serverConnecting = false;
-bool pinging = false;
-int missedPings = 0;
-unsigned long pingTimeoutTimer;
+#if defined(ONLINE) \
+    && (!defined(WIFI_SSID) || !defined(WIFI_PASSWORD) || !defined(SERVER_IP) || !defined(SERVER_PORT))
+    #error ONLINE defined but one of (WIFI_SSID, WIFI_PASSWORD, SERVER_IP, SERVER_PORT) is not set
+#endif
 
 WiFiClient client;
+u_int32_t last_connection_try_time;
 
-// Called to connect to the server whose info is stored in env.h
-void connectServer() {
-    serialLogln("Connecting to Server...", 2);
-    if (client.connect(SERVER_IP, SERVER_PORT)) {
-        // If successful, sets the connection status and stops trying to connect to the server
-        setServerConnectionStatus(true);
-        serverConnecting = false;
-        serialLogln("Connected to Server!", 2);
+inline bool connected() {
+    return WiFi.status() == WL_CONNECTED && client.connected();
+}
 
-        // A handshake is an initial exchange of information, and a confirmation of a connection
-        if (DO_HANDSHAKE) { initiateHandshake(); }
-    } else {
-        serverConnecting = true;
-        // If unsuccessful, tries again in 5 seconds
-        serialLogln("Connection To Server Failed! Retrying...", 2);
-
-        timerDelay(HANDSHAKE_INTERVAL, &connectServer);
+void connection_check_reconnect() {
+    u_int32_t delta_con_time = millis() - last_connection_try_time;
+    if (WiFi.status() != WL_CONNECTED && delta_con_time > 5000) {
+        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+        last_connection_try_time = millis();
     }
-}
 
-// Completely disconnect from the server
-void disconnectServer() {
-    setServerConnectionStatus(false);
-    client.stop();
-    serialLogln("Disconnected From Server!", 2);
-}
-
-// If not connected to the server (whether by disconnect or by lost connection), reconnects
-void reconnectServer() {
-    if (!serverConnecting) {
-        setServerConnectionStatus(false);
-        serialLogln("Disconnected From Server! Reconnecting...", 2);
-        connectServer();
-    }
-}
-
-// Checks whether still connected to server
-bool checkServerConnection() {
-    return client.connected();
-}
-
-// Sends an initial packet to the server. Contains the mac address of this bot
-void initiateHandshake() {
-    JsonDocument packet;
-    constructHelloPacket(packet);
-    serialLogln((char*)"Sending Handshake...", 2);
-    sendPacket(packet);
-}
-
-// The buffer size is 500 characters. If there are issues right after
-// accepting a packet, the buffer size may be the culprit
-void acceptData() {
-    if (client.available()) {
-        // Allocates a buffer to hold the incoming packet
-        char rawPacket[500];
-        int len = 0;
-        bool packetDone = false;
-        while (client.available() || !packetDone) {
-            // Reads in a single character
-            char data = client.read();
-            if (data == ';') {
-                // If the delimiter character is encountered, the packet is done
-                packetDone = true;
-            } else {
-                // Adds the character to the buffer
-                rawPacket[len] = data;
-                len++;
-            }
+    if (!client.connected()) {
+        if (client.connect(SERVER_IP, SERVER_PORT)) {
+            send_handshake();
         }
-
-        // The packet is in the form of a JSON. We use a library to handle them
-        JsonDocument packet;
-        // This turns the character buffer into a fully formed JSON object
-        deserializeJson(packet, rawPacket);
-        serialLog("Received Packet: ", 2);
-        // This takes that JSON object and prints it to Serial (the console) for debugging purposes
-        if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-        serialLog("\n", 2);
-
-        // Actually does something with the received packet
-        handlePacket(packet);
     }
+}
+
+std::optional<JsonDocument> recv_packet() {
+    if (!connected()) {
+        return std::nullopt;
+    }
+
+    int index = 0;
+    char raw_packet[500];
+    JsonDocument packet;
+    
+    // Tries to read the whole packet in one go, might break if the underlying TCP packet is fragmented
+    while (client.available()) {
+        char data = client.read();
+
+        if (data == ';' || index > 499) {
+            break;
+        } else {
+            raw_packet[index] = data;
+            index++;
+        }
+    }
+
+    if (deserializeJson(packet, raw_packet) != DeserializationError::Ok) {
+        return std::nullopt;
+    }
+
+    return std::make_optional(packet);
 }
 
 // Sends a packet to the server
-void sendPacket(JsonDocument& packet) {
-    // This takes that JSON object and sends it through the client's socket
+void send_packet(JsonDocument packet) {
     serializeJson(packet, client);
-    // Sends a delimiter character to mark the end of the packet
     client.write(';');
-    serialLogln("Sent Packet: ", 2);
-    // This takes that JSON object and prints it to Serial (the console) for debugging purposes
-    if (LOGGING_LEVEL >= 3) serializeJson(packet, Serial);
-    serialLog("\n", 2);
 }
 
-void sendActionSuccess(std::string messageId) {
+void send_handshake() {
+    uint8_t mac[8];
+    JsonDocument packet;    
+
+    esp_efuse_mac_get_default(mac);
+    auto stringMac = unint8ArrayToHexString(mac, 6);
+
+    packet["type"] = "CLIENT_HELLO";
+    packet["macAddress"] = stringMac;
+
+    send_packet(packet);
+}
+
+void send_success(std::string id) {
     JsonDocument packet;
-    constructSuccessPacket(packet, messageId);
-    serialLogln((char*)"Sending Action Success...", 2);
-    sendPacket(packet);
+    packet["type"] = "ACTION_SUCCESS";
+    packet["packetId"] = id;
+
+    send_packet(packet);
 }
 
-void sendActionFail(std::string messageId) {
+void send_ping() {
     JsonDocument packet;
-    constructFailPacket(packet, messageId);
-    serialLogln((char*)"Sending Action Success...", 2);
-    sendPacket(packet);
-}
+    packet["type"] = "PING_RESPONSE";
+    packet["batteryLevel"] = Robot::batteryLevel();
 
-void pingTimeout() {
-    if (DO_PINGING) {
-        missedPings++;
-        serialLog(missedPings, 2);
-        serialLogln((char*)" missed ping!", 2);
-        if (missedPings >= PING_MAX_MISSES) {
-            serialLogln((char*)"SERVER TIMED OUT!", 2);
-            stop();
-            pinging = false;
-        } else {
-            pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
-        }
-    }
+    send_packet(packet);
 }
-
-void sendPingResponse() {
-    if (DO_PINGING) {
-        JsonDocument packet;
-        constructPingPacket(packet);
-        serialLogln((char*)"Sending Ping Response...", 2);
-        sendPacket(packet);
-        if (pinging) {
-            timerReset(pingTimeoutTimer);
-        } else {
-            pingTimeoutTimer = timerDelay(PING_TIMEOUT, &pingTimeout);
-            serialLogln((char*)"Started Ping Timeout Timer", 2);
-            pinging = true;
-        }
-        missedPings = 0;
-    }
-}
-
-#endif

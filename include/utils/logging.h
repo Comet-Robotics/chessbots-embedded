@@ -1,19 +1,17 @@
-#ifndef CHESSBOT_LOGGING_H
-#define CHESSBOT_LOGGING_H
+#pragma once
 
-// Built-In Libraries
 #include <string>
 
-void serialLog(const char *message, int serialLoggingLevel);
-void serialLog(int value, int serialLoggingLevel);
-void serialLog(double value, int serialLoggingLevel);
-void serialLog(std::string value, int serialLoggingLevel);
+enum DebugLevel {
+    NONE,
+    INFO,
+    DEBUG,
+    TRACE,
+    RIDICULOUS, // Use if insane
+};
 
-void serialLogln(const char *message, int serialLoggingLevel);
-void serialLogln(int value, int serialLoggingLevel);
-void serialLogln(double value, int serialLoggingLevel);
-void serialLogln(std::string value, int serialLoggingLevel);
+#define SERIAL_CLEAR "\033[3J\033[H\033[2J"
+#define SERIAL_WHITE "\e[0m"
+#define SERIAL_RED "\e[31m"
 
-void serialLogError(char message[], int error);
-
-#endif
+void serial_printf(enum DebugLevel level, const char* fmt, ...);

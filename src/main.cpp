@@ -1,84 +1,51 @@
-// Sets file name into memory (usually to avoid duplicate imports)
-#ifndef CHESSBOT_MAIN_CPP
-#define CHESSBOT_MAIN_CPP
-
-// Built-In Libraries
 #include <Arduino.h>
+#include <WiFi.h>
 
-// Custom Libraries
+#include "../env.h"
+#include "robot/robot.h"
+#include "robot/pid.h"
+#include "tests.h"
 #include "utils/config.h"
 #include "utils/logging.h"
-#include "utils/timer.h"
-#include "utils/status.h"
-#include "wifi/wireless.h"
 #include "wifi/connection.h"
-#include "robot/control.h"
-#include "robot/encoder.h"
-#include "../env.h"
-#include "robot/pidController.h"
+#include "wifi/packet.h"
 
-//alright SCREW YOU serial monitor i won't print every frame then if you wanna play that game
-const int8_t PRINT_INTERVAL = 60;
-int8_t framesUntilPrint = 60;
+uint32_t frame = 0;
+uint32_t previous_time = 0;
 
-// Setup gets run at startup
 void setup() {
-    // Serial port for debugging purposes
-    if (LOGGING_LEVEL > 0) Serial.begin(115200);
+    #if ONLINE
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    #endif
 
-    delay(STARTUP_DELAY);
-    serialLogln("Finished Delay!", 2);
+    if (LOGGING_LEVEL > 0) {
+        Serial.begin(115200);
+    };
 
-
-    // Any setup needed to get bot ready
-    setupBot();
-
-    // Create a WiFi network for the laptop to connect to
-    if (!RUN_OFFLINE) connectWiFI();
-
-    if (DO_DRIVE_TEST) startDriveTest();
-
-    delay(2000);
-
-    //start reading the light
-    if (DO_DRIVE_TICKS_TEST) driveTicks(20000, "NULL");
-
-    if (DO_HARDWARE_TEST) timerDelay(5000, &startMotorAndEncoderTest);
+    // sleepy_test(robot);
+    // hardware_test(robot);
 }
 
-// After setup gets run, loop is run over and over as fast ass possible
 void loop() {
-    // Checks if any timers have expired
-    timerStep();
+    delay(10); // We want to run at ~100 fps to standardize motor power <-> speed
+    uint32_t delta = micros() - previous_time;
+    previous_time = micros();
+    
+    #if ONLINE
+        connection_check_reconnect();
+        auto packet = recv_packet();
+        if (packet.has_value()) {
+            handle_packet(robot, packet.value());
+        }
+    #endif
 
-    if (!RUN_OFFLINE) 
-    {
-        // Checks whether bot is still connected to WiFi. Reconnect if not
-        if (getWiFiConnectionStatus() && !checkWiFiConnection()) reconnectWiFI();
-        // Checks whether bot is still connected to the server. Reconnect if not
-        if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
+    robot.tick(frame, delta);
 
-        // If the bot is connected to the server, check for received data, and accept it if available
-        if (getServerConnectionStatus()) acceptData();
-        // Checks whether bot is still connected to the server. Reconnect if not
-        if (getServerConnectionStatus() && !checkServerConnection()) reconnectServer();
+    // center_test(robot);
+    // line_test(robot);
+    square_test(robot);
+    // circle_test(robot);
 
-        // If the bot is connected to the server, check for received data, and accept it if available
-        if (getServerConnectionStatus()) acceptData();
-    }
-
-    // Run control loop
-    controlLoop(loopDelayMilliseconds, framesUntilPrint);
-
-    // This delay determines how often the code in loop is run
-    // (Forcefully pauses the thread for about the amount of milliseconds passed in)
-  	delay(loopDelayMilliseconds);
-    framesUntilPrint--;
-    if(framesUntilPrint < 0)
-    {
-        framesUntilPrint = PRINT_INTERVAL;
-    }
+    frame++;
 }
-
-// This is used at the end of each file due to the name definition at the beginning
-#endif
