@@ -5,6 +5,7 @@
 #include "utils/config.h"
 #include "utils/functions.h"
 #include "utils/logging.h"
+#include <algorithm>
 
 Motor::Motor(bool _inverted, int motor_pin_a, int motor_pin_b, uint8_t enc_pin_a, uint8_t enc_pin_b)
     : inverted(_inverted), encoder(enc_pin_a, enc_pin_b)
@@ -91,5 +92,8 @@ double Motor::save_dist() {
 // We use this to change a double power between 0-1 to an int duty cycle between 0-4096
 int power_to_duty(double power) {
     power = abs(power);
-    return fmap(power, 0.0, 1.0, 0.0, 4096.0);
+
+    float clampedPower = std::clamp(power, 0.0, 1.0);
+
+    return (int) fmap(clampedPower, 0, 1, 0, 4096);
 }
