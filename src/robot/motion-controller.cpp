@@ -11,7 +11,7 @@
 #include "robot/motion-controller.h"
  
 MotionController::MotionController()
-    :   DistVelocityController(0.1, 0.2, 0.1, -1.5, +1.5, 0.0),
+    :   DistVelocityController(0.8, 0.5, 0.1, -1.5, +1.5, 0.0),
         AVelocityController(.1, 0.4, 0.1, -.4, +.4, 0.0)
 {}
 
@@ -59,7 +59,7 @@ void MotionController::tick(uint32_t delta) {
        auto powers = std::make_tuple(-angular_vel, angular_vel);
        robot.drive(powers);
     } else {
-        if (_prev_phase != TRAVELLING) {
+        if (_prev_phase == TRAVELLING) {
             DistVelocityController.Reset();
             AVelocityController.Reset();
         }

@@ -51,6 +51,17 @@ double PIDController::Compute(double setpoint, double actual_value, double dt) {
     return (output);
 }
 
+double ContinuousPIDController::getError(double setpoint, double actual_value) {
+    double error = setpoint - actual_value;
+    double range = maxInput - minInput;
+    if (error > range / 2) {
+        error -= range;
+    } else if (error < -range / 2) {
+        error += range;
+    }
+    return error;
+}
+
 void PIDController::Reset(){
     integral = 0;
 }

@@ -28,13 +28,13 @@ void setup() {
 }
 
 void loop() {
-    delay(10); // We want to run at ~100 fps to standardize motor power <-> speed
+    // (10); // We want to run at ~100 fps to standardize motor power <-> speed
     uint32_t delta = micros() - previous_time;
     previous_time = micros();
     
     #if ONLINE
         connection_check_reconnect();
-        auto packet = recv_packet();
+        auto packet = recv_packet();++
         if (packet.has_value()) {
             handle_packet(robot, packet.value());
         }
