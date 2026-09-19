@@ -34,7 +34,7 @@ void loop() {
     
     #if ONLINE
         connection_check_reconnect();
-        auto packet = recv_packet();++
+        auto packet = recv_packet();
         if (packet.has_value()) {
             handle_packet(robot, packet.value());
         }

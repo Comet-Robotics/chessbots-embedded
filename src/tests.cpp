@@ -63,10 +63,44 @@ void circle_test(Robot& r) {
     r.drive(goal, rotation);
 }
 
-int goal_idx = 0;
-
 // Test all of MotionController
 void square_test(Robot& r) {
+    unsigned long time_seconds = millis() / 1000;
+
+    Coordinate2D goal;
+    double rotation;
+
+    if (time_seconds > 5) {
+        goal = Coordinate2D(0, 100);
+        rotation = M_PI / 2;
+    }
+
+    if (time_seconds > 20) {
+        goal = Coordinate2D(0, 0);
+        rotation = 0;
+    }
+
+    if (time_seconds > 35) {
+        goal = Coordinate2D(100, 0);
+    }
+    
+    if (time_seconds > 50) {
+        goal = Coordinate2D(100, 100);
+    }
+
+    if (time_seconds > 65) {
+        goal = Coordinate2D(0, 100);
+    }
+
+    if (time_seconds > 80) {
+        goal = Coordinate2D(0, 0);
+    }
+
+    r.drive(goal, rotation);
+}
+
+int goal_idx = 0;
+void square_test_lazy(Robot& r) {
     unsigned long time_seconds = millis() / 1000;
     Coordinate2D goal;
     double rotation;

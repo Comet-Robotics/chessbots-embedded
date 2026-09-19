@@ -59,7 +59,7 @@ void MotionController::tick(uint32_t delta) {
        auto powers = std::make_tuple(-angular_vel, angular_vel);
        robot.drive(powers);
     } else {
-        if (_prev_phase == TRAVELLING) {
+        if (_prev_phase != TRAVELLING) {
             DistVelocityController.Reset();
             AVelocityController.Reset();
         }
