@@ -44,7 +44,7 @@ void Robot::print_status(uint32_t delay) {
 
     uint32_t fps = delay == 0 ? 0 : 1000000 / delay;
     serial_printf(
-        DebugLevel::DEBUG,
+        DebugLevel::TRACE,
         
         SERIAL_CLEAR
         "FPS: %lu (%luus) Voltage: %d\n"
@@ -190,7 +190,7 @@ void Robot::center_tick(uint32_t delay) {
                 rotation = -atan(delta_dist / LIGHT_DISTANCE);
             }
 
-            serial_printf(DebugLevel::INFO, "ROTATION: %fdeg, delta_dist: %f", rotation * RAD_TO_DEG, delta_dist);
+            serial_printf(DebugLevel::TRACE, "ROTATION: %fdeg, delta_dist: %f", rotation * RAD_TO_DEG, delta_dist);
             position.y = BACKUP_DIST;
             rotation = rotation + (M_PI /  2);
 

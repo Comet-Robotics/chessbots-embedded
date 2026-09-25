@@ -66,6 +66,8 @@ void MotionController::tick(uint32_t delta) {
 
         double temp_goal_angle;
         if (robot.position.is_behind(robot.rotation, goal_position)) {
+            serial_printf(DebugLevel::DEBUG, "We calculated position (%f, %f), %frad: was facing away from (%f, %f)", robot.position.x, robot.position.y, robot.rotation, goal_position.x, goal_position.y);
+            
             temp_goal_angle = goal_position.angle_to(robot.position);
         } else {
             dist_err = -dist_err;
@@ -86,7 +88,7 @@ void MotionController::tick(uint32_t delta) {
 }
 
 void MotionController::print_status() {
-    serial_printf(DebugLevel::DEBUG, "MotionController status: %d\n  goal_angle: %f (%fdeg)\n  goal_position: (%f, %f)", _phase, goal_angle, RAD_TO_DEG *goal_angle, goal_position.x, goal_position.y);
+    serial_printf(DebugLevel::TRACE, "MotionController status: %d\n  goal_angle: %f (%fdeg)\n  goal_position: (%f, %f)", _phase, goal_angle, RAD_TO_DEG *goal_angle, goal_position.x, goal_position.y);
 }
 
 void MotionController::reset() {
