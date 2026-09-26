@@ -66,3 +66,11 @@ double Coordinate2D::dot_product(const Coordinate2D other) const {
 bool Coordinate2D::is_behind(double radians, Coordinate2D other) const {
     return vector_to(other).dot_product(Coordinate2D(radians)) < 0;
 }
+
+// Normalized, the minimum delta between angles
+double angle_delta(double from, double to) {
+    double diff = std::fmod(to - from, 2 * M_PI);
+    if (diff < -M_PI) diff += 2 * M_PI;
+    if (diff > M_PI)  diff -= 2 * M_PI;
+    return diff;
+}

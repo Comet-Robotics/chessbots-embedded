@@ -1,5 +1,7 @@
 #pragma once
 
+double angle_delta(double angle, double other);
+
 class Coordinate2D {
     public:
         double x;
