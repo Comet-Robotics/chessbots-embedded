@@ -11,7 +11,7 @@
 #include "robot/motion-controller.h"
  
 MotionController::MotionController()
-    :   DistVelocityController(0.8, 0.5, 0.1, -1.5, +1.5, 0.0),
+    :   DistVelocityController(0.4, 0.2, 0.1, -1.5, +1.5, 0.0),
         AVelocityController(.1, 0.4, 0.1, -.4, +.4, 0.0)
 {}
 
@@ -66,8 +66,6 @@ void MotionController::tick(uint32_t delta) {
 
         double temp_goal_angle;
         if (robot.position.is_behind(robot.rotation, goal_position)) {
-            serial_printf(DebugLevel::DEBUG, "We calculated position (%f, %f), %frad: was facing away from (%f, %f)", robot.position.x, robot.position.y, robot.rotation, goal_position.x, goal_position.y);
-            
             temp_goal_angle = goal_position.angle_to(robot.position);
         } else {
             dist_err = -dist_err;
@@ -75,7 +73,9 @@ void MotionController::tick(uint32_t delta) {
         }
 
         double vel = DistVelocityController.Compute(0, dist_err, (double) delta / 1000000);
-        double angular_vel = AVelocityController.Compute(temp_goal_angle, robot.rotation, (double) delta / 1000000);
+
+        // There might still be a subtle angle problem here but hopefully that is fixed in alignment
+        double angular_vel = AVelocityController.Compute(0, angle_delta(robot.rotation, temp_goal_angle), (double) delta / 1000000);
 
         // https://aleksandarhaber.com/tutorial-on-simple-position-controller-for-differential-drive-robot-with-simulation-and-animation-in-python/
         auto powers = std::make_tuple(
