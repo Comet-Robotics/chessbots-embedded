@@ -31,13 +31,13 @@ void setup() {
 }
 
 void loop() {
-    delay(5); // We want to run at ~100 fps to standardize motor power <-> speed
+    // delay(5); // We want to run at ~100 fps to standardize motor power <-> speed
     uint32_t delta = micros() - previous_time;
     previous_time = micros();
     
     #if ONLINE
         if (!connected() && micros() > connection_backoff_next_time) {
-            bool success = connection_check_reconnect();
+            bool success = reconnect();
 
             if (success) {
                 connection_backoff = 1;
@@ -46,8 +46,6 @@ void loop() {
                 connection_backoff_next_time = micros() + connection_backoff;
             }
         }
-
-        serial_printf(DebugLevel::NONE, "%d\n", connection_backoff);
 
         auto packet = recv_packet();
         if (packet.has_value()) {
