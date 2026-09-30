@@ -11,8 +11,8 @@
 #include "robot/motion-controller.h"
  
 MotionController::MotionController()
-    :   DistVelocityController(0.2, 0.1, 0.05, -0.5, +0.5, 0.0),
-        AVelocityController(0.1, 0.1, 0.05, -0.3, +0.3, 0.0)
+    :   DistVelocityController(0.3, 0.1, 0.05, -0.5, +0.5, 0.0),
+        AVelocityController(0.2, 0.1, 0.05, -0.3, +0.3, 0.0)
 {}
 
 MotionController::MotionPhase MotionController::phase() {
@@ -73,8 +73,6 @@ void MotionController::tick(uint32_t delta) {
         }
 
         double vel = DistVelocityController.Compute(0, dist_err, (double) delta / 1000000);
-
-        serial_printf(DebugLevel::INFO, "goal_angle: % .2f angle_delta: % .2f\n", temp_goal_angle, angle_delta(robot.rotation, temp_goal_angle));
 
         // There might still be a subtle angle problem here but hopefully that is fixed in alignment
         // Negative angle delta because we want PID to push angle in the positive direction
