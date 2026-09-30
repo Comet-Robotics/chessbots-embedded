@@ -19,14 +19,3 @@ public:
 protected:
     virtual double getError(double setpoint, double actual_value) { return setpoint - actual_value; }
 };
-
-class ContinuousPIDController : public PIDController
-{
-public:
-    ContinuousPIDController(double kp, double ki, double kd, double min, double max, double errorTolerance, double minInput, double maxInput)
-        : PIDController(kp, ki, kd, min, max, errorTolerance), minInput(minInput), maxInput(maxInput) {}
-protected:
-    double getError(double setpoint, double actual_value) override;
-private:
-    double minInput, maxInput; // Input range for continuous wrapping
-};
