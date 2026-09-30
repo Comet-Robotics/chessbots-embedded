@@ -17,5 +17,6 @@ public:
     double integral;   // Integral accumulator
 
 protected:
+    // Am I going crazy or is this reversed?
     virtual double getError(double setpoint, double actual_value) { return setpoint - actual_value; }
 };

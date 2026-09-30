@@ -11,15 +11,15 @@
 #include "robot/motion-controller.h"
  
 MotionController::MotionController()
-    :   DistVelocityController(0.2, 0.1, 0.05, -.3, +.3, 0.0),
-        AVelocityController(.1, 0.05, 0.05, -.3, +.3, 0.0)
+    :   DistVelocityController(0.2, 0.1, 0.05, -0.5, +0.5, 0.0),
+        AVelocityController(0.1, 0.1, 0.05, -0.3, +0.3, 0.0)
 {}
 
 MotionController::MotionPhase MotionController::phase() {
     double dist_err = robot.position.distance_to(goal_position);
     double angle_err = robot.rotation - goal_angle;
 
-    if (abs(dist_err) < 8 && abs(angle_err) < .1) {
+    if (abs(dist_err) < 8 && abs(angle_err) < .01) {
         digitalWrite(ONBOARD_LED_PIN, HIGH);
 
         return ARRIVED;
@@ -77,7 +77,8 @@ void MotionController::tick(uint32_t delta) {
         serial_printf(DebugLevel::INFO, "goal_angle: % .2f angle_delta: % .2f\n", temp_goal_angle, angle_delta(robot.rotation, temp_goal_angle));
 
         // There might still be a subtle angle problem here but hopefully that is fixed in alignment
-        double angular_vel = AVelocityController.Compute(0, angle_delta(robot.rotation, temp_goal_angle), (double) delta / 1000000);
+        // Negative angle delta because we want PID to push angle in the positive direction
+        double angular_vel = AVelocityController.Compute(0, -angle_delta(robot.rotation, temp_goal_angle), (double) delta / 1000000);
 
         // https://aleksandarhaber.com/tutorial-on-simple-position-controller-for-differential-drive-robot-with-simulation-and-animation-in-python/
         auto powers = std::make_tuple(
