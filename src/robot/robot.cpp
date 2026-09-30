@@ -109,13 +109,13 @@ void Robot::tick(uint32_t frame, uint32_t delta) {
     left.tick();
     right.tick();
 
-    activateIR();
-        delay(10);
+    // activateIR();
+        // delay(10);
         front_left_light.tick();
         front_right_light.tick();
         back_left_light.tick();
         back_right_light.tick();
-    deactivateIR();
+    // deactivateIR();
 
     // Calculate new position and rotation
     double distance_sum = right.tick_dist() + left.tick_dist();

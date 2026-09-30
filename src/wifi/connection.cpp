@@ -15,24 +15,26 @@
 #endif
 
 WiFiClient client;
-u_int32_t last_connection_try_time;
 
 inline bool connected() {
     return WiFi.status() == WL_CONNECTED && client.connected();
 }
 
-void connection_check_reconnect() {
-    u_int32_t delta_con_time = millis() - last_connection_try_time;
-    if (WiFi.status() != WL_CONNECTED && delta_con_time > 5000) {
+bool reconnect() {
+    if (WiFi.status() != WL_CONNECTED) {
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-        last_connection_try_time = millis();
     }
 
     if (!client.connected()) {
         if (client.connect(SERVER_IP, SERVER_PORT)) {
             send_handshake();
+            return true;
         }
+
+        return false;
     }
+
+    return true;
 }
 
 std::optional<JsonDocument> recv_packet() {

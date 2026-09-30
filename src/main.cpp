@@ -13,6 +13,9 @@
 uint32_t frame = 0;
 uint32_t previous_time = 0;
 
+uint32_t connection_backoff = 1;
+uint32_t connection_backoff_next_time = 0;
+
 void setup() {
     #if ONLINE
         WiFi.mode(WIFI_STA);
@@ -28,12 +31,24 @@ void setup() {
 }
 
 void loop() {
-    // (10); // We want to run at ~100 fps to standardize motor power <-> speed
+    delay(20); // We want to run at ~100 fps to standardize motor power <-> speed
     uint32_t delta = micros() - previous_time;
     previous_time = micros();
     
     #if ONLINE
-        connection_check_reconnect();
+        if (!connected() && micros() > connection_backoff_next_time) {
+            bool success = connection_check_reconnect();
+
+            if (success) {
+                connection_backoff = 1;
+            } else {
+                connection_backoff * 2 < 10000000 ? connection_backoff * 2 : 10000000;
+                connection_backoff_next_time = micros() + connection_backoff;
+            }
+        }
+
+        serial_printf(DebugLevel::NONE, "%d\n", connection_backoff);
+
         auto packet = recv_packet();
         if (packet.has_value()) {
             handle_packet(robot, packet.value());
