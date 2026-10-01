@@ -23,9 +23,10 @@ bool connected_wifi() {
 bool connected_server() {
     return client.connected();
 }
-
+int lastAttempt;
 bool reconnect_wifi() {
-    if (!connected_wifi()) {
+    if (!connected_wifi() && millis()-lastAttempt > 5000) {
+        lastAttempt = millis();
         return WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     }
 
