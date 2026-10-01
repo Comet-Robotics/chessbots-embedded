@@ -37,26 +37,40 @@ void line_test(Robot& r) {
     r.drive(goal, rotation);
 }
 
-// Test the angular PID controller
+// Check if the angle caculation is accurate
 void circle_test(Robot& r) {
     unsigned long time_seconds = millis() / 1000;
 
-    Coordinate2D goal(00, 0.0);
-    double rotation = 0;
+    Coordinate2D goal;
+    double rotation;
 
     if (time_seconds > 5) {
-        rotation = 2 * M_PI;
-    }
-
-    if (time_seconds > 10) {
-        rotation =  0;
+        goal = Coordinate2D(0);
+        rotation = M_PI / 2;
     }
 
     if (time_seconds > 15) {
+        goal = Coordinate2D(0, 0);
+        rotation = M_PI;
+    }
+
+    if (time_seconds > 25) {
+        goal = Coordinate2D(0, 0);
+        rotation = (3.0 / 2.0) * M_PI;
+    }
+    
+    if (time_seconds > 35) {
+        goal = Coordinate2D(0, 0);
+        rotation = 2 * M_PI;
+    }
+
+    if (time_seconds > 45) {
+        goal = Coordinate2D(0, 0);
         rotation = 4 * M_PI;
     }
 
-    if (time_seconds > 20) {
+    if (time_seconds > 55) {
+        goal = Coordinate2D(0, 0);
         rotation = 0;
     }
 

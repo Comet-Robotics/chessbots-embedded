@@ -8,8 +8,11 @@
 
 extern WiFiClient client;
 
-bool connected();
-bool reconnect();
+bool connected_wifi();
+bool connected_server();
+bool reconnect_wifi();
+bool reconnect_server();
+
 std::optional<JsonDocument> recv_packet();
 
 void send_packet(JsonDocument packet);

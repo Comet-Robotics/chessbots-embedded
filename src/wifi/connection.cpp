@@ -16,16 +16,24 @@
 
 WiFiClient client;
 
-inline bool connected() {
-    return WiFi.status() == WL_CONNECTED && client.connected();
+bool connected_wifi() {
+    return WiFi.status() == WL_CONNECTED;
+}    
+
+bool connected_server() {
+    return client.connected();
 }
 
-bool reconnect() {
-    if (WiFi.status() != WL_CONNECTED) {
-        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+bool reconnect_wifi() {
+    if (!connected_wifi()) {
+        return WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     }
 
-    if (!client.connected()) {
+    return true;
+}
+
+bool reconnect_server() {
+    if (connected_wifi() && !connected_server()) {
         if (client.connect(SERVER_IP, SERVER_PORT)) {
             send_handshake();
             return true;
@@ -38,7 +46,7 @@ bool reconnect() {
 }
 
 std::optional<JsonDocument> recv_packet() {
-    if (!connected()) {
+    if (!connected_server()) {
         return std::nullopt;
     }
 
