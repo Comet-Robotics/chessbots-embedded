@@ -2,9 +2,9 @@
 
 #include <Arduino.h>
 
-class Light {
+class IRSensor {
     public:
-        Light(gpio_num_t pin);
+        IRSensor(gpio_num_t pin);
 
         void tick();
         

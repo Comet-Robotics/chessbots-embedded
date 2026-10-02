@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <optional>
 
-#include "robot/lights.h"
+#include "robot/ir.h"
 #include "robot/motion-controller.h"
 #include "robot/motor.h"
 #include "robot/pid.h"
@@ -44,10 +44,10 @@ class Robot {
         Motor left;
         Motor right;
 
-        Light front_left_light;
-        Light front_right_light;
-        Light back_left_light;
-        Light back_right_light;
+        IRSensor front_left_ir;
+        IRSensor front_right_ir;
+        IRSensor back_left_ir;
+        IRSensor back_right_ir;
 
         // State
         double rotation;

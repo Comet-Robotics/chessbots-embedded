@@ -9,7 +9,7 @@
 #include "robot/robot.h"
 
 #include "../../env.h"
-#include "robot/lights.h"
+#include "robot/ir.h"
 #include "robot/motor.h"
 #include "robot/pid.h"
 #include "utils/config.h"
@@ -25,10 +25,10 @@ Robot::Robot()
     :   left(false, MOTOR_A_PIN1, MOTOR_A_PIN2, ENCODER_A_PIN1, ENCODER_A_PIN2),
         right(true, MOTOR_B_PIN1, MOTOR_B_PIN2, ENCODER_B_PIN1, ENCODER_B_PIN2),
 
-        front_left_light(PHOTODIODE_A_PIN),
-        front_right_light(PHOTODIODE_B_PIN),
-        back_left_light(PHOTODIODE_C_PIN),
-        back_right_light(PHOTODIODE_D_PIN),
+        front_left_ir(PHOTODIODE_A_PIN),
+        front_right_ir(PHOTODIODE_B_PIN),
+        back_left_ir(PHOTODIODE_C_PIN),
+        back_right_ir(PHOTODIODE_D_PIN),
         drive_mode(MOTION_CONTROL)
 
 
@@ -85,11 +85,11 @@ void Robot::print_status(uint32_t delay) {
         left.power(), left.duty(), left.dist(), left.raw_dist(), left.get_saved(),
         right.power(), right.duty(), right.dist(), right.raw_dist(), right.get_saved(),
 
-        front_left_light.raw_value(), front_left_light.value(), front_left_light.held_value(), front_left_light.last_changed_time(),
-        front_right_light.raw_value(), front_right_light.value(), front_right_light.held_value(), front_right_light.last_changed_time(),
+        front_left_ir.raw_value(), front_left_ir.value(), front_left_ir.held_value(), front_left_ir.last_changed_time(),
+        front_right_ir.raw_value(), front_right_ir.value(), front_right_ir.held_value(), front_right_ir.last_changed_time(),
 
-        back_left_light.raw_value(), back_left_light.value(), back_left_light.held_value(), back_left_light.last_changed_time(),
-        back_right_light.raw_value(), back_right_light.value(), back_right_light.held_value(), back_right_light.last_changed_time()
+        back_left_ir.raw_value(), back_left_ir.value(), back_left_ir.held_value(), back_left_ir.last_changed_time(),
+        back_right_ir.raw_value(), back_right_ir.value(), back_right_ir.held_value(), back_right_ir.last_changed_time()
     );
 
     motion_controller.print_status();
@@ -111,10 +111,10 @@ void Robot::tick(uint32_t frame, uint32_t delta) {
 
     // activateIR();
         // delay(10);
-        front_left_light.tick();
-        front_right_light.tick();
-        back_left_light.tick();
-        back_right_light.tick();
+        front_left_ir.tick();
+        front_right_ir.tick();
+        back_left_ir.tick();
+        back_right_ir.tick();
     // deactivateIR();
 
     // Calculate new position and rotation
@@ -166,7 +166,7 @@ void Robot::center_tick(uint32_t delay) {
         auto motor_speeds = std::make_tuple(CENTER_MOTOR_SPEED, CENTER_MOTOR_SPEED);
         drive(motor_speeds);
 
-        if (front_left_light.held_value() || front_right_light.held_value()) {
+        if (front_left_ir.held_value() || front_right_ir.held_value()) {
             left.save_dist();
             right.save_dist();
 
@@ -181,8 +181,8 @@ void Robot::center_tick(uint32_t delay) {
         drive(motor_speeds);
         double delta_dist;
 
-        if (front_left_light.held_value() && front_right_light.held_value()) {
-            if (front_left_light.last_changed_time() > front_right_light.last_changed_time()) {
+        if (front_left_ir.held_value() && front_right_ir.held_value()) {
+            if (front_left_ir.last_changed_time() > front_right_ir.last_changed_time()) {
                 delta_dist = left.dist() - left.save_dist();
                 rotation = atan(delta_dist / LIGHT_DISTANCE);
             } else {
@@ -204,8 +204,8 @@ void Robot::center_tick(uint32_t delay) {
         motion_controller.set_goal(Coordinate2D(position.x, 0.0), 0, std::nullopt);
 
         if (motion_controller.phase() == MotionController::MotionPhase::ARRIVED) {
-            front_left_light.reset();
-            front_right_light.reset();
+            front_left_ir.reset();
+            front_right_ir.reset();
             
             motion_controller.set_goal(Coordinate2D(position.x + 100.0, 0.0), 0, std::nullopt);
             centeringStatus = CENTERED_Y_AXIS;
@@ -216,7 +216,7 @@ void Robot::center_tick(uint32_t delay) {
     if (centeringStatus == CENTERED_Y_AXIS) {
         drive_mode = DriveType::MOTION_CONTROL;
 
-        if (front_left_light.held_value() && front_right_light.held_value()) {
+        if (front_left_ir.held_value() && front_right_ir.held_value()) {
             position.x = BACKUP_DIST;
  
             motion_controller.set_goal(Coordinate2D(0.0, 0.0), M_PI / 2, centeringID);
@@ -233,10 +233,10 @@ void Robot::center(std::optional<std::string> id) {
 
         drive_mode = DriveType::MANUAL;
 
-        front_left_light.reset();
-        front_right_light.reset();
-        back_left_light.reset();
-        back_right_light.reset();
+        front_left_ir.reset();
+        front_right_ir.reset();
+        back_left_ir.reset();
+        back_right_ir.reset();
     }
 }
 
