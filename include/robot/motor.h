@@ -6,7 +6,7 @@
 #include "utils/config.h"
 
 
-const double TIRE_RADIUS = 5.9;
+const double TIRE_RADIUS = 6.1;
 const double TIRE_CIRCUMFERENCE = M_PI * 2 * TIRE_RADIUS;
 
 class Motor {

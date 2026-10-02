@@ -33,18 +33,19 @@ void setup() {
 }
 
 void loop() {
-    if (!connected_wifi()) {
-        serial_printf(DebugLevel::INFO, "reconnectwifi %d\n", reconnect_wifi());
-    }
-
-    if (!connected_server()) {
-        serial_printf(DebugLevel::INFO, "reconnectserver %d\n", reconnect_server());
-    }
     // delay(5); // We want to run at ~100 fps to standardize motor power <-> speed
     uint32_t delta = micros() - previous_time;
     previous_time = micros();
-    
+
     #if ONLINE
+        if (!connected_wifi()) {
+            reconnect_wifi();
+        }
+
+        if (!connected_server()) {
+            reconnect_server();
+        }
+
         auto packet = recv_packet();
         if (packet.has_value()) {
             handle_packet(robot, packet.value());
@@ -57,6 +58,7 @@ void loop() {
     // line_test(robot);
     // square_test(robot);
     // circle_test(robot);
+    // small_angle_test(robot);
 
     frame++;
 }

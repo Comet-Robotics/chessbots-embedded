@@ -59,20 +59,20 @@ bool IR_activated = false;
 // Turns on the IR Blaster
 // Does turning on and off the IR potentially take more energy than just leaving it on?
 void activateIR() {
-    // if (IR_activated) {
-    //     return;
-    // }
+    if (IR_activated) {
+        return;
+    }
 
-    // digitalWrite(RELAY_IR_LED_PIN, HIGH);
-    // IR_activated = true;
+    digitalWrite(RELAY_IR_LED_PIN, HIGH);
+    IR_activated = true;
 }
 
 // Turns off the IR Blaster
 void deactivateIR() {
-    // if (!IR_activated) {
-    //     return;
-    // }
+    if (!IR_activated) {
+        return;
+    }
 
-    // digitalWrite(RELAY_IR_LED_PIN, LOW);
-    // IR_activated = false;
+    digitalWrite(RELAY_IR_LED_PIN, LOW);
+    IR_activated = false;
 }
