@@ -25,12 +25,29 @@ void line_test(Robot& r) {
 
     Coordinate2D goal;
     double rotation = 0;
-
+    int count = 0;
+    
     if (time_seconds > 5) {
         goal = Coordinate2D(100, 0);
     }
 
     if (time_seconds > 15) {
+        goal = Coordinate2D(0, 0);
+    }
+
+    if (time_seconds > 25) {
+        goal = Coordinate2D(100, 0);
+    }
+
+    if (time_seconds > 35) {
+        goal = Coordinate2D(0, 0);
+    }
+
+    if (time_seconds > 45) {
+        goal = Coordinate2D(100, 0);
+    }
+
+    if (time_seconds > 55) {
         goal = Coordinate2D(0, 0);
     }
 
@@ -150,4 +167,43 @@ void square_test_lazy(Robot& r) {
         r.drive(goal, rotation);
         goal_idx += 1;
     }
+}
+
+void small_angle_test(Robot& r) {
+    unsigned long time_seconds = millis() / 1000;
+
+    Coordinate2D goal;
+    double rotation;
+
+    if (time_seconds > 5) {
+        goal = Coordinate2D(0, 0);
+        rotation = .03;
+    }
+
+    if (time_seconds > 10) {
+        goal = Coordinate2D(0, 0);
+        rotation = 0.06;
+    }
+
+    if (time_seconds > 15) {
+        goal = Coordinate2D(0, 0);
+        rotation = 0.09;
+    }
+    
+    if (time_seconds > 20) {
+        goal = Coordinate2D(0, 0);
+        rotation = 0.12;
+    }
+
+    if (time_seconds > 25) {
+        goal = Coordinate2D(0, 0);
+        rotation = 0.15;
+    }
+
+    if (time_seconds > 30) {
+        goal = Coordinate2D(0, 0);
+        rotation = 0.18;
+    }
+
+    r.drive(goal, rotation);
 }

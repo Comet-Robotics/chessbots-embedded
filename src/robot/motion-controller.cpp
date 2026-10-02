@@ -12,7 +12,7 @@
  
 MotionController::MotionController()
     :   DistVelocityController(0.8, 0.5, 0.1, -1.5, +1.5, 0.0),
-        AVelocityController(.1, 0.4, 0.1, -.4, +.4, 0.0)
+        AVelocityController(.8, 0.5, 0.1, -.4, +.4, 0.0)
         // Maybe try this too? AVelocityController(.4, 0.4, 0.2, -.4, +.4, 0.0)
 {}
 
