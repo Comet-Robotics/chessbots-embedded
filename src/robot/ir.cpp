@@ -8,7 +8,7 @@
 
 static short LIGHT_RAW_VALUE_CUTOFF = 5000;
 bool is_ir_value_high(short value) {
-    return value > LIGHT_RAW_VALUE_CUTOFF;
+    return value < LIGHT_RAW_VALUE_CUTOFF;
 }
 
 IRSensor::IRSensor(gpio_num_t _pin) {

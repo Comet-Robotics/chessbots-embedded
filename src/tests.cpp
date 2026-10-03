@@ -207,3 +207,9 @@ void small_angle_test(Robot& r) {
 
     r.drive(goal, rotation);
 }
+
+void ir_test(Robot& r) {
+    r.stop();
+    
+    activateIR();
+}

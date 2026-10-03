@@ -54,11 +54,12 @@ void loop() {
 
     robot.tick(frame, delta);
 
-    // center_test(robot);
+    center_test(robot);
     // line_test(robot);
     // square_test(robot);
     // circle_test(robot);
     // small_angle_test(robot);
+    // ir_test(robot);
 
     frame++;
 }

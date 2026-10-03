@@ -16,3 +16,5 @@ void square_test(Robot& r);
 void hardware_test(Robot& r);
 
 void small_angle_test(Robot& r);
+
+void ir_test(Robot& r);

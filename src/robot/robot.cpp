@@ -152,7 +152,7 @@ void Robot::tick(uint32_t frame, uint32_t delta) {
     }
 }
 
-#define CENTER_MOTOR_SPEED .5
+#define CENTER_MOTOR_SPEED .25
 #define LIGHT_DISTANCE 17 // In CM
 #define BACKUP_DIST 20.0
 void Robot::center_tick(uint32_t delay) {
@@ -222,6 +222,8 @@ void Robot::center_tick(uint32_t delay) {
             motion_controller.set_goal(Coordinate2D(0.0, 0.0), M_PI / 2, centeringID);
             centeringID = std::nullopt;
             centeringStatus = NOT_CENTERING;
+
+            deactivateIR();
         }
     }
 }
@@ -233,6 +235,8 @@ void Robot::center(std::optional<std::string> id) {
 
         drive_mode = DriveType::MANUAL;
 
+        activateIR();
+        
         front_left_ir.reset();
         front_right_ir.reset();
         back_left_ir.reset();
@@ -274,5 +278,5 @@ void Robot::start() {
 void Robot::stop() {
     drive_mode = DriveType::STOPPED;
     
-    serial_printf(DebugLevel::DEBUG, "Bot Stopped!\n");
+    // serial_printf(DebugLevel::DEBUG, "Bot Stopped!\n");
 }
