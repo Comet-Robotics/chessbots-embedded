@@ -109,9 +109,8 @@ bool handle_packet(Robot& r, JsonDocument packet) {
         r.drive(tiles, packet["packetId"].as<std::string>());
 
     } else if (type == CENTER_SEND) {
-        ASSERT_FIELD(packet, "tileDistance", double)
-
-        r.center(packet["packetId"].as<std::string>());
+        ASSERT_FIELD(packet, "packetId", const char *)
+        send_success(packet["packetId"].as<std::string>());
     } else if (type == PING_SEND) {
         send_ping();
     }
