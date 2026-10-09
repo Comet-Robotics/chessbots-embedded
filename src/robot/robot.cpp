@@ -104,6 +104,14 @@ MotionController::MotionPhase Robot::motion_status() {
     return motion_controller.phase();
 }
 
+void Robot::set_position(Coordinate2D _position) {
+    position = _position;
+}
+
+void Robot::set_rotation(double _rotation) {
+    rotation = _rotation;
+}
+
 void Robot::tick(uint32_t frame, uint32_t delta) {
     // Pass through tick, update all sensors / motors
     left.tick();
@@ -246,6 +254,10 @@ void Robot::center(std::optional<std::string> id) {
 
 void Robot::drive(Coordinate2D goal_pos, double goal_angle) {
     motion_controller.set_goal(goal_pos, goal_angle, std::nullopt);
+}
+
+void Robot::drive(Coordinate2D goal_pos, double goal_angle, std::string id) {
+    motion_controller.set_goal(goal_pos, goal_angle, id);
 }
 
 void Robot::drive(double tiles, std::string id) {

@@ -24,12 +24,16 @@ class Robot {
         static int batteryLevel();
         MotionController::MotionPhase motion_status();
 
+        void set_position(Coordinate2D _position);
+        void set_rotation(double _angle);
+
         // Runs all the necessary processing for each tick of the global event loop
         void tick(uint32_t frame, uint32_t delay);
         
         void center(std::optional<std::string> id);
         void drive(double tiles, std::string id);
         void drive(Coordinate2D goal_pos, double goal_angle);
+        void drive(Coordinate2D goal_pos, double goal_angle, std::string id);
         void drive(std::tuple<double, double>& powers);
 
         void turn(double angleRadians, std::string id);

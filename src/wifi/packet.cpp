@@ -12,44 +12,20 @@
 #include "wifi/connection.h"
 
 PacketType parse_packet_type(std::string type) {
-    if (type == "CLIENT_HELLO") {
-        return CLIENT_HELLO;
-    }
     if (type == "SERVER_HELLO") {
         return SERVER_HELLO;
     }
-    if (type == "PING_SEND") {
-        return PING_SEND;
-    }
-    if (type == "PING_RESPONSE") {
-        return PING_RESPONSE;
+    if (type == "SET_ABSOLUTE") {
+        return SET_ABSOLUTE;
     }
     if (type == "TURN_BY_ANGLE") {
         return TURN_BY_ANGLE;
     }
+    if (type == "DRIVE_ABSOLUTE") {
+        return DRIVE_ABSOLUTE;
+    }
     if (type == "DRIVE_TILES") {
         return DRIVE_TILES;
-    }
-    if (type == "DRIVE_TICKS") {
-        return DRIVE_TICKS;
-    }
-    if (type == "ACTION_SUCCESS") {
-        return ACTION_SUCCESS;
-    }
-    if (type == "ACTION_FAIL") {
-        return ACTION_FAIL;
-    }
-    if (type == "DRIVE_TANK") {
-        return DRIVE_TANK;
-    }
-    if (type == "ESTOP") {
-        return ESTOP;
-    }
-    if (type == "SPIN_RADIANS") {
-        return SPIN_RADIANS;
-    }
-    if (type == "BS_MOVE") {
-        return BS_MOVE;
     }
     if (type == "CENTER_SEND") {
         return CENTER_SEND;
@@ -76,21 +52,26 @@ bool handle_packet(Robot& r, JsonDocument packet) {
 
         setConfig(packet["config"].as<JsonObject>());
 
-    } else if (type == DRIVE_TANK) {
-        // Manual control of the robot
+    } else if (type == SET_ABSOLUTE) {
+        ASSERT_FIELD(packet, "x", double)
+        ASSERT_FIELD(packet, "y", double)
+        ASSERT_FIELD(packet, "rot", double)
 
-        ASSERT_FIELD(packet, "left", double)
-        ASSERT_FIELD(packet, "left", double)
-        ASSERT_FIELD(packet, "packetId", const char *)
-
-        std::tuple<double, double> power = std::make_tuple(
-            packet["left"].as<double>(), packet["right"].as<double>()
+        Coordinate2D coordinate = Coordinate2D(
+            packet["x"].as<double>(),
+            packet["y"].as<double>()
         );
 
-        r.drive(power);
+        double rotation = packet["rot"].as<double>();
 
-    } else if (type == ESTOP) {
-        r.stop();
+        r.set_position(coordinate);
+        r.set_rotation(rotation);
+    } else if (type == DRIVE_ABSOLUTE) {
+        ASSERT_FIELD(packet, "x", double)
+        ASSERT_FIELD(packet, "y", double)
+        ASSERT_FIELD(packet, "rot", double)
+        ASSERT_FIELD(packet, "packetId", const char *)
+
 
     } else if (type == TURN_BY_ANGLE) {
         ASSERT_FIELD(packet, "deltaHeadingRadians", double)
@@ -110,7 +91,7 @@ bool handle_packet(Robot& r, JsonDocument packet) {
 
     } else if (type == CENTER_SEND) {
         ASSERT_FIELD(packet, "packetId", const char *)
-        send_success(packet["packetId"].as<std::string>());
+        r.center(packet["packetId"].as<std::string>());
     } else if (type == PING_SEND) {
         send_ping();
     }
