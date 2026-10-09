@@ -39,6 +39,9 @@ class MotionController {
         void set_goal(Coordinate2D goal_destination, double goal_angle, std::optional<std::string> id);
         void tick(uint32_t delta);
         
+        Coordinate2D goal_position();
+        double goal_angle();
+        
         void print_status();
         void reset();
     private:
@@ -50,6 +53,6 @@ class MotionController {
         MotionPhase _phase;
         MotionPhase _prev_phase;
         
-        double goal_angle;
-        Coordinate2D goal_position;
+        double _goal_angle;
+        Coordinate2D _goal_position;
 };

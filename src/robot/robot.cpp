@@ -263,9 +263,9 @@ void Robot::drive(Coordinate2D goal_pos, double goal_angle, std::string id) {
 void Robot::drive(double tiles, std::string id) {
     const float TILE_SIZE_CM = 24 * 2.54;
     
-    Coordinate2D offset(rotation);
+    Coordinate2D offset(motion_controller.goal_angle());
     offset = offset.scale(TILE_SIZE_CM * tiles);
-    Coordinate2D destination = position.transform(offset);
+    Coordinate2D destination = motion_controller.goal_position().transform(offset);
 
     motion_controller.set_goal(destination, rotation, id);
 }
@@ -278,7 +278,7 @@ void Robot::drive(std::tuple<double, double>& powers) {
 
 //turns the given amount in radians, CCW
 void Robot::turn(double delta, std::string id) {
-    motion_controller.set_goal(position, rotation + delta, id);
+    motion_controller.set_goal(motion_controller.goal_position(), motion_controller.goal_angle() + delta, id);
 }
 
 void Robot::start() {
